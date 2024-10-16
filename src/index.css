@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
-.direction-rtl {
-  direction: rtl;
+@layer base {
+  body {
+    @apply font-sans text-primary-text bg-primary-bg; 
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+:root {
+  --color-primary: #407fd5;
+  --bg-primary: #fff;
+  --text-primary: #000;
+  --text-link: #407fd5;
+}
+
+.dark {
+  --color-primary: #1e3a8a;
+  --bg-primary: #000;
+  --text-primary: #fff;
+  --text-link: #fff;
 }

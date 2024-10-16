@@ -40,10 +40,58 @@ export const pushAvailableDatesWithTimes = async (datesWithTimes) => {
     }
 };
 
-export const formatTime = (time) => {
-    const [hours, minutes] = time.split(':');
-    const date = new Date();
-    date.setHours(parseInt(hours, 10));
-    date.setMinutes(parseInt(minutes, 10));
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+export const capitalizeFirstLetter = (word) => {
+    if (!word) return ""; // Check for empty input
+    return word.charAt(0).toUpperCase() + word.slice(1);
+}
+
+export const getFirstName = (fullName) => {
+    if (!fullName) return "";
+    return fullName.split(" ")[0];
+}
+
+export const convert24HourTo12Hour = (time24) => {
+    // Check if the input time format is valid (HH:MM)
+    if (!time24 || typeof time24 !== 'string' || !/^\d{2}:\d{2}$/.test(time24)) {
+        throw new Error('Invalid time format. Please use HH:MM format.');
+    }
+
+    const [hourString, minutes] = time24.split(':');
+    let hours = parseInt(hourString, 10); // Convert hours to a number
+    let period = 'AM';
+  
+    if (hours >= 12) {
+        period = 'PM';
+        if (hours > 12) {
+            hours -= 12; // Convert to 12-hour format
+        }
+    } else if (hours === 0) {
+        hours = 12; // Midnight case
+    }
+  
+    // Ensure minutes are formatted as two digits
+    const formattedMinutes = minutes.padStart(2, '0');
+
+    const formattedTime = `${hours}:${formattedMinutes} ${period}`;
+    return formattedTime;
 };
+
+
+export const convert12HourTo24Hour = (time12) => {
+    const [time, period] = time12.split(' '); // Split into time and period (AM/PM)
+    let [hours, minutes] = time.split(':'); // Split into hours and minutes
+    hours = parseInt(hours, 10); // Convert hours to a number
+
+    if (period === 'PM' && hours < 12) {
+        hours += 12; // Convert PM hours to 24-hour format
+    } else if (period === 'AM' && hours === 12) {
+        hours = 0; // Convert 12 AM to 0 hours
+    }
+
+    // Pad hours and minutes to ensure they are two digits
+    const formattedHours = String(hours).padStart(2, '0');
+    const formattedMinutes = String(minutes).padStart(2, '0');
+
+    return `${formattedHours}:${formattedMinutes}`;
+};
+

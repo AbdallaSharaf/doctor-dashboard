@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from '../helpers/Axios';
-import { formatTime } from '../helpers/Helpers';
 
 const BookingDetails = () => {
   const { id } = useParams(); // Get the booking ID from the URL
@@ -33,7 +32,7 @@ const BookingDetails = () => {
       <p><strong>Gender:</strong> {booking.gender}</p>
       <p><strong>Problem:</strong> {booking.problem}</p>
       <p><strong>Date:</strong> {booking.date}</p>
-      <p><strong>Time:</strong> {formatTime(booking.time)}</p>
+      <p><strong>Time:</strong> {booking.time}</p>
     </div>
   );
 };
