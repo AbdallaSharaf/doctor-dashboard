@@ -4,13 +4,37 @@ import axios from '../helpers/Axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone, faTrash, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
-import { handleMarkAsUnread, handleDeleteMessage } from '../helpers/MessageActions';
 
 const MessageDetailsPage = () => {
     const { id } = useParams(); // Get the message ID from the route params
     const [message, setMessage] = useState(null);
     const navigate = useNavigate();
 
+    const handleDeleteMessage = async (id) => {
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: 'This message will be permanently deleted!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+        });
+        if (result.isConfirmed) {
+            await axios.delete(`/messages/${id}.json`).then(
+                navigate('/messages') // Redirect after deletion
+            )
+        }
+    };
+    const handleToggleReadStatus = async () => {
+        try {
+            const newUnreadStatus = !message.unread; // Toggle the unread status
+            const response = await axios.patch(`/messages/${id}.json`, { newUnreadStatus });
+            setMessage(prev => ({ ...prev, unread: newUnreadStatus })); // Update local state
+            console.log('Response from server:', response.data); // Log the server response
+        } catch (error) {
+            console.error('Error updating message:', error);
+        }
+    };
+    
     // Fetch the message data when the component is mounted
     useEffect(() => {
         const fetchMessage = async () => {
@@ -26,18 +50,7 @@ const MessageDetailsPage = () => {
         fetchMessage();
     }, [id]);
 
-    const handleDelete = async () => {
-        await handleDeleteMessage(id);
-        navigate('/messages'); // Redirect after deletion
-    };
 
-    const toggleReadStatus = async () => {
-        if (message) {
-            const newUnreadStatus = !message.unread; // Toggle the unread status
-            await handleMarkAsUnread(id, newUnreadStatus); // Update the status on the server
-            setMessage(prev => ({ ...prev, unread: newUnreadStatus })); // Update local state
-        }
-    };
 
     if (!message) {
         return <div>Loading...</div>;
@@ -58,10 +71,10 @@ const MessageDetailsPage = () => {
                 <button onClick={() => window.open(`https://wa.me/${message.phone}`)} className="text-green-500">
                     <FontAwesomeIcon icon={faWhatsapp} /> WhatsApp
                 </button>
-                <button onClick={toggleReadStatus} className={`text-${message.unread ? 'green-500' : 'yellow-500'}`}>
+                <button onClick={handleToggleReadStatus} className={`text-${message.unread ? 'green-500' : 'yellow-500'}`}>
                     <FontAwesomeIcon icon={faEnvelope} /> {message.unread ? 'Mark as Read' : 'Mark as Unread'}
                 </button>
-                <button onClick={handleDelete} className="text-red-500">
+                <button onClick={handleDeleteMessage} className="text-red-500">
                     <FontAwesomeIcon icon={faTrash} /> Delete
                 </button>
             </div>

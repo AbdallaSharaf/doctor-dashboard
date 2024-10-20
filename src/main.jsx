@@ -1,7 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import { HashRouter, Route, Routes } from 'react-router-dom';
 import App from './Pages/App.jsx';
-import Layout from './Layout/Layout.jsx';
+import Layout from './helpers/Layout/Layout.jsx';
 import ScrollToTop from './helpers/ScrollToTop';
 import './index.css';
 import Schedule from './Pages/Schedule.jsx';
@@ -10,6 +10,8 @@ import Appointments from './Pages/Appointments.jsx';
 import MessageDetailsPage from './Pages/MessageDetailsPage.jsx'
 import MessagesPage from './Pages/MessagesPage.jsx';
 import TeamPage from './Pages/TeamPage/TeamPage.jsx';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 
 createRoot(document.getElementById('root')).render(
   <>

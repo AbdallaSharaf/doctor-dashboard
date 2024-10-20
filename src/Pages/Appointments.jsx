@@ -2,8 +2,14 @@ import React, { useEffect, useState } from 'react';
 import axios from '../helpers/Axios';
 import { capitalizeFirstLetter, convert24HourTo12Hour, convert12HourTo24Hour } from '../helpers/Helpers';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faChevronUp, faSquareCheck, faSquareXmark, faSquarePen } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronUp,  faSquareCheck, faSquareXmark, faSquarePen, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import AppointmentModal from '../components/AppointmentModal';
+import CustomDropdown from '../components/CustomDropdown';
+import Pagination from '@mui/material/Pagination';
+import PaginationItem from '@mui/material/PaginationItem'; // Import PaginationItem
+
+
+
 
 const getStatusClass = (status) => {
     switch (status.toLowerCase()) {
@@ -20,6 +26,17 @@ const getStatusClass = (status) => {
     }
 };
 
+
+const statusOptions = [
+    { value: 'All', label: 'All' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'ongoing', label: 'Ongoing' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'approved', label: 'Approved' },
+];
+
+
+
 const Appointments = () => {
     const [appointments, setAppointments] = useState([]);
     const [sortConfig, setSortConfig] = useState({ key: '', direction: 'ascending' });
@@ -31,9 +48,17 @@ const Appointments = () => {
     const [editData, setEditData] = useState({ name: '', phone: '', date: '', time: '', status: '' });
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const [appointmentsPerPage] = useState(2); // Set how many appointments you want per page
+    const [appointmentsPerPage, setAppointmentsPerPage] = useState(5);
     
-
+    //  -------------------- helpers ------------------
+    const getArrow = (key) => {
+        if (sortConfig.key === key) {
+            return sortConfig.direction === 'ascending' ? <FontAwesomeIcon icon={faChevronUp} className='ml-1'/> : <FontAwesomeIcon icon={faChevronDown} className='ml-1'/>; 
+        }
+        return <FontAwesomeIcon icon={faChevronDown} className='ml-1'/>;
+    };
+    //---------------------end of helpers------------------
+    
     const fetchAppointments = async () => {
         try {
             const response = await axios.get('/bookings.json');
@@ -124,7 +149,7 @@ const Appointments = () => {
             return (nameMatch || phoneMatch) && statusMatch;
         });
     }, [sortedAppointments, searchQuery, selectedStatus]);
-
+    
     const totalPages = Math.ceil(filteredAppointments.length / appointmentsPerPage);
     const indexOfLastAppointment = currentPage * appointmentsPerPage;
     const indexOfFirstAppointment = indexOfLastAppointment - appointmentsPerPage;
@@ -198,6 +223,10 @@ const Appointments = () => {
         fetchAppointments(); // Refresh data
         setSelectedAppointments([]); // Clear selections
     };
+    const handleAppointmentsPerPageChange = (event) => {
+        setAppointmentsPerPage(Number(event.target.value));
+        setCurrentPage(1); // Reset to first page when changing the items per page
+    };
     
     const handleDeleteAll = async () => {
         const deletePromises = selectedAppointments.map(id =>
@@ -216,60 +245,62 @@ const Appointments = () => {
         );
     };
 
-    
-    const getArrow = (key) => {
-        if (sortConfig.key === key) {
-            return sortConfig.direction === 'ascending' ? <FontAwesomeIcon icon={faChevronUp} className='ml-1'/> : <FontAwesomeIcon icon={faChevronDown} className='ml-1'/>; 
-        }
-        return <FontAwesomeIcon icon={faChevronDown} className='ml-1'/>;
-    };
 
     return (
-        <div className="p-5 w-full">
-            <h2 className="text-2xl font-bold mb-4">Appointments</h2>
-            <button onClick={() => setIsModalOpen(true)} className="mb-4 p-2 bg-blue-600 text-white rounded">
-                Add New Appointment
-            </button>
+        <div className="p-7 w-full">
+            <div className='flex justify-between mb-6'>
+            <h2 className="text-lg font-semibold">Appointments</h2>
+                <button onClick={() => setIsModalOpen(true)} className="mb-2 py-2 px-4 bg-primary-btn hover:bg-hover-btn w-[170px] text-white rounded">
+                    Add Appointment
+                </button>
+    
+                <AppointmentModal
+                    isModalOpen={isModalOpen}
+                    setIsModalOpen={setIsModalOpen}
+                    availableTimes={availableTimes}
+                    handleSubmit={handleAddAppointment}
+                />
 
-            <AppointmentModal
-                isModalOpen={isModalOpen}
-                setIsModalOpen={setIsModalOpen}
-                availableTimes={availableTimes}
-                handleSubmit={handleAddAppointment}
+            </div>
+            <div className='p-7 rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.04) border border-gray-200]'>
+            <div className='flex justify-between items-center'>
+            <div className='flex gap-4'>
+            <CustomDropdown
+                options={statusOptions}
+                selectedStatus={selectedStatus}
+                setSelectedStatus={setSelectedStatus}
             />
-
-            <input
-                type="text"
-                placeholder="Search an Appointment"
-                className="mb-4 p-2 border border-gray-300 rounded"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            
-            <select
-                className="mb-4 p-2 border border-gray-300 rounded"
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-            >
-                <option value="All">All Appointments</option>
-                <option value="completed">Completed</option>
-                <option value="ongoing">Ongoing</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-            </select>
             {selectedAppointments.length > 0 && (
                 <div>
-                    <button className='bg-green-600 p-3 ' onClick={handleApproveAll}>Approve All</button>
-                    <button className='bg-red-600 ml-4 p-3' onClick={handleDeleteAll}>Delete All</button>
+                    <button className='bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-2 text-sm' onClick={handleApproveAll}>Approve All</button>
+                    <button className='ml-4 p-2 text-sm hover:bg-gray-100 rounded text-primary-text' onClick={handleDeleteAll}>Delete All</button>
                 </div>
             )}
 
+            </div>
+            <div className="relative p-2 text-sm">
+                <FontAwesomeIcon 
+                    icon={faMagnifyingGlass} 
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" 
+                />
+                <input
+                    type="text"
+                    placeholder="Search Appointment"
+                    className="p-2 pl-8 bg-gray-100 rounded w-full"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+            </div>
+            </div>
+            
+
             <table className="w-full border-separate border-spacing-y-3 table-auto">
                 <thead>
-                    <tr>
-                        <th className="text-start font-normal text-sm opacity-60 p-2">
+                    <tr className='text-center'>
+                        <th className="px-2 ">
                             <input
                             type="checkbox"
+                            className='scale-125'
                             onChange={(e) =>
                                 setSelectedAppointments(
                                     e.target.checked ? filteredAppointments.map(app => app.id) : []
@@ -277,35 +308,34 @@ const Appointments = () => {
                             }
                             checked={selectedAppointments.length === filteredAppointments.length && filteredAppointments.length > 0}/>
                         </th>
-                        <th className="text-start font-normal text-sm opacity-60 p-2">NO</th>
-                        <th className="text-start font-normal text-sm opacity-60 p-2">Booking ID</th>
-                        <th className="text-start font-normal text-sm opacity-60 p-2 cursor-pointer" onClick={() => sortBy('name')}>
+                        <th className=" font-normal text-sm p-2">NO</th>
+                        <th className=" font-normal text-sm p-2 cursor-pointer" onClick={() => sortBy('name')}>
                             Patient Name {getArrow('name')}
                         </th>
-                        <th className="text-start font-normal text-sm opacity-60 p-2 cursor-pointer" onClick={() => sortBy('date')}>
+                        <th className=" font-normal text-sm p-2 cursor-pointer" onClick={() => sortBy('date')}>
                             Date {getArrow('date')}
                         </th>
-                        <th className="text-start font-normal text-sm opacity-60 p-2 cursor-pointer" onClick={() => sortBy('time')}>
+                        <th className=" font-normal text-sm p-2 cursor-pointer" onClick={() => sortBy('time')}>
                             Time {getArrow('time')}
                         </th>
-                        <th className="text-start font-normal text-sm opacity-60 p-2">Phone Number</th>
-                        <th className="text-start font-normal text-sm opacity-60 p-2 cursor-pointer w-fit" onClick={() => sortBy('status')}>
+                        <th className=" font-normal text-sm p-2">Phone Number</th>
+                        <th className=" font-normal text-sm  cursor-pointer w-fit" onClick={() => sortBy('status')}>
                             Status {getArrow('status')}
                         </th>
-                        <th className="text-start font-normal text-sm opacity-60 p-2">Action</th>
+                        <th className=" font-normal text-sm p-2">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {currentAppointments.map((appointment, index) => (
-                        <tr key={appointment.id} className={`gap-x-3 h-12 ${editId === appointment.id ? 'bg-black bg-opacity-20' : ''}`}>
-                            <td className="text-sm p-2">
+                        <tr key={appointment.id} className={`gap-x-3 h-12 text-center ${editId === appointment.id ? 'bg-black bg-opacity-20' : ''}`}>
+                            <td className="p-2">
                                 <input
                                 type="checkbox"
+                                className='scale-125'
                                 checked={selectedAppointments.includes(appointment.id)}
                                 onChange={() => handleCheckboxChange(appointment.id)}/>
                             </td>
-                            <td className="font-bold text-sm p-2">{index + 1}</td>
-                            <td className="font-bold text-sm p-2">{appointment.id}</td>
+                            <td className="text-sm p-2">{index + 1}</td>
                             <td className="font-bold text-sm p-2 h-7">
                                 {editId === appointment.id ? (
                                     <input 
@@ -319,7 +349,7 @@ const Appointments = () => {
                                     appointment.name
                                 )}
                             </td>
-                            <td className="font-bold text-sm p-2">
+                            <td className=" text-sm p-2">
                             {editId === appointment.id ? (
                                     <input 
                                     type='date'
@@ -331,7 +361,7 @@ const Appointments = () => {
                                     appointment.date
                                 )}
                             </td>
-                            <td className="font-bold text-sm p-2">
+                            <td className=" text-sm p-2">
                                 {editId === appointment.id ? (
                                     <input 
                                         type='time'
@@ -344,7 +374,7 @@ const Appointments = () => {
                                     appointment.time
                                 )}
                             </td>
-                            <td className="font-bold text-sm p-2">
+                            <td className=" text-sm p-2">
                                 {editId === appointment.id ? (
                                     <input 
                                         type="text" 
@@ -369,13 +399,13 @@ const Appointments = () => {
                                         <option value="approved">Approved</option>
                                     </select>
                                 ) : (
-                                    <div className={`font-bold text-sm p-1  rounded-md bg-opacity-30 ${getStatusClass(appointment.status)} max-w-[85px] text-center justify-center items-center`}>
+                                    <div className={`font-semibold text-opacity-70 text-sm p-1 mx-auto rounded-md bg-opacity-20 ${getStatusClass(appointment.status)} max-w-[85px] text-center justify-center items-center`}>
                                        {capitalizeFirstLetter(appointment.status)}</div>
                                 )}
                             </td>
-                            <td className="font-bold text-sm p-2">
+                            <td className=" text-sm p-2">
                                 {editId === appointment.id ? (
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-2 ">
                                         <button 
                                             onClick={() => handleSave(appointment.id)} 
                                             className="text-green-600 "
@@ -390,7 +420,7 @@ const Appointments = () => {
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-2 justify-center">
                                         <button onClick={() => handleApprove(appointment.id, appointment.status)} className="text-green-600"><FontAwesomeIcon icon={faSquareCheck}/></button>
                                         <button 
                                             onClick={() => handleEditClick(appointment)} 
@@ -411,24 +441,35 @@ const Appointments = () => {
                     ))}
                 </tbody>
             </table>
-            <div className="flex justify-between items-center mt-4">
-            <button 
-                disabled={currentPage === 1} 
-                onClick={() => setCurrentPage((prev) => prev - 1)} 
-                className="p-2 bg-gray-300 rounded"
-            >
-                Previous
-            </button>
-            <div>
-                Page {currentPage} of {totalPages}
+            <div className="mt-4 flex justify-between">
+            <div className="mb-4">
+                <label htmlFor="appointments-per-page" className="mr-2">Show:</label>
+                <select
+                    id="appointments-per-page"
+                    value={appointmentsPerPage}
+                    onChange={handleAppointmentsPerPageChange}
+                    className="p-2 rounded border border-gray-300 "
+                >
+                    {[5, 10, 20, 50].map((option) => (
+                        <option key={option} value={option}>
+                            {option} per page
+                        </option>
+                    ))}
+                </select>
+            </div>          
+            <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={(event, value) => setCurrentPage(value)}
+                shape="rounded"
+                color="#1B84FF"
+                siblingCount={1} // Show one sibling on each side of the current page
+                boundaryCount={1} 
+                renderItem={(item) => (
+                    <PaginationItem {...item} />
+                )}
+            />
             </div>
-            <button 
-                disabled={currentPage === totalPages} 
-                onClick={() => setCurrentPage((prev) => prev + 1)} 
-                className="p-2 bg-gray-300 rounded"
-            >
-                Next
-            </button>
         </div>
         </div>
     );

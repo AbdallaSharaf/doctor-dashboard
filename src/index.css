@@ -14,9 +14,12 @@
 }
 
 :root {
+  --btn-primary: #1B84FF;
+  --btn-hover: #3d96ff;
   --color-primary: #407fd5;
   --bg-primary: #fff;
-  --text-primary: #000;
+  --text-primary: #838383;
+  --text-secondary: #fff;
   --text-link: #407fd5;
 }
 

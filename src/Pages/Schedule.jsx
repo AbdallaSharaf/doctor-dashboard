@@ -6,18 +6,76 @@ const Schedule = () => {
   const [schedule, setSchedule] = useState([]);
   const [datesWithTimes, setDatesWithTimes] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [timeoutId, setTimeoutId] = useState(null);
+
+  const saveAvailabilityToDatabase = async () => {
+    const dataToPush = datesWithTimes.map(({ date, times }) => ({
+      date,
+      times,
+    }));
+    
+    await pushAvailableDatesWithTimes(dataToPush);
+  };
+
+  const toggleAvailability = async (date, time) => {
+    const updatedTimes = datesWithTimes.map(slot => {
+      if (slot.date === date) {
+        return {
+          ...slot,
+          times: slot.times.map(t => 
+            t.time === time ? { ...t, available: !t.available } : t
+          ),
+        };
+      }
+      return slot;
+    });
+  
+    setSchedule(updatedTimes);
+    setDatesWithTimes(updatedTimes);
+  
+    // Clear the previous timeout if it exists
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  
+    // Set a new timeout to save changes after 2 minutes
+    const id = setTimeout(() => {
+      saveAvailabilityToDatabase();
+    }, 120000); // 2 minutes
+  
+    setTimeoutId(id); // Save the new timeout ID
+  };
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      saveAvailabilityToDatabase();
+      e.preventDefault();
+      e.returnValue = '';
+    };
+  
+    window.addEventListener('beforeunload', handleBeforeUnload);
+  
+    // Cleanup function
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (timeoutId) {
+        clearTimeout(timeoutId); // Clear timeout on unmount
+      }
+      saveAvailabilityToDatabase(); // Save changes when unmounting
+    };
+  }, [timeoutId]);
+  
 
   useEffect(() => {
     const fetchSchedule = async () => {
       try {
         const response = await axios.get('/available_times.json');
         const data = response.data;
-
         const scheduleArray = Object.keys(data).map(key => ({
           date: key,
           times: data[key],
         }));
-
+        console.log(scheduleArray)
         setSchedule(scheduleArray);
         setDatesWithTimes(scheduleArray);
       } catch (error) {
@@ -44,28 +102,6 @@ const Schedule = () => {
     fetchSchedule();
     fetchBookings(); // Fetch bookings on component mount
   }, []);
-
-  const toggleAvailability = async (date, time) => {
-    const updatedTimes = datesWithTimes.map(slot => {
-      if (slot.date === date) {
-        return {
-          ...slot,
-          times: slot.times.map(t => 
-            t.time === time ? { ...t, available: !t.available } : t
-          ),
-        };
-      }
-      return slot;
-    });
-
-    setSchedule(updatedTimes);
-    setDatesWithTimes(updatedTimes);
-    const dataToPush = updatedTimes.map(({ date, times }) => ({
-      date,
-      times,
-    }));
-    await pushAvailableDatesWithTimes(dataToPush);
-  };
 
   // Prepare data for rendering
   const timeSlots = datesWithTimes.length > 0 ? datesWithTimes[0].times.map(time => time.time) : [];
@@ -100,7 +136,7 @@ const Schedule = () => {
                   <td 
                     onClick={() => !booking && toggleAvailability(slot.date, timeSlot)}
                     key={slot.date} 
-                    className={`border cursor-pointer h-[65px] w-40 text-white text-center border-gray-300 p-2 ${booking ? 'bg-yellow-500' : isAvailable ? 'bg-green-500' : 'bg-red-500'}`}>
+                    className={`border cursor-pointer h-[65px] min-w-28 text-white text-center border-gray-300  ${booking ? 'bg-yellow-500' : isAvailable ? 'bg-green-500' : 'bg-red-500'}`}>
                     
                     {booking ? (
                       <>

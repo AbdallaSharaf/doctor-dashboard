@@ -3,7 +3,6 @@ import axios from '../helpers/Axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone, faTrash, faEnvelopeOpen, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
-import { handleMarkAsUnread, handleDeleteMessage } from '../helpers/MessageActions';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
@@ -15,6 +14,120 @@ const MessagesPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10); // Set items per page
     const navigate = useNavigate();
+    
+    const totalPages = Math.ceil(filteredMessages.length / itemsPerPage);
+    const indexOfLastMessage = currentPage * itemsPerPage;
+    const indexOfFirstMessage = indexOfLastMessage - itemsPerPage;
+    const currentMessages = filteredMessages.slice(indexOfFirstMessage, indexOfLastMessage);
+    
+    //---------- helper function ----------
+    const formatTimestamp = (timestamp) => {
+        const date = new Date(timestamp);
+        return new Intl.DateTimeFormat('en-US', {
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            hour12: true,
+        }).format(date);
+    };
+
+    //---------- end of helper function ----------
+    
+    
+    //---------- handlers ----------
+    const handleToggleReadStatus = async (message) => {
+        if (message) {
+            const newUnreadStatus = !message.unread; // Toggle the unread status
+            await handleMarkAsUnread(message.id, newUnreadStatus).then(  // Update the status on the server
+                setMessages(prevMessages => 
+                    prevMessages.map(msg => msg.id === message.id ? { ...msg, unread: newUnreadStatus } : msg)
+                )
+            )
+        }
+    };
+
+    const handleMarkAsUnread = async (id, unread) => {
+        try {
+            const response = await axios.patch(`/messages/${id}.json`, { unread });
+            console.log('Response from server:', response.data); // Log the server response
+        } catch (error) {
+            console.error('Error updating message:', error);
+        }
+    };
+    // Delete the message
+    const handleDeleteMessage = async (id) => {
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: 'This message will be permanently deleted!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+        });
+        if (result.isConfirmed) {
+            await axios.delete(`/messages/${id}.json`);
+        }
+    };
+    
+    
+    const handleOpenMessage = (message) => {
+        setMessages(prevMessages => 
+            prevMessages.map(msg => msg.id === message.id ? { ...msg, unread: false } : msg)
+        );
+        axios.patch(`/messages/${message.id}.json`, { unread: false }).catch(error => console.error('Error marking message as read:', error));
+        navigate(`/messages/${message.id}`);
+    };
+    
+    const handleReply = (type, phoneNumber) => {
+        if (type === 'call') {
+            window.open(`tel:${phoneNumber}`);
+        } else if (type === 'whatsapp') {
+            window.open(`https://wa.me/${phoneNumber}`);
+        }
+    };
+    
+    const handleCheckboxChange = (id) => {
+        setSelectedIds(prevSelectedIds => {
+            const updatedSelectedIds = new Set(prevSelectedIds);
+            updatedSelectedIds.has(id) ? updatedSelectedIds.delete(id) : updatedSelectedIds.add(id);
+            return updatedSelectedIds;
+        });
+    };
+    
+    const handleBulkAction = async (action) => {
+        const promises = Array.from(selectedIds).map(id => action(id));
+        await Promise.all(promises);
+        setSelectedIds(new Set());
+        fetchMessages(); // Fetch updated messages after bulk action
+    };
+    
+    const handleDeleteSelected = async () => {
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: 'These messages will be permanently deleted!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete them!',
+        });
+        
+        if (result.isConfirmed) {
+            await handleBulkAction(async (id) => {
+                await handleDeleteMessage(id); // Ensure this also returns a promise
+            });
+        }
+    };
+    
+    const handleMarkSelectedAsUnread = async () => {
+        await handleBulkAction(async (id) => {
+            await axios.patch(`/messages/${id}.json`, { unread: true });
+        });
+    };
+    
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    //---------- end of handlers ----------
 
     const fetchMessages = async () => {
         try {
@@ -40,80 +153,7 @@ const MessagesPage = () => {
         );
         setFilteredMessages(filtered);
     }, [searchTerm, messages]);
-
-    const totalPages = Math.ceil(filteredMessages.length / itemsPerPage);
-    const indexOfLastMessage = currentPage * itemsPerPage;
-    const indexOfFirstMessage = indexOfLastMessage - itemsPerPage;
-    const currentMessages = filteredMessages.slice(indexOfFirstMessage, indexOfLastMessage);
-
-    const formatTimestamp = (timestamp) => {
-        const date = new Date(timestamp);
-        return new Intl.DateTimeFormat('en-US', {
-            month: 'long',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
-            hour12: true,
-        }).format(date);
-    };
-
-    const handleOpenMessage = (message) => {
-        setMessages(prevMessages => 
-            prevMessages.map(msg => msg.id === message.id ? { ...msg, unread: false } : msg)
-        );
-        axios.patch(`/messages/${message.id}.json`, { unread: false }).catch(error => console.error('Error marking message as read:', error));
-        navigate(`/messages/${message.id}`);
-    };
-
-    const handleReply = (type, phoneNumber) => {
-        if (type === 'call') {
-            window.open(`tel:${phoneNumber}`);
-        } else if (type === 'whatsapp') {
-            window.open(`https://wa.me/${phoneNumber}`);
-        }
-    };
-
-    const handleCheckboxChange = (id) => {
-        setSelectedIds(prevSelectedIds => {
-            const updatedSelectedIds = new Set(prevSelectedIds);
-            updatedSelectedIds.has(id) ? updatedSelectedIds.delete(id) : updatedSelectedIds.add(id);
-            return updatedSelectedIds;
-        });
-    };
-
-    const handleBulkAction = async (action) => {
-        const promises = Array.from(selectedIds).map(id => action(id));
-        await Promise.all(promises);
-        setSelectedIds(new Set());
-        fetchMessages(); // Fetch updated messages after bulk action
-    };
-
-    const handleDeleteSelected = async () => {
-        const result = await Swal.fire({
-            title: 'Are you sure?',
-            text: 'These messages will be permanently deleted!',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, delete them!',
-        });
-
-        if (result.isConfirmed) {
-            await handleBulkAction(async (id) => {
-                await handleDeleteMessage(id); // Ensure this also returns a promise
-            });
-        }
-    };
-
-    const handleMarkSelectedAsUnread = async () => {
-        await handleBulkAction(async (id) => {
-            await axios.patch(`/messages/${id}.json`, { unread: true });
-        });
-    };
-
-    const handlePageChange = (pageNumber) => {
-        setCurrentPage(pageNumber);
-    };
-
+    
     return (
         <div className="p-4 w-full">
             <h2 className="text-xl font-bold mb-4">Messages</h2>
@@ -177,7 +217,7 @@ const MessagesPage = () => {
                             </td>
                             <td className="py-2 px-4 border-b">{message.name}</td>
                             <td className="py-2 px-4 border-b">{message.subject}</td>
-                            <td className="py-2 px-4 border-b">
+                            <td className="py-2 px-4 border-b" onClick={async (e)=>{ e.stopPropagation(); await handleToggleReadStatus(message).then(fetchMessages());}}>
                                 {message.unread ? (
                                     <FontAwesomeIcon icon={faEnvelope} className="text-red-500" />
                                 ) : (

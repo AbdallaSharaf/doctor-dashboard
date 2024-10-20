@@ -9,9 +9,12 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: 'var(--color-primary)',
+        'primary': 'var(--color-primary)',
         'primary-text': 'var(--text-primary)',
+        'secondary-text': 'var(--text-secondary)',
         'primary-bg': 'var(--bg-primary)',
+        'primary-btn': 'var(--btn-primary)',
+        'hover-btn': 'var(--btn-hover)',
       },
       fontFamily: {
         sans: ['Rubik', 'sans-serif'],
