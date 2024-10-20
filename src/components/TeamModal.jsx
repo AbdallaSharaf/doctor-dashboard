@@ -10,7 +10,7 @@ const TeamModal = ({ isModalOpen, setIsModalOpen, handleAddMember }) => {
         initialValues: {
             name: '',
             job: '',
-            college: '',
+            description: '',
             image: ''
         },
         validationSchema: Yup.object({
@@ -18,15 +18,13 @@ const TeamModal = ({ isModalOpen, setIsModalOpen, handleAddMember }) => {
                 .required('Name is required'),
             job: Yup.string()
                 .required('Job is required'),
-            college: Yup.string()
-                .required('College is required'),
+            description: Yup.string()
+                .required('Description is required'),
             image: Yup.string().required('Image is required')
         }),
         onSubmit: (values) => {
+            console.log(values)
             handleAddMember(values);
-            formik.resetForm();
-            setImagePreview(null); // Reset the image preview
-            setIsModalOpen(false);
         },
     });
 
@@ -84,18 +82,18 @@ const TeamModal = ({ isModalOpen, setIsModalOpen, handleAddMember }) => {
                             <div className="text-red-600 mb-2">{formik.errors.job}</div>
                         )}
 
-                        {/* College Input */}
+                        {/* Description Input */}
                         <textarea
                             type="text"
-                            name="college"
+                            name="description"
                             placeholder="Description"
-                            value={formik.values.college}
+                            value={formik.values.description}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             className="border border-gray-300 rounded p-2 w-full mb-4"
                         />
-                        {formik.touched.college && formik.errors.college && (
-                            <div className="text-red-600 mb-2">{formik.errors.college}</div>
+                        {formik.touched.description && formik.errors.description && (
+                            <div className="text-red-600 mb-2">{formik.errors.description}</div>
                         )}
 
                         {/* Image Input */}
@@ -127,10 +125,10 @@ const TeamModal = ({ isModalOpen, setIsModalOpen, handleAddMember }) => {
                         ) : <div className="mb-4 max-w-[60%] h-52"></div>}
 
                         <div className="flex justify-center gap-5 ">
-                            <button type="button" onClick={handleCloseModal} className="text-primary-text hover:bg-gray-100 rounded w-40 p-2">
+                            <button type='reset' onClick={handleCloseModal} className="text-primary-text hover:bg-gray-100 rounded w-40 p-2">
                                 Cancel
                             </button>
-                            <button onClick={formik.handleSubmit} className="bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-2 w-40">
+                            <button type='submit' onClick={formik.handleSubmit} className="bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-2 w-40">
                                 Save
                             </button>
                         </div>

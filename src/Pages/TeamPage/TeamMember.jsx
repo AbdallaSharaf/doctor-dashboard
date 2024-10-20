@@ -1,6 +1,6 @@
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React from 'react';
+import React, {useRef} from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 
 const ItemType = 'TEAM_MEMBER';
@@ -16,7 +16,8 @@ const TeamMember = ({
   handleEditMember,
   handleInputChange
 }) => {
-  const ref = React.useRef();
+  const ref = useRef();
+  const fileInputRef = useRef(); // Reference for file input
 
   // Drag source
   const [{ isDragging }, drag] = useDrag({
@@ -67,7 +68,38 @@ const TeamMember = ({
 
   // Use the isDragging state to change styles
   const opacity = isDragging ? 0 : 1; // Set opacity of the main item to 0 when dragging
-  const backgroundColor = isDragging ? '#f0f0f0' : 'white'; // Optional: Change background color while dragging
+  const backgroundColor = isDragging ? '#f0f0f0' : 'white'; // Change background color while dragging
+
+
+  // Function to open file input dialog
+  const handleImageEdit = () => {
+    fileInputRef.current.click(); // Trigger the hidden file input click
+  };
+
+  // Function to handle file input change
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader(); // Create a new FileReader instance
+  
+      // Set up a callback to run when the file is read
+      reader.onloadend = () => {
+        setEditMember((prevMember) => ({
+          ...prevMember,
+          image: reader.result, // Use the data URL from the FileReader
+        }));
+  
+        // Set the image preview if needed
+        setImagePreview(reader.result);
+      };
+  
+      // Read the file as a data URL
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  
+
 
   return (
     <tr
@@ -75,12 +107,27 @@ const TeamMember = ({
     data-handler-id={handlerId}
     onDoubleClick={() => setEditMember(member)}
     style={{ opacity, backgroundColor }} // Apply styles based on dragging state
-    className={`h-16 ${editMember && 'bg-black bg-opacity-20'} ${length !== index+1 ? 'border-b border-gray-200':'border-none'}`}
+    className={`h-16 ${editMember ? 'bg-black bg-opacity-20' : 'cursor-grab'} ${length !== index+1 ? 'border-b border-gray-200':'border-none'}`}
     >
     {editMember && editMember.id === member.id ? (
         <>
         <td className=" text-sm text-center"><FontAwesomeIcon icon={faBars} className="mr-3 text-gray-400" /></td>
         <td className=" text-sm text-center pr-6">{index+1}</td>
+        <td className="flex justify-center relative">
+            <img
+              src={editMember.image}
+              className="w-12 h-12 rounded-full absolute -top-7 cursor-pointer"
+              onClick={handleImageEdit} // Trigger image edit on click
+              alt="Team member"
+            />
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              className="hidden"
+              onChange={handleFileChange} // Handle the file input change
+            />
+          </td>
         <td>
             <input
             type="text"
@@ -104,11 +151,11 @@ const TeamMember = ({
         <td>
             <input
             type="text"
-            name="college"
-            value={editMember.college}
+            name="description"
+            value={editMember.description}
             onChange={(e) => handleInputChange(e, setEditMember)}
             className="border p-2 rounded-md focus:outline-none text-sm text-center focus:ring-2 flex justify-center mx-auto focus:ring-blue-400"
-            placeholder="College"
+            placeholder="Description"
             />
         </td>
         <td className="space-x-2 mx-auto flex items-center justify-center h-16">
@@ -124,9 +171,10 @@ const TeamMember = ({
         <>
         <td className="text-sm text-center"><FontAwesomeIcon icon={faBars} className="mr-3 text-gray-400" /></td>
         <td className=" text-sm text-center pr-6 ">{index+1}</td>
+        <td className="flex justify-center relative"><img src={member.image} className="w-12 h-12 rounded-full absolute -top-7"/></td>
         <td className="font-bold text-sm text-center">{member.name}</td>
         <td className="text-sm text-center text-gray-500">{member.job}</td>
-        <td className="text-sm text-center text-gray-500">{member.college}</td>
+        <td className="text-sm text-center text-gray-500">{member.description}</td>
         <td className="space-x-2 flex items-center justify-center h-16">
             <button onClick={() => setEditMember(member)} className="bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-1  transition duration-150 w-20">
             Edit

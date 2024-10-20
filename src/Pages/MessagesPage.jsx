@@ -21,6 +21,18 @@ const MessagesPage = () => {
     const currentMessages = filteredMessages.slice(indexOfFirstMessage, indexOfLastMessage);
     
     //---------- helper function ----------
+    
+    const fetchMessages = async () => {
+        try {
+            const response = await axios.get('/messages.json');
+            const data = response.data || {};
+            const fetchedMessages = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            setMessages(fetchedMessages);
+        } catch (error) {
+            console.error('Error fetching messages:', error);
+        }
+    };
+
     const formatTimestamp = (timestamp) => {
         const date = new Date(timestamp);
         return new Intl.DateTimeFormat('en-US', {
@@ -36,6 +48,7 @@ const MessagesPage = () => {
     
     
     //---------- handlers ----------
+
     const handleToggleReadStatus = async (message) => {
         if (message) {
             const newUnreadStatus = !message.unread; // Toggle the unread status
@@ -129,16 +142,6 @@ const MessagesPage = () => {
 
     //---------- end of handlers ----------
 
-    const fetchMessages = async () => {
-        try {
-            const response = await axios.get('/messages.json');
-            const data = response.data || {};
-            const fetchedMessages = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-            setMessages(fetchedMessages);
-        } catch (error) {
-            console.error('Error fetching messages:', error);
-        }
-    };
 
     useEffect(() => {
         fetchMessages();
