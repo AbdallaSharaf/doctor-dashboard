@@ -1,14 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from '../helpers/Axios';
 import { capitalizeFirstLetter, convert24HourTo12Hour, convert12HourTo24Hour } from '../helpers/Helpers';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faChevronUp,  faSquareCheck, faSquareXmark, faSquarePen, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronUp, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import AppointmentModal from '../components/AppointmentModal';
 import CustomDropdown from '../components/CustomDropdown';
+import { Link } from 'react-router-dom';
 import Pagination from '@mui/material/Pagination';
 import PaginationItem from '@mui/material/PaginationItem'; // Import PaginationItem
-
-
+import ActionsDropdown from '../components/ActionsDropdown';
+import Swal from 'sweetalert2';
+import BulkActionsDropdown from '../components/BulkActionsDropdown';
+import Spinner from '../components/Spinner';
 
 
 const getStatusClass = (status) => {
@@ -18,9 +21,11 @@ const getStatusClass = (status) => {
         case 'approved':
             return 'text-green-600 bg-green-600';
         case 'ongoing':
-            return 'text-yellow-600 bg-yellow-600';
-        case 'pending':
             return 'text-red-600 bg-red-600';
+        case 'pending':
+            return 'text-yellow-600 bg-yellow-600';
+        case 'cancelled':
+            return 'text-gray-600 bg-gray-600'; // Color for "Cancelled"
         default:
             return 'text-gray-600';
     }
@@ -32,8 +37,15 @@ const statusOptions = [
     { value: 'completed', label: 'Completed' },
     { value: 'ongoing', label: 'Ongoing' },
     { value: 'pending', label: 'Pending' },
+    { value: 'cancelled', label: 'Cancelled' },
     { value: 'approved', label: 'Approved' },
 ];
+
+const editableStatusOptions = [
+    { label: 'Pending', value: 'pending' },
+    { label: 'Approved', value: 'approved' },
+    { label: 'Cancelled', value: 'cancelled' },
+]
 
 
 
@@ -42,13 +54,14 @@ const Appointments = () => {
     const [sortConfig, setSortConfig] = useState({ key: '', direction: 'ascending' });
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('All');
-    const [availableTimes, setAvailableTimes] = useState('All');
     const [editId, setEditId] = useState(null);
     const [selectedAppointments, setSelectedAppointments] = useState([]); 
     const [editData, setEditData] = useState({ name: '', phone: '', date: '', time: '', status: '' });
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [appointmentsPerPage, setAppointmentsPerPage] = useState(5);
+    const [loading, setLoading] = useState(true); // Loading state
+    const rowRef = useRef(); // Ref for the editable row
     
     //  -------------------- helpers ------------------
     const getArrow = (key) => {
@@ -72,25 +85,12 @@ const Appointments = () => {
             setAppointments(appointmentsArray);
         } catch (error) {
             console.error("Error fetching appointments:", error);
+        } finally {
+            setLoading(false); // Set loading to false after fetching
         }
     };
-    const fetchAvailableTimes = async () => {
-        try {
-          const response = await axios.get('/available_times.json');
-          const data = response.data;
-  
-          const scheduleArray = Object.keys(data).map(key => ({
-            date: key,
-            times: data[key],
-          }));
-          setAvailableTimes(scheduleArray);
-        } catch (error) {
-          console.error("Error fetching available times:", error);
-        }
-      };
   
     useEffect(() => {
-        fetchAvailableTimes();
         fetchAppointments();
     }, []);
 
@@ -156,9 +156,8 @@ const Appointments = () => {
     const currentAppointments = filteredAppointments.slice(indexOfFirstAppointment, indexOfLastAppointment);
 
 
-    const handleApprove = async (id, prevStatus) => {
-        const newStatus = prevStatus === 'pending' ? 'approved' : prevStatus;
-        await axios.patch(`/bookings/${id}.json`, { status: newStatus });
+    const handleChangeStatus = async (id, newStatus) => {
+        await axios.patch(`/bookings/${id}.json`, { status: newStatus});
         const response = await axios.get('/bookings.json');
         const data = response.data;
         const appointmentsArray = Object.keys(data).map(key => ({
@@ -184,6 +183,52 @@ const Appointments = () => {
         setEditData((prev) => ({ ...prev, [name]: value }));
     };
     
+    const handleBulkAction = async (action) => {
+        switch (action) {
+          case 'approve':
+            try {
+                await Promise.all(selectedAppointments.map(id => handleChangeStatus(id, 'approved'))).then(setSelectedAppointments([]))
+                Swal.fire('Success!', `The selected appointments have been marked as approved.`, 'success');
+            } catch (error) {
+                console.error('Error updating status:', error);
+                Swal.fire('Error!', 'There was a problem updating the status.', 'error');
+            }
+            break;
+          case 'pending':
+            try {
+                await Promise.all(selectedAppointments.map(id => handleChangeStatus(id, 'pending'))).then(setSelectedAppointments([]))
+                Swal.fire('Success!', `The selected appointments have been marked as pending.`, 'success');
+            } catch (error) {
+                console.error('Error updating status:', error);
+                Swal.fire('Error!', 'There was a problem updating the status.', 'error');
+            }
+            break;
+          case 'cancelled':
+            try {
+                await Promise.all(selectedAppointments.map(id => handleChangeStatus(id, 'cancelled'))).then(setSelectedAppointments([]))
+                Swal.fire('Success!', `The selected appointments have been marked as cancelled.`, 'success');
+            } catch (error) {
+                console.error('Error updating status:', error);
+                Swal.fire('Error!', 'There was a problem updating the status.', 'error');
+            }            
+            break;
+          case 'delete':
+            try {
+                await Promise.all(selectedAppointments.map(id => handleDeleteAppointment(id))).then(setSelectedAppointments([]))
+                Swal.fire('Success!', `The selected appointments have been deleted.`, 'success');
+            } catch (error) {
+                console.error('Error updating status:', error);
+                Swal.fire('Error!', 'There was a problem deleting the selected appointments.', 'error');
+            }           
+            break;
+          case 'message':
+
+            break;
+          default:
+            break;
+        }
+      };
+      
 
     const handleSave = async (id) => {
         const dataToBePushed = { 
@@ -192,50 +237,72 @@ const Appointments = () => {
             date: editData.date, 
             time: convert24HourTo12Hour(editData.time), 
             status: editData.status 
+        };
+    
+        try {
+            await axios.patch(`/bookings/${id}.json`, dataToBePushed)           
+            // Fetch appointments again to refresh data
+            const response = await axios.get('/bookings.json');
+            const data = response.data;
+            const appointmentsArray = Object.keys(data).map(key => ({
+                id: key,
+                ...data[key],
+            }));     
+            setAppointments(appointmentsArray);
+            setEditId(null);
+            console.log("Appointment saved successfully."); // Log success message
+        } catch (error) {
+            console.error("Error saving appointment:", error); // Log the error message
         }
-        await axios.patch(`/bookings/${id}.json`, dataToBePushed);
-        // Fetch appointments again to refresh data
-        const response = await axios.get('/bookings.json');
-        const data = response.data;
-        const appointmentsArray = Object.keys(data).map(key => ({
-            id: key,
-            ...data[key],
-        }));
-        setAppointments(appointmentsArray);
-        setEditId(null);
-    };
-
-    const handleRejectDelete = async (id) => {
-        await axios.delete(`/bookings/${id}.json`);
-        const response = await axios.get('/bookings.json');
-        const data = response.data;
-        const appointmentsArray = Object.keys(data).map(key => ({
-            id: key,
-            ...data[key],
-        }));
-        setAppointments(appointmentsArray);
-    };
-    const handleApproveAll = async () => {
-        const updatePromises = selectedAppointments.map(id =>
-            axios.patch(`/bookings/${id}.json`, { status: 'approved' })
-        );
-        await Promise.all(updatePromises);
-        fetchAppointments(); // Refresh data
-        setSelectedAppointments([]); // Clear selections
-    };
-    const handleAppointmentsPerPageChange = (event) => {
-        setAppointmentsPerPage(Number(event.target.value));
-        setCurrentPage(1); // Reset to first page when changing the items per page
     };
     
-    const handleDeleteAll = async () => {
-        const deletePromises = selectedAppointments.map(id =>
-            axios.delete(`/bookings/${id}.json`)
-        );
-        await Promise.all(deletePromises);
-        fetchAppointments(); // Refresh data
-        setSelectedAppointments([]); // Clear selections
+
+    const handleDeleteAppointment = async (id) => {
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: 'This appointment will be deleted!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+        });
+        if (result.isConfirmed) {
+            try {
+                // Fetch the appointment details first
+                const appointmentResponse = await axios.get(`/bookings/${id}.json`);
+                const appointmentData = appointmentResponse.data;
+    
+                // Archive the appointment by sending it to the 'archive/appointments' path
+                await axios.post('/archive/appointments.json', appointmentData);
+    
+                // Now delete the original appointment
+                await axios.delete(`/bookings/${id}.json`);
+    
+                // Update the appointments list
+                const response = await axios.get('/bookings.json');
+                const data = response.data;
+                const appointmentsArray = Object.keys(data).map(key => ({
+                    id: key,
+                    ...data[key],
+                }));
+                setAppointments(appointmentsArray);
+    
+                Swal.fire('Deleted!', 'The appointment has been deleted.', 'success');
+            } catch (error) {
+                console.error('Error deleting appointment:', error);
+                Swal.fire('Error!', 'There was a problem deleting the appointment.', 'error');
+            }
+        }
     };
+    
+
+    const handleReply = (type, phoneNumber) => {
+        if (type === 'call') {
+            window.open(`tel:${phoneNumber}`);
+        } else if (type === 'whatsapp') {
+            window.open(`https://wa.me/${phoneNumber}`);
+        }
+    };
+
     
     const handleCheckboxChange = (id) => {
         setSelectedAppointments((prevSelected) =>
@@ -245,6 +312,20 @@ const Appointments = () => {
         );
     };
 
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (rowRef.current && !rowRef.current.contains(event.target)) {
+              if (editId !== null) {
+                handleSave(editId); // Call handleSave even if no input changes detected
+              }
+            }
+          };
+          document.addEventListener('mousedown', handleClickOutside);
+          return () => {
+            if(!editId)document.removeEventListener('mousedown', handleClickOutside);   
+         // Cleanup
+          };
+        }, [editId]); // Dependency on editId
 
     return (
         <div className="p-7 w-full">
@@ -257,23 +338,23 @@ const Appointments = () => {
                 <AppointmentModal
                     isModalOpen={isModalOpen}
                     setIsModalOpen={setIsModalOpen}
-                    availableTimes={availableTimes}
                     handleSubmit={handleAddAppointment}
                 />
 
             </div>
             <div className='p-7 rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.04) border border-gray-200]'>
-            <div className='flex justify-between items-center'>
+            <div className='flex justify-between items-center mb-6'>
             <div className='flex gap-4'>
+            <div className='w-[140px]'>
             <CustomDropdown
                 options={statusOptions}
-                selectedStatus={selectedStatus}
+                selectedStatus={{ value: selectedStatus, label: `${selectedStatus}` }}
                 setSelectedStatus={setSelectedStatus}
             />
+            </div>
             {selectedAppointments.length > 0 && (
                 <div>
-                    <button className='bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-2 text-sm' onClick={handleApproveAll}>Approve All</button>
-                    <button className='ml-4 p-2 text-sm hover:bg-gray-100 rounded text-primary-text' onClick={handleDeleteAll}>Delete All</button>
+                    <BulkActionsDropdown handleBulkAction={handleBulkAction} />
                 </div>
             )}
 
@@ -293,10 +374,12 @@ const Appointments = () => {
             </div>
             </div>
             
-
-            <table className="w-full border-separate border-spacing-y-3 table-auto">
+            {loading ? ( // Conditional rendering for loading spinner
+                <Spinner /> // Use Spinner component
+                ) : (
+            <table className="w-full  table-auto">
                 <thead>
-                    <tr className='text-center'>
+                    <tr className='text-center border-b-[16px] border-white'>
                         <th className="px-2 ">
                             <input
                             type="checkbox"
@@ -327,7 +410,7 @@ const Appointments = () => {
                 </thead>
                 <tbody>
                     {currentAppointments.map((appointment, index) => (
-                        <tr key={appointment.id} className={`gap-x-3 h-12 text-center ${editId === appointment.id ? 'bg-black bg-opacity-20' : ''}`}>
+                        <tr ref={editId === appointment.id ? rowRef : null} onDoubleClick={() => handleEditClick(appointment)} key={appointment.id} className={`h-14 text-center ${editId === appointment.id ? 'bg-black bg-opacity-20' : ''} ${index % 2 ===0 ? 'bg-gray-100 bg-opacity-80':''}`}>
                             <td className="p-2">
                                 <input
                                 type="checkbox"
@@ -336,7 +419,7 @@ const Appointments = () => {
                                 onChange={() => handleCheckboxChange(appointment.id)}/>
                             </td>
                             <td className="text-sm p-2">{index + 1}</td>
-                            <td className="font-bold text-sm p-2 h-7">
+                            <td className="font-bold text-sm p-2">
                                 {editId === appointment.id ? (
                                     <input 
                                         type="text" 
@@ -346,7 +429,7 @@ const Appointments = () => {
                                         className="border max-w-40 border-gray-300 rounded p-1"
                                     />
                                 ) : (
-                                    appointment.name
+                                    <Link to='./patient-details'>{appointment.name}</Link>
                                 )}
                             </td>
                             <td className=" text-sm p-2">
@@ -388,16 +471,16 @@ const Appointments = () => {
                                 )}
                             </td>
                             <td className={``}>
-                                {editId === appointment.id && (appointment.status === 'pending' || appointment.status === 'approved') ? (
-                                    <select 
-                                        name="status"
-                                        value={editData.status} 
-                                        onChange={handleInputChange} 
-                                        className="h-7"
-                                    >
-                                        <option value="pending">Pending</option>
-                                        <option value="approved">Approved</option>
-                                    </select>
+                                {editId === appointment.id && (appointment.status === 'pending' || appointment.status === 'approved' || appointment.status === 'cancelled') ? (
+                                    <div className='w-[125px] mx-auto'>
+                                        <CustomDropdown
+                                            options={editableStatusOptions}
+                                            selectedStatus={{ value: editData.status, label: `${editData.status}` }}
+                                            setSelectedStatus={(status) =>
+                                                setEditData((prev) => ({ ...prev, status }))
+                                            }
+                                        />
+                                    </div>
                                 ) : (
                                     <div className={`font-semibold text-opacity-70 text-sm p-1 mx-auto rounded-md bg-opacity-20 ${getStatusClass(appointment.status)} max-w-[85px] text-center justify-center items-center`}>
                                        {capitalizeFirstLetter(appointment.status)}</div>
@@ -405,58 +488,39 @@ const Appointments = () => {
                             </td>
                             <td className=" text-sm p-2">
                                 {editId === appointment.id ? (
-                                    <div className="flex gap-2 ">
-                                        <button 
-                                            onClick={() => handleSave(appointment.id)} 
-                                            className="text-green-600 "
-                                        >
-                                            <FontAwesomeIcon icon={faSquareCheck} />
+                                    <div className="space-x-2 mx-auto flex items-center justify-center h-16">
+                                        <button onClick={() =>handleSave(editId)} className="bg-green-500 hover:bg-green-400 text-secondary-text rounded p-1  transition duration-150 w-16">
+                                            Save
                                         </button>
-                                        <button 
-                                            onClick={() => setEditId(null)} 
-                                            className="text-red-600 "
-                                        >
-                                            <FontAwesomeIcon icon={faSquareXmark} />
+                                        <button onClick={() => setEditData(null)} className="bg-red-500 text-white py-1 rounded-md hover:bg-red-400 transition duration-150 w-16">
+                                            Discard
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="flex gap-2 justify-center">
-                                        <button onClick={() => handleApprove(appointment.id, appointment.status)} className="text-green-600"><FontAwesomeIcon icon={faSquareCheck}/></button>
-                                        <button 
-                                            onClick={() => handleEditClick(appointment)} 
-                                            className="text-yellow-500"
-                                        >
-                                            <FontAwesomeIcon icon={faSquarePen} />
-                                        </button>
-                                        <button 
-                                            onClick={() => handleRejectDelete(appointment.id)} 
-                                            className="text-red-600"
-                                        >
-                                            <FontAwesomeIcon icon={faSquareXmark} />
-                                        </button>
-                                    </div>
+                                    <ActionsDropdown
+                                        appointment={appointment}
+                                        handleChangeStatus={handleChangeStatus}
+                                        handleEditClick={handleEditClick}
+                                        handleRejectDelete={handleDeleteAppointment}
+                                        handleReply={handleReply}
+                                    />
                                 )}
                             </td>
                         </tr>
                     ))}
                 </tbody>
-            </table>
+            </table>)}
             <div className="mt-4 flex justify-between">
-            <div className="mb-4">
-                <label htmlFor="appointments-per-page" className="mr-2">Show:</label>
-                <select
-                    id="appointments-per-page"
-                    value={appointmentsPerPage}
-                    onChange={handleAppointmentsPerPageChange}
-                    className="p-2 rounded border border-gray-300 "
-                >
-                    {[5, 10, 20, 50].map((option) => (
-                        <option key={option} value={option}>
-                            {option} per page
-                        </option>
-                    ))}
-                </select>
-            </div>          
+            <div className="mb-4 flex justify-between items-center">
+                <label htmlFor="appointments-per-page" className="mr-4">Show:</label>
+                <div className='w-[150px]'>
+                <CustomDropdown 
+                    options={[5, 10, 20, 50, 100].map(option => ({ value: option, label: `${option} per page` }))} 
+                    selectedStatus={{ value: appointmentsPerPage, label: `${appointmentsPerPage} per page` }} 
+                    setSelectedStatus={(selected) => setAppointmentsPerPage(selected)} 
+                />
+                </div>
+            </div>    
             <Pagination
                 count={totalPages}
                 page={currentPage}

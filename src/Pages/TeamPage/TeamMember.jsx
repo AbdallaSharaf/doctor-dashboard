@@ -66,11 +66,6 @@ const TeamMember = ({
   // Connect drag source and drop target to the same ref
   drag(drop(ref));
 
-  // Use the isDragging state to change styles
-  const opacity = isDragging ? 0 : 1; // Set opacity of the main item to 0 when dragging
-  const backgroundColor = isDragging ? '#f0f0f0' : 'white'; // Change background color while dragging
-
-
   // Function to open file input dialog
   const handleImageEdit = () => {
     fileInputRef.current.click(); // Trigger the hidden file input click
@@ -106,8 +101,7 @@ const TeamMember = ({
     ref={ref}
     data-handler-id={handlerId}
     onDoubleClick={() => setEditMember(member)}
-    style={{ opacity, backgroundColor }} // Apply styles based on dragging state
-    className={`h-16 ${editMember ? 'bg-black bg-opacity-20' : 'cursor-grab'} ${length !== index+1 ? 'border-b border-gray-200':'border-none'}`}
+    className={`h-16 ${isDragging ? 'opacity-0' : 'opacity-100'} ${editMember ? 'bg-black' : 'cursor-grab'} ${index % 2 !== 0 ? 'bg-gray-100' : 'bg-white'}`}
     >
     {editMember && editMember.id === member.id ? (
         <>

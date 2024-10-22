@@ -57,7 +57,7 @@ const MessageDetailsPage = () => {
     }
 
     return (
-        <div className="p-4 w-full">
+        <div className="p-4 w-full direction-rtl">
             <h2 className="text-xl font-bold mb-4">{message.subject}</h2>
             <p><strong>Sender:</strong> {message.name}</p>
             <p><strong>Phone:</strong> {message.phone}</p>

@@ -10,7 +10,6 @@ import Appointments from './Pages/Appointments.jsx';
 import MessageDetailsPage from './Pages/MessageDetailsPage.jsx'
 import MessagesPage from './Pages/MessagesPage.jsx';
 import TeamPage from './Pages/TeamPage/TeamPage.jsx';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 
 createRoot(document.getElementById('root')).render(
@@ -23,6 +22,7 @@ createRoot(document.getElementById('root')).render(
           <Route path='/schedule' element={<Schedule />} />
           <Route path="/booking/:id" element={<BookingDetails />} />
           <Route path="/appointments" element={<Appointments />} />
+          <Route path="/patient-details/:id" element={<Appointments />} />
           <Route path="/messages" element={<MessagesPage />} />
           <Route path="/team" element={<TeamPage />} />
           <Route path="/messages/:id" element={<MessageDetailsPage />} />

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { capitalizeFirstLetter } from '../helpers/Helpers';
 
 const CustomDropdown = ({ options, selectedStatus, setSelectedStatus }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -11,26 +12,28 @@ const CustomDropdown = ({ options, selectedStatus, setSelectedStatus }) => {
     };
 
     return (
-        <div className="relative inline-block text-left w-[170px]">
+        <div className="relative inline-block text-left w-full">
             {/* Dropdown Button */}
             <div>
                 <button
-                   e type="button"
-                    className=" p-2 w-full text-sm flex justify-between items-center bg-gray-100 rounded"
+                    type="button"
+                    className="inline-flex w-full justify-between rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                     onClick={() => setIsOpen(!isOpen)}
                 >
-                    {selectedStatus ? selectedStatus : "Select Status"}
-                    <FontAwesomeIcon className='ml-5' icon={faChevronDown}/>
+                    {selectedStatus.label ? (typeof selectedStatus.label === "string" ? capitalizeFirstLetter(selectedStatus.label) : selectedStatus.label) : "Select Status"}
+                    <FontAwesomeIcon className='ml-2' icon={faChevronDown}/>
                 </button>
             </div>
 
             {/* Dropdown Menu */}
             {isOpen && (
-                <ul className="absolute z-10 w-full -mt-2 bg-white border border-gray-300 rounded shadow-lg ">
+                <ul className="absolute right-0 z-10 mt-2 w-full origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                     {options.map((option) => (
                         <li
                             key={option.value}
-                            className={`p-2 cursor-pointer ${selectedStatus === option.value ? 'bg-primary-btn text-secondary-text' : 'hover:bg-gray-100'}`}
+                            className={`${
+                                selectedStatus.value === option.value ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                              } group flex rounded-md items-center w-full px-2 py-2 text-sm hover:bg-gray-100 cursor-pointer`}
                             onClick={() => handleSelect(option.value)}
                         >
                             {option.label}
