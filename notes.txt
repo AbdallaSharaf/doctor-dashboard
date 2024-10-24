@@ -1,0 +1,7 @@
+doctor,
+diagnosis,
+job done, 
+medicine,
+case photo, 
+next appointment date,
+additional notes,

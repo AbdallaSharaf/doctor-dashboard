@@ -1,12 +1,13 @@
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React, {useRef} from 'react';
+import { Switch } from '@headlessui/react';
+import React, {useRef, useState, useEffect} from 'react';
 import { useDrag, useDrop } from 'react-dnd';
+import axios from '../../helpers/Axios';
 
 const ItemType = 'TEAM_MEMBER';
 
 const TeamMember = ({
-  length,
   member,
   index,
   moveMember,
@@ -14,10 +15,16 @@ const TeamMember = ({
   handleDeleteMember,
   editMember,
   handleEditMember,
-  handleInputChange
+  handleInputChange,
 }) => {
   const ref = useRef();
   const fileInputRef = useRef(); // Reference for file input
+  const [isVisible, setIsVisible] = useState(member.isVisible);
+  const [saveTimeout, setSaveTimeout] = useState(null);
+  const [hasChanges, setHasChanges] = useState(false); // Track if there are unsaved changes
+
+
+  // State for visibility toggle
 
   // Drag source
   const [{ isDragging }, drag] = useDrag({
@@ -27,7 +34,7 @@ const TeamMember = ({
       isDragging: monitor.isDragging(),
     }),
   });
-  console.log(length)
+  console.log(isVisible)
   // Drop target
   const [{ handlerId }, drop] = useDrop({
     accept: ItemType,
@@ -71,6 +78,25 @@ const TeamMember = ({
     fileInputRef.current.click(); // Trigger the hidden file input click
   };
 
+  const handleToggleVisibility = () => {
+    setIsVisible(prev => !prev);
+    setHasChanges(true); // Mark as having changes
+
+    // Clear any existing timeout and set a new one
+    if (saveTimeout) clearTimeout(saveTimeout);
+    const timeoutId = setTimeout(handleSaveVisibilityChange, 12000);
+    setSaveTimeout(timeoutId);
+  };
+
+  const handleSaveVisibilityChange = async () => {
+    const updatedMember = { ...member, isVisible }; // Use the local state value
+    try {
+      await axios.put(`/teamMembers/${member.id}.json`, updatedMember);
+      setHasChanges(false); // Reset changes flag after saving
+    } catch (error) {
+      console.error('Error updating visibility:', error);
+    }
+  };
   // Function to handle file input change
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -94,6 +120,24 @@ const TeamMember = ({
   };
   
   
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasChanges) {
+        handleSaveVisibilityChange(); // Save on unload if there are changes
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (saveTimeout) clearTimeout(saveTimeout); // Cleanup the timeout
+      if (hasChanges) {
+        handleSaveVisibilityChange(); // Save changes when unmounting
+      }
+    };
+  }, [hasChanges, saveTimeout]);
 
 
   return (
@@ -152,6 +196,18 @@ const TeamMember = ({
             placeholder="Description"
             />
         </td>
+        <td className="text-center">
+            <Switch
+              checked={isVisible}
+              onChange={handleToggleVisibility}
+              className={`${member.isVisible ? 'bg-green-500' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full`}
+            >
+              <span className="sr-only">Toggle visibility</span>
+              <span
+                className={`${member.isVisible ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition`}
+              />
+            </Switch>
+        </td>
         <td className="space-x-2 mx-auto flex items-center justify-center h-16">
             <button onClick={handleEditMember} className="bg-green-500 hover:bg-green-400 text-secondary-text rounded p-1  transition duration-150 w-20">
             Save
@@ -169,6 +225,15 @@ const TeamMember = ({
         <td className="font-bold text-sm text-center">{member.name}</td>
         <td className="text-sm text-center text-gray-500">{member.job}</td>
         <td className="text-sm text-center text-gray-500">{member.description}</td>
+        <td className="text-center">
+            <Switch
+              checked={isVisible}
+              onChange={handleToggleVisibility}
+              className="group inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition data-[checked]:bg-blue-600"
+              >
+                <span className="size-4 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6" />
+            </Switch>
+        </td>
         <td className="space-x-2 flex items-center justify-center h-16">
             <button onClick={() => setEditMember(member)} className="bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-1  transition duration-150 w-20">
             Edit

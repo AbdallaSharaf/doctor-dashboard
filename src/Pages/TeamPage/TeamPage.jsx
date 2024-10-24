@@ -29,6 +29,7 @@ const TeamPage = () => {
 
 
   //--------------------------handlers-------------------------------
+
   // Handle input changes for the new member form
   const handleInputChange = (e, memberSetter) => {
     const { name, value } = e.target;
@@ -213,6 +214,7 @@ const TeamPage = () => {
                   <th className="text-center font-semibold py-2 text-primary-text text-sm">Name</th>
                   <th className="text-center font-semibold py-2 text-primary-text text-sm">Job</th>
                   <th className="text-center font-semibold py-2 text-primary-text text-sm">Description</th>
+                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Show</th>
                   <th className="text-center font-semibold py-2 text-primary-text text-sm">Actions</th>
                 </tr>
               </thead>
@@ -220,7 +222,6 @@ const TeamPage = () => {
               <tbody>
                 {teamMembers.map((member, index, arr) => (
                   <TeamMember 
-                    length={arr.length}
                     key={member.id} 
                     member={member} 
                     index={index} 

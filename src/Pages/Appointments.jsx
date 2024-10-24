@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import AppointmentModal from '../components/AppointmentModal';
 import CustomDropdown from '../components/CustomDropdown';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Pagination from '@mui/material/Pagination';
 import PaginationItem from '@mui/material/PaginationItem'; // Import PaginationItem
 import ActionsDropdown from '../components/ActionsDropdown';
@@ -61,6 +61,7 @@ const Appointments = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [appointmentsPerPage, setAppointmentsPerPage] = useState(5);
     const [loading, setLoading] = useState(true); // Loading state
+    const navigate = useNavigate()
     const rowRef = useRef(); // Ref for the editable row
     
     //  -------------------- helpers ------------------
@@ -70,18 +71,18 @@ const Appointments = () => {
         }
         return <FontAwesomeIcon icon={faChevronDown} className='ml-1'/>;
     };
-    //---------------------end of helpers------------------
+    
     
     const fetchAppointments = async () => {
         try {
             const response = await axios.get('/bookings.json');
             const data = response.data;
-
+            
             const appointmentsArray = Object.keys(data).map(key => ({
                 id: key,
                 ...data[key],
             }));
-
+            
             setAppointments(appointmentsArray);
         } catch (error) {
             console.error("Error fetching appointments:", error);
@@ -89,11 +90,8 @@ const Appointments = () => {
             setLoading(false); // Set loading to false after fetching
         }
     };
-  
-    useEffect(() => {
-        fetchAppointments();
-    }, []);
-
+    
+    
     const sortBy = (key) => {
         let direction = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -102,20 +100,25 @@ const Appointments = () => {
         setSortConfig({ key, direction });
     };
 
+    //---------------------end of helpers------------------
+    
+
+    //----------------------------memos----------------------------
+
     const sortedAppointments = React.useMemo(() => {
         let sortableAppointments = [...appointments];
-    
+        
         if (sortConfig.key) {
             sortableAppointments.sort((a, b) => {
                 let aValue = a[sortConfig.key];
                 let bValue = b[sortConfig.key];
-    
+                
                 // Custom sorting logic for time
                 if (sortConfig.key === 'time') {    
                     aValue = convert12HourTo24Hour(a.time);
                     bValue = convert12HourTo24Hour(b.time);
                 }
-    
+                
                 if (aValue < bValue) {
                     return sortConfig.direction === 'ascending' ? -1 : 1;
                 }
@@ -125,22 +128,10 @@ const Appointments = () => {
                 return 0;
             });
         }
-    
         return sortableAppointments;
     }, [appointments, sortConfig]);
     
-    const handleAddAppointment = async (newAppointment) => {
-        const convertedTime = convert24HourTo12Hour(newAppointment.time);
-
-        await axios.post('/bookings.json', { 
-            ...newAppointment,
-            time: convertedTime, // Use the converted time
-            status: 'pending' // Default status
-        });
-            setIsModalOpen(false); // Close the modal
-            fetchAppointments(); // Refresh the appointments
-    };
-
+    
     const filteredAppointments = React.useMemo(() => {
         return sortedAppointments.filter((appointment) => {
             const nameMatch = appointment.name?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -154,19 +145,38 @@ const Appointments = () => {
     const indexOfLastAppointment = currentPage * appointmentsPerPage;
     const indexOfFirstAppointment = indexOfLastAppointment - appointmentsPerPage;
     const currentAppointments = filteredAppointments.slice(indexOfFirstAppointment, indexOfLastAppointment);
+    
+    //---------------------------------end of memos-----------------------------------------------
 
 
+    //-------------------------handlers----------------------------
+    
+    const handleAddAppointment = async (newAppointment) => {
+        const convertedTime = convert24HourTo12Hour(newAppointment.time);
+        
+        await axios.post('/bookings.json', { 
+            ...newAppointment,
+            time: convertedTime, // Use the converted time
+            status: 'pending' // Default status
+        });
+        setIsModalOpen(false); // Close the modal
+        fetchAppointments(); // Refresh the appointments
+    };
+    
+    
+    
+    
     const handleChangeStatus = async (id, newStatus) => {
         await axios.patch(`/bookings/${id}.json`, { status: newStatus});
         const response = await axios.get('/bookings.json');
         const data = response.data;
         const appointmentsArray = Object.keys(data).map(key => ({
-          id: key,
+            id: key,
           ...data[key],
         }));
         setAppointments(appointmentsArray);
-      };
-
+    };
+    
     const handleEditClick = (appointment) => {
         setEditId(appointment.id);
         setEditData({ 
@@ -177,7 +187,7 @@ const Appointments = () => {
             status: appointment.status 
         });
     };
-
+    
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setEditData((prev) => ({ ...prev, [name]: value }));
@@ -185,7 +195,7 @@ const Appointments = () => {
     
     const handleBulkAction = async (action) => {
         switch (action) {
-          case 'approve':
+            case 'approve':
             try {
                 await Promise.all(selectedAppointments.map(id => handleChangeStatus(id, 'approved'))).then(setSelectedAppointments([]))
                 Swal.fire('Success!', `The selected appointments have been marked as approved.`, 'success');
@@ -194,7 +204,7 @@ const Appointments = () => {
                 Swal.fire('Error!', 'There was a problem updating the status.', 'error');
             }
             break;
-          case 'pending':
+            case 'pending':
             try {
                 await Promise.all(selectedAppointments.map(id => handleChangeStatus(id, 'pending'))).then(setSelectedAppointments([]))
                 Swal.fire('Success!', `The selected appointments have been marked as pending.`, 'success');
@@ -203,7 +213,7 @@ const Appointments = () => {
                 Swal.fire('Error!', 'There was a problem updating the status.', 'error');
             }
             break;
-          case 'cancelled':
+            case 'cancelled':
             try {
                 await Promise.all(selectedAppointments.map(id => handleChangeStatus(id, 'cancelled'))).then(setSelectedAppointments([]))
                 Swal.fire('Success!', `The selected appointments have been marked as cancelled.`, 'success');
@@ -212,7 +222,7 @@ const Appointments = () => {
                 Swal.fire('Error!', 'There was a problem updating the status.', 'error');
             }            
             break;
-          case 'delete':
+            case 'delete':
             try {
                 await Promise.all(selectedAppointments.map(id => handleDeleteAppointment(id))).then(setSelectedAppointments([]))
                 Swal.fire('Success!', `The selected appointments have been deleted.`, 'success');
@@ -221,31 +231,31 @@ const Appointments = () => {
                 Swal.fire('Error!', 'There was a problem deleting the selected appointments.', 'error');
             }           
             break;
-          case 'message':
-
+            case 'message':
+                
             break;
-          default:
+            default:
             break;
         }
-      };
-      
-
-    const handleSave = async (id) => {
-        const dataToBePushed = { 
-            name: editData.name, 
-            phone: editData.phone, 
-            date: editData.date, 
-            time: convert24HourTo12Hour(editData.time), 
-            status: editData.status 
-        };
-    
-        try {
-            await axios.patch(`/bookings/${id}.json`, dataToBePushed)           
-            // Fetch appointments again to refresh data
-            const response = await axios.get('/bookings.json');
-            const data = response.data;
-            const appointmentsArray = Object.keys(data).map(key => ({
-                id: key,
+    };
+                        
+                        
+            const handleSave = async (id) => {
+                const dataToBePushed = { 
+                    name: editData.name, 
+                    phone: editData.phone, 
+                    date: editData.date, 
+                    time: convert24HourTo12Hour(editData.time), 
+                    status: editData.status 
+                };
+                
+                try {
+                    await axios.patch(`/bookings/${id}.json`, dataToBePushed)           
+                    // Fetch appointments again to refresh data
+                    const response = await axios.get('/bookings.json');
+                    const data = response.data;
+                    const appointmentsArray = Object.keys(data).map(key => ({
+                        id: key,
                 ...data[key],
             }));     
             setAppointments(appointmentsArray);
@@ -256,7 +266,7 @@ const Appointments = () => {
         }
     };
     
-
+    
     const handleDeleteAppointment = async (id) => {
         const result = await Swal.fire({
             title: 'Are you sure?',
@@ -270,13 +280,13 @@ const Appointments = () => {
                 // Fetch the appointment details first
                 const appointmentResponse = await axios.get(`/bookings/${id}.json`);
                 const appointmentData = appointmentResponse.data;
-    
+                
                 // Archive the appointment by sending it to the 'archive/appointments' path
                 await axios.post('/archive/appointments.json', appointmentData);
-    
+                
                 // Now delete the original appointment
                 await axios.delete(`/bookings/${id}.json`);
-    
+                
                 // Update the appointments list
                 const response = await axios.get('/bookings.json');
                 const data = response.data;
@@ -285,13 +295,30 @@ const Appointments = () => {
                     ...data[key],
                 }));
                 setAppointments(appointmentsArray);
-    
+                
                 Swal.fire('Deleted!', 'The appointment has been deleted.', 'success');
             } catch (error) {
                 console.error('Error deleting appointment:', error);
                 Swal.fire('Error!', 'There was a problem deleting the appointment.', 'error');
             }
         }
+    };
+    
+    
+    const handleAddPatient = (appointment) => {
+        // Extract necessary data from the appointment
+        const patientData = {
+            name: appointment.name,
+            phone: appointment.phone,
+            age: appointment.age,
+            gender: appointment.gender,
+            problem: appointment.problem,
+            appointmentDate: appointment.date,
+            appointmentTime: appointment.time,
+        };
+    
+        // Navigate to the new patient form page, passing patientData as state
+        navigate('/add-patient', { state: { patientData } });
     };
     
 
@@ -302,33 +329,45 @@ const Appointments = () => {
             window.open(`https://wa.me/${phoneNumber}`);
         }
     };
-
+    
     
     const handleCheckboxChange = (id) => {
         setSelectedAppointments((prevSelected) =>
             prevSelected.includes(id)
-                ? prevSelected.filter(selectedId => selectedId !== id)
-                : [...prevSelected, id]
-        );
-    };
+        ? prevSelected.filter(selectedId => selectedId !== id)
+        : [...prevSelected, id]
+    );
+};
+//--------------------------------------end of handlers--------------------------------------
 
+
+//------------------------------------------effects------------------------------------------
+
+    useEffect(() => {
+        fetchAppointments();
+    }, []);
+
+    
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (rowRef.current && !rowRef.current.contains(event.target)) {
-              if (editId !== null) {
-                handleSave(editId); // Call handleSave even if no input changes detected
-              }
+                if (editId !== null) {
+                    handleSave(editId); // Call handleSave even if no input changes detected
+                }
             }
-          };
-          document.addEventListener('mousedown', handleClickOutside);
-          return () => {
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
             if(!editId)document.removeEventListener('mousedown', handleClickOutside);   
-         // Cleanup
-          };
-        }, [editId]); // Dependency on editId
+            // Cleanup
+        };
+    }, [editId]); // Dependency on editId
 
-    return (
-        <div className="p-7 w-full">
+//--------------------------------------end of effects--------------------------------------
+
+
+return (
+    <div className="p-7 w-full">
             <div className='flex justify-between mb-6'>
             <h2 className="text-lg font-semibold">Appointments</h2>
                 <button onClick={() => setIsModalOpen(true)} className="mb-2 py-2 px-4 bg-primary-btn hover:bg-hover-btn w-[170px] text-white rounded">
@@ -429,7 +468,7 @@ const Appointments = () => {
                                         className="border max-w-40 border-gray-300 rounded p-1"
                                     />
                                 ) : (
-                                    <Link to='./patient-details'>{appointment.name}</Link>
+                                    <Link to={`./patient-details/${appointment.phone}`}>{appointment.name}</Link>
                                 )}
                             </td>
                             <td className=" text-sm p-2">
@@ -503,6 +542,7 @@ const Appointments = () => {
                                         handleEditClick={handleEditClick}
                                         handleRejectDelete={handleDeleteAppointment}
                                         handleReply={handleReply}
+                                        handleAddPatient={handleAddPatient}
                                     />
                                 )}
                             </td>

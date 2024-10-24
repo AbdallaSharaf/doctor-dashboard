@@ -26,6 +26,9 @@ const Sidebar = () => {
         <Link to="/team" className="p-4   text-[#9a9cae] hover:text-white">
           Team
         </Link>
+        <Link to="/Clinic-settings" className="p-4   text-[#9a9cae] hover:text-white">
+          Clinic Settings
+        </Link>
       </nav>
     </div>
   );

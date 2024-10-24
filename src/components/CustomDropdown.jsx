@@ -21,7 +21,7 @@ const CustomDropdown = ({ options, selectedStatus, setSelectedStatus }) => {
                     onClick={() => setIsOpen(!isOpen)}
                 >
                     {selectedStatus.label ? (typeof selectedStatus.label === "string" ? capitalizeFirstLetter(selectedStatus.label) : selectedStatus.label) : "Select Status"}
-                    <FontAwesomeIcon className='ml-2' icon={faChevronDown}/>
+                    <FontAwesomeIcon className={`ml-2 ${isOpen && 'rotate-180'}`} icon={faChevronDown}/>
                 </button>
             </div>
 

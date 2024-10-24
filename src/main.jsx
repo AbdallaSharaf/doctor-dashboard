@@ -10,6 +10,9 @@ import Appointments from './Pages/Appointments.jsx';
 import MessageDetailsPage from './Pages/MessageDetailsPage.jsx'
 import MessagesPage from './Pages/MessagesPage.jsx';
 import TeamPage from './Pages/TeamPage/TeamPage.jsx';
+import PatientDetailsPage from './Pages/PatientDetailsPage.jsx';
+import ClinicSettings from './Pages/ClinicSettings/ClinicSettings.jsx';
+import AddPatient from './Pages/AddPatient.jsx';
 
 
 createRoot(document.getElementById('root')).render(
@@ -22,8 +25,10 @@ createRoot(document.getElementById('root')).render(
           <Route path='/schedule' element={<Schedule />} />
           <Route path="/booking/:id" element={<BookingDetails />} />
           <Route path="/appointments" element={<Appointments />} />
-          <Route path="/patient-details/:id" element={<Appointments />} />
+          <Route path="/appointments/patient-details/:phone" element={<PatientDetailsPage />} />
           <Route path="/messages" element={<MessagesPage />} />
+          <Route path="/clinic-settings" element={<ClinicSettings />} />
+          <Route path="/add-patient" element={<AddPatient />} />
           <Route path="/team" element={<TeamPage />} />
           <Route path="/messages/:id" element={<MessageDetailsPage />} />
         </Route>

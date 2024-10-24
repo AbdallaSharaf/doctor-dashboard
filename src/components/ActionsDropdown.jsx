@@ -1,7 +1,7 @@
 import React from 'react';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'; // Import the Menu component
 
-const ActionsDropdown = ({ appointment, handleChangeStatus, handleEditClick, handleRejectDelete, handleReply}) => {
+const ActionsDropdown = ({ appointment, handleChangeStatus, handleEditClick, handleRejectDelete, handleReply, handleAddPatient}) => {
   return (
     <Menu as="div" className="relative inline-block text-left">
       <div>
@@ -68,6 +68,18 @@ const ActionsDropdown = ({ appointment, handleChangeStatus, handleEditClick, han
                 onClick={() => handleReply('whatsapp',appointment.phone)}
             >
                 WhatsApp Reply
+            </button>
+            )}
+        </MenuItem>
+        <MenuItem>
+            {({ focus }) => (
+            <button
+                className={`${
+                focus ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
+                onClick={() => handleAddPatient(appointment)}
+            >
+                Add Patient
             </button>
             )}
         </MenuItem>
