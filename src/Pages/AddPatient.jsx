@@ -5,6 +5,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; // Importing a
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { useDispatch, useSelector } from 'react-redux';
+import {addPatient} from '../store/slices/patientsSlice'
 import Swal from 'sweetalert2';
 
 const AddPatient = () => {
@@ -26,6 +28,7 @@ const AddPatient = () => {
         nextAppointmentDate: '',
         additionalNotes: ''
     });
+    const dispatch = useDispatch()
 
     const validationSchema = Yup.object().shape({
         name: Yup.string().required('Name is required'),
@@ -38,61 +41,44 @@ const AddPatient = () => {
         nextAppointmentDate: Yup.date().required('Next appointment date is required'),
     });
 
-    const [doctors, setDoctors] = useState([]);
-    const [diagnoses, setDiagnoses] = useState([]);
-    const [jobs, setJobs] = useState([]);
-    const [medicines, setMedicines] = useState([]);
+    const doctors = useSelector(state => state.team.members);
+    const diagnoses = useSelector(state => state.clinicSettings.diagnoses);
+    const jobs = useSelector(state => state.clinicSettings.jobs);
+    const medicines = useSelector(state => state.clinicSettings.medicines);
     const [otherOptionToggle, setOtherOptionToggle] = useState('')
     const [otherOption, setOtherOption] = useState('');
 
     // Fetch options from Firebase on component mount
     useEffect(() => {
-        const fetchOptions = async () => {
-            try {
-                const teamResponse = await axios.get('/teamMembers.json');
-                const diagnosisResponse = await axios.get('/settings/diagnoses.json');
-                const jobsResponse = await axios.get('/settings/jobs.json');
-                const medicinesResponse = await axios.get('/settings/medicines.json');
-
-                setDoctors(Object.keys(teamResponse.data || {}).map(id => ({
-                    id,
-                    name: teamResponse.data[id].name
-                })));
-
-                setDiagnoses(Object.keys(diagnosisResponse.data || {}).map(id => ({
-                    id,
-                    name: diagnosisResponse.data[id].name
-                })));
-
-                setJobs(Object.keys(jobsResponse.data || {}).map(id => ({
-                    id,
-                    name: jobsResponse.data[id].name
-                })));
-
-                setMedicines(Object.keys(medicinesResponse.data || {}).map(id => ({
-                    id,
-                    name: medicinesResponse.data[id].name
-                })));
-            } catch (error) {
-                console.error('Error fetching options:', error);
-            }
-        };
-
-        fetchOptions();
-    }, []);
+    }, [dispatch]);
 
     const formik = useFormik({
         initialValues: formData,
         validationSchema: validationSchema,
         onSubmit: async (values) => {
-            console.log('clicked')
+            console.log('clicked');
             try {
+                // First, check if the phone number already exists
+                const existingPatientResponse = await axios.get(`/patients.json?orderBy="phone"&equalTo="${values.phone}"`);
+    
+                // If the response contains data, the phone number already exists
+                if (existingPatientResponse.data && Object.keys(existingPatientResponse.data).length > 0) {
+                    // Display an error message if the phone number is already registered
+                    Swal.fire({
+                        title: 'Phone Number Already Exists',
+                        text: 'This phone number is already associated with an existing patient.',
+                        icon: 'error',
+                    });
+                    return; // Exit early to prevent further execution
+                }
+    
                 let casePhotoUrl = '';
                 if (formData.casePhoto) {
                     const storageRef = await axios.post('/upload', formData.casePhoto);
                     casePhotoUrl = storageRef.data.url;
                 }
-        
+    
+                // Proceed to add the patient since the phone number doesn't exist
                 const patientResponse = await axios.post('/patients.json', {
                     name: values.name,
                     phone: values.phone,
@@ -101,9 +87,9 @@ const AddPatient = () => {
                     firstAppointmentDate: values.firstAppointmentDate,
                     lastAppointmentDate: values.lastAppointmentDate,
                 });
-        
+    
                 const patientId = patientResponse.data.name;
-        
+    
                 await axios.post(`/patients/${patientId}/records.json`, {
                     doctorTreating: values.doctorTreating,
                     diagnosis: formData.diagnosis,
@@ -113,26 +99,27 @@ const AddPatient = () => {
                     nextAppointmentDate: values.nextAppointmentDate,
                     additionalNotes: values.additionalNotes,
                 });
-        
+    
                 Swal.fire({
                     title: 'Good Job!',
                     text: 'Patient was added successfully',
                     icon: 'success',
-                  });
-              
+                });
+    
                 formik.resetForm();
-                navigate('./patients')
+                navigate(`/patients/patient-details/${values.phone}`);
                 console.log('Patient and record added successfully');
             } catch (error) {
-                console.error('Error submitting contact form:', error);
+                console.error('Error submitting contact form:', error.response ? error.response.data : error);
                 Swal.fire({
-                title: 'Failed...',
-                text: 'Oops, something went wrong',
-                icon: 'error',
+                    title: 'Failed...',
+                    text: 'Oops, something went wrong',
+                    icon: 'error',
                 });
             }
         }
-    })
+    });
+    
     // Handle adding selected item to an array
     const handleAddSelectedItem = (e, field, customValue = '') => {
         const value = e?.target?.value || customValue;

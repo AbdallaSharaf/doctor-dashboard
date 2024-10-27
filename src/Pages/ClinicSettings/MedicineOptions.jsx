@@ -1,32 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from '../../helpers/Axios';
 import AddOptionForm from './AddOptionForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import { useDispatch, useSelector } from 'react-redux';
+import { deleteOption, editOption } from '../../store/slices/clinicSettingsSlice';
 
 const MedicineOptions = () => {
-    const [medicines, setMedicines] = useState([]);
     const [editIndex, setEditIndex] = useState(null);
     const [editedMedicine, setEditedMedicine] = useState('');
     const inputRef = useRef();
-
-    useEffect(() => {
-        const fetchMedicines = async () => {
-            const response = await axios.get('/settings/medicines.json');
-            const medicinesData = response.data
-                ? Object.keys(response.data).map((key) => ({
-                      id: key,
-                      name: response.data[key].name,
-                  }))
-                : [];
-            setMedicines(medicinesData);
-        };
-        fetchMedicines();
-    }, []);
+    const dispatch = useDispatch();
+    const endpoint = '/medicines';
+    const medicines = useSelector((state) => state.clinicSettings.medicines);
+    const loading = useSelector((state) => state.clinicSettings.loading);
 
     const handleDelete = async (id) => {
-        await axios.delete(`/settings/medicines/${id}.json`);
-        setMedicines(medicines.filter((medicine) => medicine.id !== id));
+        dispatch(deleteOption({ endpoint, id }));
     };
 
     const handleEdit = (index) => {
@@ -35,12 +24,7 @@ const MedicineOptions = () => {
     };
 
     const handleSaveEdit = async (id) => {
-        await axios.patch(`/settings/medicines/${id}.json`, { name: editedMedicine });
-        setMedicines(
-            medicines.map((medicine, index) =>
-                index === editIndex ? { ...medicine, name: editedMedicine } : medicine
-            )
-        );
+        dispatch(editOption({ endpoint, id, name: editedMedicine }));
         setEditIndex(null);
     };
 
@@ -48,7 +32,7 @@ const MedicineOptions = () => {
         if (e.key === 'Enter') {
             handleSaveEdit(id);
         } else if (e.key === 'Escape') {
-            setEditIndex(null);
+            setEditIndex(null); // Discard edits
         }
     };
 
@@ -56,7 +40,7 @@ const MedicineOptions = () => {
         if (inputRef.current && !inputRef.current.contains(event.target) && editIndex !== null) {
             handleSaveEdit(medicines[editIndex].id);
             setTimeout(() => {
-                handleSaveEdit(diagnoses[editIndex].id);
+                handleSaveEdit(medicines[editIndex].id);
             }, 100); // 100ms delay before saving and closing
         }
     };
@@ -71,7 +55,7 @@ const MedicineOptions = () => {
     return (
         <div className="bg-white p-6 rounded-md shadow-md">
             <h2 className="text-2xl font-semibold mb-4">Medicine Options</h2>
-            <AddOptionForm setOptions={setMedicines} endpoint="/settings/medicines" type="Medicine" />
+            <AddOptionForm endpoint="/settings/medicines" type="Medicine" />
             <div className="flex flex-wrap mt-4 space-x-4 w-fit">
                 {medicines.map((medicine, index) => (
                     <div

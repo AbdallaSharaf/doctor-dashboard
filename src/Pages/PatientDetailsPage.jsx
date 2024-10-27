@@ -6,7 +6,6 @@ const PatientDetailsPage = () => {
   const { phone } = useParams();  // Get phone number from the URL
   const [patientData, setPatientData] = useState(null);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     // Fetch all patient data and filter by phone number
     const fetchPatientData = async () => {
@@ -46,13 +45,17 @@ const PatientDetailsPage = () => {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold">Patient History: {patientData.name}</h1>
-
-      <div className="bg-white shadow-md rounded-lg p-6 mt-4">
-        <h2 className="text-xl font-semibold mb-2">Patient Details</h2>
-        <p><strong>Name:</strong> {patientData.name}</p>
-        <p><strong>Phone:</strong> {patientData.phone}</p>
+    <div className="container mx-auto p-10">
+        <h1 className="text-2xl font-bold">Patient History: {patientData.name}</h1>
+    <div className='grid grid-cols-3 gap-10'>
+    <div>
+      <div className="bg-white shadow-md rounded-lg py-8 px-9 mt-4 w-full">
+        <img src="https://placehold.co/100" alt="" className='rounded-full w-100 h-100 mx-auto my-4'/>
+        <p className='text-center font-semibold mb-2 text-xl'>{patientData.name}</p>
+        <div className='text-center w-full'>
+            <p className='px-2 py-1 bg-blue-600 bg-opacity-20 text-blue-600 font-medium text-sm w-fit mx-auto rounded-md mb-4'>Placeholder</p>
+        </div>
+        <p className='text-center'>No. of records: <strong>{Object.keys(patientData.records).length}</strong></p>
         <p><strong>Age:</strong> {patientData.age}</p>
         <p><strong>Gender:</strong> {patientData.gender}</p>
         <p><strong>Problem:</strong> {patientData.problem}</p>
@@ -71,6 +74,8 @@ const PatientDetailsPage = () => {
         ) : (
           <p>No appointments found.</p>
         )}
+        </div>
+      </div>
       </div>
     </div>
   );

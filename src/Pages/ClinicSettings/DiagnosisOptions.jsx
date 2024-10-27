@@ -1,32 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from '../../helpers/Axios';
 import AddOptionForm from './AddOptionForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import { useDispatch, useSelector } from 'react-redux';
+import { deleteOption, editOption } from '../../store/slices/clinicSettingsSlice';
 
 const DiagnosisOptions = () => {
-    const [diagnoses, setDiagnoses] = useState([]);
     const [editIndex, setEditIndex] = useState(null);
     const [editedDiagnosis, setEditedDiagnosis] = useState('');
+    const dispatch = useDispatch();
+    const endpoint = '/diagnoses';
+    const diagnoses = useSelector((state) => state.clinicSettings.diagnoses);
+    const loading = useSelector((state) => state.clinicSettings.loading);
     const inputRef = useRef();
 
-    useEffect(() => {
-        const fetchDiagnoses = async () => {
-            const response = await axios.get('/settings/diagnoses.json');
-            const diagnosesData = response.data
-                ? Object.keys(response.data).map((key) => ({
-                      id: key,
-                      name: response.data[key].name,
-                  }))
-                : [];
-            setDiagnoses(diagnosesData);
-        };
-        fetchDiagnoses();
-    }, []);
-
     const handleDelete = async (id) => {
-        await axios.delete(`/settings/diagnoses/${id}.json`);
-        setDiagnoses(diagnoses.filter((diagnosis) => diagnosis.id !== id));
+        dispatch(deleteOption({ endpoint, id }));
     };
 
     const handleEdit = (index) => {
@@ -35,12 +24,7 @@ const DiagnosisOptions = () => {
     };
 
     const handleSaveEdit = async (id) => {
-        await axios.patch(`/settings/diagnoses/${id}.json`, { name: editedDiagnosis });
-        setDiagnoses(
-            diagnoses.map((diagnosis, index) =>
-                index === editIndex ? { ...diagnosis, name: editedDiagnosis } : diagnosis
-            )
-        );
+        dispatch(editOption({ endpoint, id, name: editedDiagnosis }));
         setEditIndex(null);
     };
 
@@ -71,7 +55,7 @@ const DiagnosisOptions = () => {
     return (
         <div className="bg-white p-6 rounded-md shadow-md">
             <h2 className="text-2xl font-semibold mb-4">Diagnosis Options</h2>
-            <AddOptionForm setOptions={setDiagnoses} endpoint="/settings/diagnoses" type="Diagnosis" />
+            <AddOptionForm endpoint="/settings/diagnoses" type="Diagnosis" />
             <div className="flex flex-wrap mt-4 space-x-4 w-fit">
                 {diagnoses.map((diagnosis, index) => (
                     <div

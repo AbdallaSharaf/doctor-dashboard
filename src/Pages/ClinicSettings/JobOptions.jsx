@@ -1,32 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from '../../helpers/Axios';
 import AddOptionForm from './AddOptionForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import { useDispatch, useSelector } from 'react-redux';
+import { deleteOption, editOption } from '../../store/slices/clinicSettingsSlice';
 
 const JobOptions = () => {
-    const [jobs, setJobs] = useState([]);
     const [editIndex, setEditIndex] = useState(null);
     const [editedJob, setEditedJob] = useState('');
     const inputRef = useRef();
+    const dispatch = useDispatch();
+    const endpoint = '/jobs';
+    const jobs = useSelector((state) => state.clinicSettings.jobs);
+    const loading = useSelector((state) => state.clinicSettings.loading);
 
-    useEffect(() => {
-        const fetchJobs = async () => {
-            const response = await axios.get('/settings/jobs.json');
-            const jobsData = response.data
-                ? Object.keys(response.data).map((key) => ({
-                      id: key,
-                      name: response.data[key].name,
-                  }))
-                : [];
-            setJobs(jobsData);
-        };
-        fetchJobs();
-    }, []);
 
     const handleDelete = async (id) => {
-        await axios.delete(`/settings/jobs/${id}.json`);
-        setJobs(jobs.filter((job) => job.id !== id));
+        dispatch(deleteOption({ endpoint, id }));
     };
 
     const handleEdit = (index) => {
@@ -35,12 +25,7 @@ const JobOptions = () => {
     };
 
     const handleSaveEdit = async (id) => {
-        await axios.patch(`/settings/jobs/${id}.json`, { name: editedJob });
-        setJobs(
-            jobs.map((job, index) =>
-                index === editIndex ? { ...job, name: editedJob } : job
-            )
-        );
+        dispatch(editOption({ endpoint, id, name: editedJob }));
         setEditIndex(null);
     };
 
@@ -56,7 +41,7 @@ const JobOptions = () => {
         if (inputRef.current && !inputRef.current.contains(event.target) && editIndex !== null) {
             handleSaveEdit(jobs[editIndex].id);
             setTimeout(() => {
-                handleSaveEdit(diagnoses[editIndex].id);
+                handleSaveEdit(jobs[editIndex].id);
             }, 100); // 100ms delay before saving and closing
         }
     };
@@ -71,7 +56,7 @@ const JobOptions = () => {
     return (
         <div className="bg-white p-6 rounded-md shadow-md">
             <h2 className="text-2xl font-semibold mb-4">Job Options</h2>
-            <AddOptionForm setOptions={setJobs} endpoint="/settings/jobs" type="Job" />
+            <AddOptionForm endpoint="/settings/jobs" type="Job" />
             <div className="flex flex-wrap mt-4 space-x-4 w-fit">
                 {jobs.map((job, index) => (
                     <div

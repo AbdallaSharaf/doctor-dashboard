@@ -1,24 +1,23 @@
 import React, { useState } from 'react';
-import axios from '../../helpers/Axios';
+import { useDispatch } from 'react-redux';
+import { addOption } from '../../store/slices/clinicSettingsSlice';
 
-const AddOptionForm = ({ setOptions, endpoint, type }) => {
+const AddOptionForm = ({ endpoint, type }) => {
     const [newOption, setNewOption] = useState('');
+    const dispatch = useDispatch();
 
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
             handleAddOption();
-            setNewOption('')
+            setNewOption('');
         } else if (e.key === 'Escape') {
             setNewOption(''); // Discard edits
         }
     };
 
-    const handleAddOption = async () => {
-        if (newOption.trim() === '') {
-            return;
-        }
-        const response = await axios.post(`${endpoint}.json`, { name: newOption });
-        setOptions((prev) => [...prev, { id: response.data.name, name: newOption }]); // Assuming response returns the ID
+    const handleAddOption = () => {
+        if (newOption.trim() === '') return;
+        dispatch(addOption({ endpoint, name: newOption }));
         setNewOption('');
     };
 
@@ -29,7 +28,7 @@ const AddOptionForm = ({ setOptions, endpoint, type }) => {
                 placeholder={`New ${type}`}
                 value={newOption} 
                 onChange={(e) => setNewOption(e.target.value)} 
-                onKeyDown={(e) => handleKeyDown(e)} // Handle key down events
+                onKeyDown={handleKeyDown}
             />
             <button onClick={handleAddOption}>Add</button>
         </div>

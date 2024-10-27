@@ -1,7 +1,4 @@
-doctor,
-diagnosis,
-job done, 
-medicine,
-case photo, 
-next appointment date,
-additional notes,
+clinic settings rendering-------------------------- //done
+toggleVisibility team -----------------------------//semiDone
+inline edit on click outside appointments
+read unread messages ------------------------------//done

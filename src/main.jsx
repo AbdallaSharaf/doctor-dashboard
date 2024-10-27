@@ -15,11 +15,16 @@ import ClinicSettings from './Pages/ClinicSettings/ClinicSettings.jsx';
 import AddPatient from './Pages/AddPatient.jsx';
 import Patients from './Pages/Patients.jsx';
 import NotFound from './Pages/404Page.jsx';
+import { Provider } from 'react-redux';
+import Store from './store/Store.jsx';
+import FetchData from './store/fetchData.jsx';
 
 
 createRoot(document.getElementById('root')).render(
   <>
     <HashRouter>
+    <Provider store={Store}>
+      <FetchData/>
       <ScrollToTop />
       <Routes>
         <Route path='/' element={<Layout />}>
@@ -27,7 +32,7 @@ createRoot(document.getElementById('root')).render(
           <Route path='/schedule' element={<Schedule />} />
           <Route path="/booking/:id" element={<BookingDetails />} />
           <Route path="/appointments" element={<Appointments />} />
-          <Route path="/appointments/patient-details/:phone" element={<PatientDetailsPage />} />
+          <Route path="/patients/patient-details/:phone" element={<PatientDetailsPage />} />
           <Route path="/messages" element={<MessagesPage />} />
           <Route path="/clinic-settings" element={<ClinicSettings />} />
           <Route path="/patients" element={<Patients />} />
@@ -38,6 +43,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
+    </Provider>,
     </HashRouter>
   </>,
 );

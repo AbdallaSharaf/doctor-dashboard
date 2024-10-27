@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from '../helpers/Axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone, faTrash, faEnvelopeOpen, faEnvelope, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
@@ -9,6 +8,8 @@ import Pagination from '@mui/material/Pagination';
 import PaginationItem from '@mui/material/PaginationItem'; // Import PaginationItem
 import CustomDropdown from '../components/CustomDropdown';
 import Spinner from '../components/Spinner'; // Import Spinner
+import {  markAsUnread, deleteMessage } from '../store/slices/messagesSlice'; // Import actions from your slice
+import { useDispatch, useSelector } from 'react-redux';
 
 
 const options = [
@@ -19,14 +20,15 @@ const options = [
 
 
 const MessagesPage = () => {
-    const [messages, setMessages] = useState([]);
+    const dispatch = useDispatch();
+    const messages = useSelector(state => state.messages.data);
+    const loading = useSelector(state => state.messages.loading);
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredMessages, setFilteredMessages] = useState([]);
     const [selectedIds, setSelectedIds] = useState(new Set());
     const [currentPage, setCurrentPage] = useState(1);
     const [messagesPerPage, setMessagesPerPage] = useState(5);
     const [selectedStatus, setSelectedStatus] = useState('all'); // Default to 'all'
-    const [loading, setLoading] = useState(true); // Loading state
 
     const navigate = useNavigate();
     
@@ -36,19 +38,6 @@ const MessagesPage = () => {
     const currentMessages = filteredMessages.slice(indexOfFirstMessage, indexOfLastMessage);
     
     //---------- helper function ----------
-    
-    const fetchMessages = async () => {
-        try {
-            const response = await axios.get('/messages.json');
-            const data = response.data || {};
-            const fetchedMessages = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-            setMessages(fetchedMessages);
-        } catch (error) {
-            console.error('Error fetching messages:', error);
-        } finally {
-            setLoading(false); // Set loading to false after fetching
-          }
-    };
 
     const formatTimestamp = (timestamp) => {
         const date = new Date(timestamp);
@@ -63,28 +52,15 @@ const MessagesPage = () => {
 
     //---------- end of helper function ----------
     
-    
     //---------- handlers ----------
 
-    const handleToggleReadStatus = async (message) => {
+    const handleToggleReadStatus = async (message, unread) => {
         if (message) {
-            const newUnreadStatus = !message.unread; // Toggle the unread status
-            await handleMarkAsUnread(message.id, newUnreadStatus).then(  // Update the status on the server
-                setMessages(prevMessages => 
-                    prevMessages.map(msg => msg.id === message.id ? { ...msg, unread: newUnreadStatus } : msg)
-                )
-            )
+            const newUnreadStatus = !message.unread;
+            dispatch(markAsUnread({ id: message.id, unread: newUnreadStatus }));
         }
     };
 
-    const handleMarkAsUnread = async (id, unread) => {
-        try {
-            const response = await axios.patch(`/messages/${id}.json`, { unread });
-            console.log('Response from server:', response.data); // Log the server response
-        } catch (error) {
-            console.error('Error updating message:', error);
-        }
-    };
     // Delete the message
     const handleDeleteMessage = async (id) => {
         const result = await Swal.fire({
@@ -95,16 +71,14 @@ const MessagesPage = () => {
             confirmButtonText: 'Yes, delete it!',
         });
         if (result.isConfirmed) {
-            await axios.delete(`/messages/${id}.json`);
+            dispatch(deleteMessage(id));
         }
     };
+
     
     
     const handleOpenMessage = (message) => {
-        setMessages(prevMessages => 
-            prevMessages.map(msg => msg.id === message.id ? { ...msg, unread: false } : msg)
-        );
-        axios.patch(`/messages/${message.id}.json`, { unread: false }).catch(error => console.error('Error marking message as read:', error));
+        handleToggleReadStatus(message.id, {unread: false})
         navigate(`/messages/${message.id}`);
     };
     
@@ -127,7 +101,6 @@ const MessagesPage = () => {
     const handleBulkAction = async (action) => {
         const promises = Array.from(selectedIds).map(id => action(id));
         await Promise.all(promises);
-        fetchMessages(); // Fetch updated messages after bulk action
     };
 
     const handleToggleSelectedReadStatus = async () => {
@@ -141,7 +114,8 @@ const MessagesPage = () => {
         const newUnreadStatus = !anyUnread;
     
         await handleBulkAction(async (id) => {
-            await handleMarkAsUnread(id, newUnreadStatus); // Update each message with the new status
+            console.log('clicked')
+            dispatch(markAsUnread({ id: id, unread: newUnreadStatus }));
         });
     };
     
@@ -157,18 +131,13 @@ const MessagesPage = () => {
         
         if (result.isConfirmed) {
             await handleBulkAction(async (id) => {
-                await handleDeleteMessage(id); // Ensure this also returns a promise
+                dispatch(deleteMessage(id));
             });
         }
     };
     
     
     //---------- end of handlers ----------
-
-
-    useEffect(() => {
-        fetchMessages()
-    }, []);
 
     useEffect(() => {
         const filtered = messages.filter(message => 
@@ -267,7 +236,7 @@ const MessagesPage = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {currentMessages.map((message, index, arr) => (
+                    {currentMessages.map((message, index) => (
                         <tr
                             key={message.id}
                             className={` cursor-pointer ${message.unread ? 'font-bold' : ''}  h-14 ${index % 2 !== 0 ? 'bg-gray-100 hover:bg-gray-200' : 'bg-white hover:bg-gray-100'}`}
@@ -287,30 +256,29 @@ const MessagesPage = () => {
                             <td className="py-2 px-4 text-sm">{message.subject}</td>
                             <td className="py-2 pl-8 text-sm">
                                 {message.unread ? (
-                                    <FontAwesomeIcon onClick={async (e)=>{ e.stopPropagation(); await handleToggleReadStatus(message).then(fetchMessages());}} icon={faEnvelope} className="text-red-500" />
+                                    <FontAwesomeIcon onClick={async (e)=>{ e.stopPropagation(); await handleToggleReadStatus(message);}} icon={faEnvelope} className="text-red-500" />
                                 ) : (
-                                    <FontAwesomeIcon onClick={async (e)=>{ e.stopPropagation(); await handleToggleReadStatus(message).then(fetchMessages());}} icon={faEnvelopeOpen} className="text-green-500" />
+                                    <FontAwesomeIcon onClick={async (e)=>{ e.stopPropagation(); await handleToggleReadStatus(message);}} icon={faEnvelopeOpen} className="text-green-500" />
                                 )}
                             </td>
                             <td className="py-2 px-4 flex space-x-2 h-14 text-lg">
                                 <button onClick={(e) => { 
                                     e.stopPropagation(); 
                                     handleReply('call', message.phone); 
-                                    fetchMessages(); 
+                                    
                                 }} className="text-blue-500">
                                     <FontAwesomeIcon icon={faPhone} />
                                 </button>
                                 <button onClick={(e) => { 
                                     e.stopPropagation(); 
                                     handleReply('whatsapp', message.phone); 
-                                    fetchMessages(); 
+                                    
                                 }} className="text-green-500">
                                     <FontAwesomeIcon icon={faWhatsapp} />
                                 </button>
                                 <button onClick={async (e) => { 
                                     e.stopPropagation(); 
                                     await handleDeleteMessage(message.id); // Ensure this also returns a promise
-                                    await fetchMessages(); // Wait for messages to be fetched again
                                 }} className="text-red-500">
                                     <FontAwesomeIcon icon={faTrash} />
                                 </button>

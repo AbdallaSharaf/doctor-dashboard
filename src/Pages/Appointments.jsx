@@ -5,12 +5,19 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import AppointmentModal from '../components/AppointmentModal';
 import CustomDropdown from '../components/CustomDropdown';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Pagination from '@mui/material/Pagination';
 import PaginationItem from '@mui/material/PaginationItem'; // Import PaginationItem
-import ActionsDropdown from '../components/ActionsDropdown';
+import ActionsDropdown from '../components/AppointmentsActionsDropdown';
 import Swal from 'sweetalert2';
 import BulkActionsDropdown from '../components/BulkActionsDropdown';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+    
+    addAppointment,
+    updateAppointment,
+    deleteAppointment,
+} from '../store/slices/appointmentsSlice';
 import Spinner from '../components/Spinner';
 
 
@@ -50,17 +57,18 @@ const editableStatusOptions = [
 
 
 const Appointments = () => {
-    const [appointments, setAppointments] = useState([]);
+    const appointments = useSelector(state => state.appointments.list);
+    const loading = useSelector(state => state.appointments.loading);
+    const dispatch = useDispatch();
     const [sortConfig, setSortConfig] = useState({ key: '', direction: 'ascending' });
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('All');
     const [editId, setEditId] = useState(null);
     const [selectedAppointments, setSelectedAppointments] = useState([]); 
-    const [editData, setEditData] = useState({ name: '', phone: '', date: '', time: '', status: '' });
+    const [editData, setEditData] = useState({});
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [appointmentsPerPage, setAppointmentsPerPage] = useState(5);
-    const [loading, setLoading] = useState(true); // Loading state
     const navigate = useNavigate()
     const rowRef = useRef(); // Ref for the editable row
     
@@ -70,25 +78,6 @@ const Appointments = () => {
             return sortConfig.direction === 'ascending' ? <FontAwesomeIcon icon={faChevronUp} className='ml-1'/> : <FontAwesomeIcon icon={faChevronDown} className='ml-1'/>; 
         }
         return <FontAwesomeIcon icon={faChevronDown} className='ml-1'/>;
-    };
-    
-    
-    const fetchAppointments = async () => {
-        try {
-            const response = await axios.get('/bookings.json');
-            const data = response.data;
-            
-            const appointmentsArray = Object.keys(data).map(key => ({
-                id: key,
-                ...data[key],
-            }));
-            
-            setAppointments(appointmentsArray);
-        } catch (error) {
-            console.error("Error fetching appointments:", error);
-        } finally {
-            setLoading(false); // Set loading to false after fetching
-        }
     };
     
     
@@ -154,37 +143,26 @@ const Appointments = () => {
     const handleAddAppointment = async (newAppointment) => {
         const convertedTime = convert24HourTo12Hour(newAppointment.time);
         
-        await axios.post('/bookings.json', { 
+        dispatch(addAppointment({
             ...newAppointment,
-            time: convertedTime, // Use the converted time
-            status: 'pending' // Default status
-        });
+            time: convertedTime,
+            status: 'pending'
+        }));
         setIsModalOpen(false); // Close the modal
-        fetchAppointments(); // Refresh the appointments
     };
     
     
     
     
     const handleChangeStatus = async (id, newStatus) => {
-        await axios.patch(`/bookings/${id}.json`, { status: newStatus});
-        const response = await axios.get('/bookings.json');
-        const data = response.data;
-        const appointmentsArray = Object.keys(data).map(key => ({
-            id: key,
-          ...data[key],
-        }));
-        setAppointments(appointmentsArray);
+        dispatch(updateAppointment({ id: id, updatedData: { status: newStatus } }));
     };
     
     const handleEditClick = (appointment) => {
         setEditId(appointment.id);
         setEditData({ 
-            name: appointment.name, 
-            phone: appointment.phone, 
-            date: appointment.date, 
+            ...appointment,
             time: convert12HourTo24Hour(appointment.time), 
-            status: appointment.status 
         });
     };
     
@@ -240,25 +218,14 @@ const Appointments = () => {
     };
                         
                         
-            const handleSave = async (id) => {
-                const dataToBePushed = { 
-                    name: editData.name, 
-                    phone: editData.phone, 
-                    date: editData.date, 
-                    time: convert24HourTo12Hour(editData.time), 
-                    status: editData.status 
-                };
-                
-                try {
-                    await axios.patch(`/bookings/${id}.json`, dataToBePushed)           
-                    // Fetch appointments again to refresh data
-                    const response = await axios.get('/bookings.json');
-                    const data = response.data;
-                    const appointmentsArray = Object.keys(data).map(key => ({
-                        id: key,
-                ...data[key],
-            }));     
-            setAppointments(appointmentsArray);
+    const handleSave = async (id) => {
+        const dataToBePushed = { 
+            ...editData,
+            time: convert24HourTo12Hour(editData.time), 
+        };
+        
+        try {
+            dispatch(updateAppointment({ id, updatedData: dataToBePushed }));
             setEditId(null);
             console.log("Appointment saved successfully."); // Log success message
         } catch (error) {
@@ -277,25 +244,7 @@ const Appointments = () => {
         });
         if (result.isConfirmed) {
             try {
-                // Fetch the appointment details first
-                const appointmentResponse = await axios.get(`/bookings/${id}.json`);
-                const appointmentData = appointmentResponse.data;
-                
-                // Archive the appointment by sending it to the 'archive/appointments' path
-                await axios.post('/archive/appointments.json', appointmentData);
-                
-                // Now delete the original appointment
-                await axios.delete(`/bookings/${id}.json`);
-                
-                // Update the appointments list
-                const response = await axios.get('/bookings.json');
-                const data = response.data;
-                const appointmentsArray = Object.keys(data).map(key => ({
-                    id: key,
-                    ...data[key],
-                }));
-                setAppointments(appointmentsArray);
-                
+                dispatch(deleteAppointment(id));
                 Swal.fire('Deleted!', 'The appointment has been deleted.', 'success');
             } catch (error) {
                 console.error('Error deleting appointment:', error);
@@ -326,6 +275,7 @@ const Appointments = () => {
         if (type === 'call') {
             window.open(`tel:${phoneNumber}`);
         } else if (type === 'whatsapp') {
+            console.log('clicked')
             window.open(`https://wa.me/${phoneNumber}`);
         }
     };
@@ -336,17 +286,12 @@ const Appointments = () => {
             prevSelected.includes(id)
         ? prevSelected.filter(selectedId => selectedId !== id)
         : [...prevSelected, id]
-    );
-};
+        );
+    };
 //--------------------------------------end of handlers--------------------------------------
 
 
 //------------------------------------------effects------------------------------------------
-
-    useEffect(() => {
-        fetchAppointments();
-    }, []);
-
     
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -468,7 +413,7 @@ return (
                                         className="border max-w-40 border-gray-300 rounded p-1"
                                     />
                                 ) : (
-                                    <Link to={`./patient-details/${appointment.phone}`}>{appointment.name}</Link>
+                                    appointment.name
                                 )}
                             </td>
                             <td className=" text-sm p-2">

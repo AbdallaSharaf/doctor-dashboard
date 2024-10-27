@@ -1,9 +1,10 @@
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Switch } from '@headlessui/react';
-import React, {useRef, useState, useEffect} from 'react';
+import React, {useRef, useState, useEffect, useCallback} from 'react';
 import { useDrag, useDrop } from 'react-dnd';
-import axios from '../../helpers/Axios';
+import { useDispatch } from 'react-redux';
+import { saveVisibilityChange } from '../../store/slices/teamSlice'; // Import the action
 
 const ItemType = 'TEAM_MEMBER';
 
@@ -21,8 +22,7 @@ const TeamMember = ({
   const fileInputRef = useRef(); // Reference for file input
   const [isVisible, setIsVisible] = useState(member.isVisible);
   const [saveTimeout, setSaveTimeout] = useState(null);
-  const [hasChanges, setHasChanges] = useState(false); // Track if there are unsaved changes
-
+  const dispatch = useDispatch()
 
   // State for visibility toggle
 
@@ -34,7 +34,6 @@ const TeamMember = ({
       isDragging: monitor.isDragging(),
     }),
   });
-  console.log(isVisible)
   // Drop target
   const [{ handlerId }, drop] = useDrop({
     accept: ItemType,
@@ -79,24 +78,14 @@ const TeamMember = ({
   };
 
   const handleToggleVisibility = () => {
-    setIsVisible(prev => !prev);
-    setHasChanges(true); // Mark as having changes
-
-    // Clear any existing timeout and set a new one
+    setIsVisible((prev) => !prev);
     if (saveTimeout) clearTimeout(saveTimeout);
-    const timeoutId = setTimeout(handleSaveVisibilityChange, 12000);
+
+    // Set new timeout for saving visibility
+    const timeoutId = setTimeout(dispatch(saveVisibilityChange({ id: member.id, isVisible })), 12000);
     setSaveTimeout(timeoutId);
   };
 
-  const handleSaveVisibilityChange = async () => {
-    const updatedMember = { ...member, isVisible }; // Use the local state value
-    try {
-      await axios.put(`/teamMembers/${member.id}.json`, updatedMember);
-      setHasChanges(false); // Reset changes flag after saving
-    } catch (error) {
-      console.error('Error updating visibility:', error);
-    }
-  };
   // Function to handle file input change
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -122,22 +111,17 @@ const TeamMember = ({
   
   useEffect(() => {
     const handleBeforeUnload = (e) => {
-      if (hasChanges) {
-        handleSaveVisibilityChange(); // Save on unload if there are changes
-        e.preventDefault();
-      }
+        dispatch(saveVisibilityChange({ id: member.id, isVisible }));
+      console.log('changed')
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      if (saveTimeout) clearTimeout(saveTimeout); // Cleanup the timeout
-      if (hasChanges) {
-        handleSaveVisibilityChange(); // Save changes when unmounting
-      }
+      if (saveTimeout) clearTimeout(saveTimeout);
+      dispatch(saveVisibilityChange({ id: member.id, isVisible }));
     };
-  }, [hasChanges, saveTimeout]);
+  }, [dispatch, saveTimeout]);
 
 
   return (
