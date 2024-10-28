@@ -7,7 +7,6 @@ import axios from '../../helpers/Axios';
 // Fetch all appointments
 export const fetchAppointments = createAsyncThunk('appointments/fetchAppointments', async () => {
     const response = await axios.get('/bookings.json');
-    console.log(response.data)
     return Object.keys(response.data).map(key => ({ id: key, ...response.data[key] }));
 });
 

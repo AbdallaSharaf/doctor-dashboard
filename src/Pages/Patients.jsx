@@ -1,63 +1,41 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import axios from '../helpers/Axios';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Pagination from '@mui/material/Pagination';
 import CustomDropdown from '../components/CustomDropdown';
 import Spinner from '../components/Spinner';
-import { format } from 'date-fns';
 import { PaginationItem } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import PatientActionsDropdown from '../components/PatientActionsDropdown';
+import { useDispatch, useSelector } from 'react-redux';
+import { formatDateTime } from '../helpers/Helpers';
+import { archivePatient } from '../store/slices/patientsSlice'; // Import Redux actions
 import Swal from 'sweetalert2';
 
 
 
 const Patients = () => {
-    const [patients, setPatients] = useState([]);
+    const patients = useSelector(state => state.patients.list); // Get patients from Redux state
+    const loading = useSelector(state => state.patients.loading); // Loading state from Redux
+    const teamMembers = useSelector(state => state.team.members);
     const [selectedPatients, setSelectedPatients] = useState([])
-    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [patientsPerPage, setPatientsPerPage] = useState(5);
-    const [doctorImages, setDoctorImages] = useState({});
-    const [doctorNames, setDoctorNames] = useState([]);
     const [selectedStatus, setSelectedStatus] = useState('All');
-
-    const filterOptions = [
-        { value: 'All', label: 'All' },
-        ...doctorNames,
-    ];
-
-    const fetchPatients = async () => {
-        try {
-            const response = await axios.get('/patients.json');
-            const data = response.data;
-            
-            const patientsArray = Object.keys(data).map(key => ({
-                id: key,
-                ...data[key],
-            }));
-            
-            setPatients(patientsArray);
-        } catch (error) {
-            console.error("Error fetching patients:", error);
-        } finally {
-            setLoading(false); // Set loading to false after fetching
-        }
-    };
-
+    const dispatch = useDispatch()
+    console.log(patients)
     const handleCheckboxChange = (id) => {
         setSelectedPatients((prevSelected) =>
             prevSelected.includes(id)
         ? prevSelected.filter(selectedId => selectedId !== id)
         : [...prevSelected, id]
-        );
-    };
+    );
+};
 
-    const handleBulkAction = async (action) => {
-        switch (action) {
-            case 'delete':
+const handleBulkAction = async (action) => {
+    switch (action) {
+        case 'delete':
             try {
                 await Promise.all(selectedPatients.map(id => handleDelete(id))).then(setSelectedPatients([]))
                 Swal.fire('Success!', `The selected patients have been deleted.`, 'success');
@@ -68,26 +46,22 @@ const Patients = () => {
             break;
             case 'message':
                 
-            break;
-            default:
-            break;
-        }
+                break;
+                default:
+                    break;
+                }
     };
-
-    useEffect(() => {
-        fetchPatients();
-    }, []);
-
-
-     // Define action handler functions
-     const handleReply = (type, phoneNumber) => {
+    
+    
+    // Define action handler functions
+    const handleReply = (type, phoneNumber) => {
         if (type === 'call') {
             window.open(`tel:${phoneNumber}`);
         } else if (type === 'message') {
             window.open(`https://wa.me/${phoneNumber}`);
         }
     };
-
+    
     const handleDelete = async (id) => {
         const result = await Swal.fire({
             title: 'Are you sure?',
@@ -98,25 +72,7 @@ const Patients = () => {
         });
         if (result.isConfirmed) {
             try {
-                // Fetch the patient details first
-                const patientResponse = await axios.get(`/patients/${id}.json`);
-                const patientData = patientResponse.data;
-                
-                // Archive the patient by sending it to the 'archive/patients' path
-                await axios.post('/archive/patients.json', patientData);
-                
-                // Now delete the original patient
-                await axios.delete(`/patients/${id}.json`);
-                
-                // Update the patients list
-                const response = await axios.get('/patients.json');
-                const data = response.data;
-                const patientsArray = Object.keys(data).map(key => ({
-                    id: key,
-                    ...data[key],
-                }));
-                setPatients(patientsArray);
-                
+                dispatch(archivePatient(id))     
                 Swal.fire('Deleted!', 'The patient has been deleted.', 'success');
             } catch (error) {
                 console.error('Error deleting patient:', error);
@@ -124,56 +80,27 @@ const Patients = () => {
             }
         }
     };
+    
+    const doctorImages = useMemo(() => {
+        return teamMembers.reduce((acc, member) => {
+            acc[member.name] = member.image;
+            return acc;
+        }, {});
+    }, [teamMembers]);
 
-    const getDoctorsTreatingImages = (records) => {
-        if (!records) return [];
-        const doctorIds = [...new Set(Object.values(records).map(record => record.doctorTreating))];
-        return fetchDoctorImages(doctorIds);
-    };
+    const doctorNames = useMemo(() => {
+        return teamMembers.map(member => ({
+            value: member.name,
+            label: member.name,
+        }));
+    }, [teamMembers]);
+    
+    const filterOptions = [
+        { value: 'All', label: 'All' },
+        ...doctorNames,
+    ];
 
-    const fetchDoctorImages = async (doctorIds) => {
-        try {
-            const teamResponse = await axios.get('/teamMembers.json');
-            const teamMembersArray = Object.values(teamResponse.data);
-
-            // Get images for each doctor based on their IDs
-            const images = doctorIds.map(name => {
-                const member = teamMembersArray.find(member => member.name === name); // Find member by name
-                return member ? member.image : ''; // Get the image, default to empty if not found
-            });
-
-            const names = [];
-            teamMembersArray.forEach(member => {
-                names.push({value: member.name, label:member.name});
-            });
-            setDoctorNames(names);
-
-            return images.filter(image => image); // Filter out any empty values
-        } catch (error) {
-            console.error("Error fetching doctor images:", error);
-            return [];
-        }
-    };
-
-    useEffect(() => {
-        const fetchAllDoctorImages = async () => {
-            const allImages = {};
-            for (const patient of patients) {
-                const images = await getDoctorsTreatingImages(patient.records);
-                allImages[patient.id] = images;
-            }
-            setDoctorImages(allImages);
-        };
-
-        if (patients.length > 0) {
-            fetchAllDoctorImages();
-        }
-    }, [patients]);
-    console.log(selectedPatients)
-    const formatDateTime = (dateTimeString) => {
-        return format(new Date(dateTimeString), 'MMMM d, yyyy'); // Format to "October 23, 2024 5:19 PM"
-    };
-
+    
     const filteredPatients = useMemo(() => {
         return patients.filter((patient) => {
             const nameMatch = patient.name?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -277,8 +204,13 @@ const Patients = () => {
                                     <td className="text-sm p-2">{formatDateTime(patient.lastAppointmentDate)}</td>
                                     <td className="text-sm p-2">
                                         <div className="flex justify-center gap-2">
-                                            {doctorImages[patient.id]?.map((image, i) => (
-                                                <img key={i} src={image} alt={`Doctor ${i}`} className="w-8 h-8 rounded-full" />
+                                        {patient.records && Object.values(patient.records).map((record, i) => (
+                                                <img 
+                                                    key={i} 
+                                                    src={doctorImages[record.doctorTreating]} 
+                                                    alt={`Doctor treating ${patient.name}`} 
+                                                    className="w-8 h-8 rounded-full" 
+                                                />
                                             ))}
                                         </div>
                                     </td>

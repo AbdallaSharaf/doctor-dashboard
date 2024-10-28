@@ -10,11 +10,40 @@ export const fetchPatients = createAsyncThunk('patients/fetchPatients', async ()
     return Object.keys(response.data).map(key => ({ id: key, ...response.data[key] }));
 });
 
-// Add a new patient
-export const addPatient = createAsyncThunk('patients/addPatient', async (newPatient) => {
-    const response = await axios.post('/patients.json', newPatient);
-    return { id: response.data.name, ...newPatient }; // Firebase assigns ID in the `name` property
-});
+// Add a new patient with a primary record
+export const addPatient = createAsyncThunk(
+    'patients/addPatient',
+    async ({ patientData, recordData }, { rejectWithValue }) => {
+        try {
+            // Step 1: Add main patient data
+            const patientResponse = await axios.post('/patients.json', patientData);
+            const patientId = patientResponse.data.name;
+
+            // Step 2: Add record for this patient
+            await axios.post(`/patients/${patientId}/records.json`, recordData);
+
+            return { id: patientId, ...patientData, records: [recordData] };
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
+// Add a new record to an existing patient's records
+export const addPatientRecord = createAsyncThunk(
+    'patients/addPatientRecord',
+    async ({ patientId, recordData }, { rejectWithValue }) => {
+        try {
+            // Add the new record to the specified patient's records
+            const response = await axios.post(`/patients/${patientId}/records.json`, recordData);
+            const recordId = response.data.name;
+
+            return { patientId, record: { id: recordId, ...recordData } };
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
 
 // Update an existing patient
 export const updatePatient = createAsyncThunk('patients/updatePatient', async ({ id, updatedData }) => {
@@ -23,10 +52,26 @@ export const updatePatient = createAsyncThunk('patients/updatePatient', async ({
 });
 
 // Archive and delete a patient
-export const deletePatient = createAsyncThunk('patients/deletePatient', async (id) => {
-    await axios.delete(`/patients/${id}.json`);  
-    return id;
-});
+export const archivePatient = createAsyncThunk(
+    'patients/archivePatient',
+    async (id, { getState, rejectWithValue }) => {
+        try {
+            // Step 1: Get the patient data from the current state
+            const patient = getState().patients.list.find(patient => patient.id === id);
+            if (!patient) throw new Error("Patient not found");
+
+            // Step 2: Move patient to the archive
+            await axios.post('/archive/patients.json', patient);
+
+            // Step 3: Delete patient from the original list
+            await axios.delete(`/patients/${id}.json`);
+
+            return id;
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
 
 // Patients Slice
 const patientsSlice = createSlice({
@@ -64,6 +109,21 @@ const patientsSlice = createSlice({
                 state.loading = false;
                 state.error = action.error.message;
             })
+            .addCase(addPatientRecord.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(addPatientRecord.fulfilled, (state, action) => {
+                const { patientId, record } = action.payload;
+                const patient = state.list.find((p) => p.id === patientId);
+                if (patient) {
+                    if (!patient.records) patient.records = []; // Initialize records if it doesn't exist
+                    patient.records.push(record);
+                }
+            })
+            .addCase(addPatientRecord.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message;
+            })
             // Update Patient
             .addCase(updatePatient.pending, (state) => {
                 state.loading = true;
@@ -80,14 +140,14 @@ const patientsSlice = createSlice({
                 state.error = action.error.message;
             })
             // Archive and Delete Patient
-            .addCase(deletePatient.pending, (state) => {
+            .addCase(archivePatient.pending, (state) => {
                 state.loading = true;
             })
-            .addCase(deletePatient.fulfilled, (state, action) => {
+            .addCase(archivePatient.fulfilled, (state, action) => {
                 state.loading = false;
                 state.list = state.list.filter((patient) => patient.id !== action.payload);
             })
-            .addCase(deletePatient.rejected, (state, action) => {
+            .addCase(archivePatient.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message;
             });

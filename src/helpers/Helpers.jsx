@@ -1,4 +1,5 @@
 import axios from './Axios'
+import { format } from 'date-fns';
 
 export const clearPastDatesFromFirebase = async () => {
     try {
@@ -38,6 +39,10 @@ export const pushAvailableDatesWithTimes = async (datesWithTimes) => {
     } catch (error) {
         console.error('Error pushing available times to Firebase:', error);
     }
+};
+
+export const formatDateTime = (dateTimeString) => {
+    return format(new Date(dateTimeString), 'MMMM d, yyyy'); // Format to "October 23, 2024 5:19 PM"
 };
 
 export const capitalizeFirstLetter = (word) => {

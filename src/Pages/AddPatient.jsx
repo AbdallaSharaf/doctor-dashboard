@@ -45,31 +45,29 @@ const AddPatient = () => {
     const diagnoses = useSelector(state => state.clinicSettings.diagnoses);
     const jobs = useSelector(state => state.clinicSettings.jobs);
     const medicines = useSelector(state => state.clinicSettings.medicines);
+    const patients = useSelector((state) => state.patients.list);
     const [otherOptionToggle, setOtherOptionToggle] = useState('')
     const [otherOption, setOtherOption] = useState('');
 
-    // Fetch options from Firebase on component mount
-    useEffect(() => {
-    }, [dispatch]);
-
+    console.log(patients)
     const formik = useFormik({
         initialValues: formData,
         validationSchema: validationSchema,
-        onSubmit: async (values) => {
+        onSubmit: async (values, { setSubmitting, resetForm }) => {
             console.log('clicked');
+            setSubmitting(true);
             try {
-                // First, check if the phone number already exists
-                const existingPatientResponse = await axios.get(`/patients.json?orderBy="phone"&equalTo="${values.phone}"`);
-    
-                // If the response contains data, the phone number already exists
-                if (existingPatientResponse.data && Object.keys(existingPatientResponse.data).length > 0) {
-                    // Display an error message if the phone number is already registered
+                 // Check if the phone number already exists in the patients list
+                const existingPatient = patients.find(patient => patient.phone === values.phone);
+                
+                if (existingPatient) {
                     Swal.fire({
                         title: 'Phone Number Already Exists',
                         text: 'This phone number is already associated with an existing patient.',
                         icon: 'error',
                     });
-                    return; // Exit early to prevent further execution
+                    setSubmitting(false);
+                    return;
                 }
     
                 let casePhotoUrl = '';
@@ -78,37 +76,39 @@ const AddPatient = () => {
                     casePhotoUrl = storageRef.data.url;
                 }
     
-                // Proceed to add the patient since the phone number doesn't exist
-                const patientResponse = await axios.post('/patients.json', {
-                    name: values.name,
-                    phone: values.phone,
-                    age: values.age,
-                    gender: values.gender,
-                    firstAppointmentDate: values.firstAppointmentDate,
-                    lastAppointmentDate: values.lastAppointmentDate,
-                });
+                // Dispatch addPatient action with both patient data and record data
+                const resultAction = dispatch(addPatient({
+                    patientData: {
+                        name: values.name,
+                        phone: values.phone,
+                        age: values.age,
+                        gender: values.gender,
+                        firstAppointmentDate: values.firstAppointmentDate,
+                        lastAppointmentDate: values.lastAppointmentDate,
+                    },
+                    recordData: {
+                        doctorTreating: values.doctorTreating,
+                        diagnosis: formData.diagnosis,
+                        jobDone: formData.jobDone,
+                        medicine: formData.medicine,
+                        casePhoto: casePhotoUrl,
+                        nextAppointmentDate: values.nextAppointmentDate,
+                        additionalNotes: values.additionalNotes,
+                    }
+                }));
     
-                const patientId = patientResponse.data.name;
-    
-                await axios.post(`/patients/${patientId}/records.json`, {
-                    doctorTreating: values.doctorTreating,
-                    diagnosis: formData.diagnosis,
-                    jobDone: formData.jobDone,
-                    medicine: formData.medicine,
-                    casePhoto: casePhotoUrl,
-                    nextAppointmentDate: values.nextAppointmentDate,
-                    additionalNotes: values.additionalNotes,
-                });
-    
+                // Handle success or failure of addPatient action
+                
                 Swal.fire({
                     title: 'Good Job!',
                     text: 'Patient was added successfully',
                     icon: 'success',
                 });
-    
-                formik.resetForm();
+
+                resetForm();
                 navigate(`/patients/patient-details/${values.phone}`);
                 console.log('Patient and record added successfully');
+
             } catch (error) {
                 console.error('Error submitting contact form:', error.response ? error.response.data : error);
                 Swal.fire({
@@ -116,9 +116,12 @@ const AddPatient = () => {
                     text: 'Oops, something went wrong',
                     icon: 'error',
                 });
+            } finally {
+                setSubmitting(false);
             }
-        }
+        },
     });
+    
     
     // Handle adding selected item to an array
     const handleAddSelectedItem = (e, field, customValue = '') => {

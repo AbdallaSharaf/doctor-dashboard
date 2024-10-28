@@ -4,6 +4,7 @@ import { fetchMessages } from './slices/messagesSlice'
 import { fetchAppointments } from './slices/appointmentsSlice'
 import { fetchTeamMembers } from './slices/teamSlice'
 import { fetchOptions } from './slices/clinicSettingsSlice'
+import { fetchPatients } from './slices/patientsSlice'
 
 const FetchData = () => {
     const dispatch = useDispatch()
@@ -11,6 +12,7 @@ const FetchData = () => {
         dispatch(fetchAppointments());
         dispatch(fetchMessages());
         dispatch(fetchTeamMembers());
+        dispatch(fetchPatients());
         dispatch(fetchOptions('/medicines'));
         dispatch(fetchOptions('/diagnoses'));
         dispatch(fetchOptions('/jobs'));

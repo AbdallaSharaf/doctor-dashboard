@@ -7,7 +7,6 @@ export const fetchOptions = createAsyncThunk(
   async (endpoint, { rejectWithValue }) => {
     try {
       const response = await axios.get(`./settings/${endpoint}.json`);
-      console.log(response.data)
       return {
         endpoint,
         data: response.data
