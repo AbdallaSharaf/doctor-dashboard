@@ -3,7 +3,7 @@ import axios from '../helpers/Axios';
 import { capitalizeFirstLetter, convert24HourTo12Hour, convert12HourTo24Hour } from '../helpers/Helpers';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
-import AppointmentModal from '../components/AppointmentModal';
+import AppointmentModal from '../components/modals/AppointmentModal';
 import CustomDropdown from '../components/CustomDropdown';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '@mui/material/Pagination';
@@ -143,7 +143,7 @@ const Appointments = () => {
     const handleAddAppointment = async (newAppointment) => {
         const convertedTime = convert24HourTo12Hour(newAppointment.time);
         
-        dispatch(addAppointment({
+        await dispatch(addAppointment({
             ...newAppointment,
             time: convertedTime,
             status: 'pending'
@@ -155,7 +155,7 @@ const Appointments = () => {
     
     
     const handleChangeStatus = async (id, newStatus) => {
-        dispatch(updateAppointment({ id: id, updatedData: { status: newStatus } }));
+        await dispatch(updateAppointment({ id: id, updatedData: { status: newStatus } }));
     };
     
     const handleEditClick = (appointment) => {
@@ -225,7 +225,7 @@ const Appointments = () => {
         };
         
         try {
-            dispatch(updateAppointment({ id, updatedData: dataToBePushed }));
+            await dispatch(updateAppointment({ id, updatedData: dataToBePushed }));
             setEditId(null);
             console.log("Appointment saved successfully."); // Log success message
         } catch (error) {
@@ -244,7 +244,7 @@ const Appointments = () => {
         });
         if (result.isConfirmed) {
             try {
-                dispatch(deleteAppointment(id));
+                await dispatch(deleteAppointment(id));
                 Swal.fire('Deleted!', 'The appointment has been deleted.', 'success');
             } catch (error) {
                 console.error('Error deleting appointment:', error);
@@ -326,7 +326,7 @@ return (
                 />
 
             </div>
-            <div className='p-7 rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.04) border border-gray-200]'>
+            <div className='p-7 rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.04)] border border-gray-200]'>
             <div className='flex justify-between items-center mb-6'>
             <div className='flex gap-4'>
             <div className='w-[140px]'>

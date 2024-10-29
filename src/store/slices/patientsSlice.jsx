@@ -34,6 +34,7 @@ export const addPatientRecord = createAsyncThunk(
     'patients/addPatientRecord',
     async ({ patientId, recordData }, { rejectWithValue }) => {
         try {
+            console.log(patientId)
             // Add the new record to the specified patient's records
             const response = await axios.post(`/patients/${patientId}/records.json`, recordData);
             const recordId = response.data.name;
@@ -46,8 +47,13 @@ export const addPatientRecord = createAsyncThunk(
 );
 
 // Update an existing patient
-export const updatePatient = createAsyncThunk('patients/updatePatient', async ({ id, updatedData }) => {
-    await axios.patch(`/patients/${id}.json`, updatedData);
+export const updatePatient = createAsyncThunk('patients/updatePatient', async ({ id, updatedData }, { rejectWithValue }) => {
+    try {
+        console.log(updatedData)
+        await axios.patch(`/patients/${id}.json`, updatedData);
+    } catch (error) {
+        return rejectWithValue(error.message);
+    }
     return { id, ...updatedData };
 });
 
@@ -115,11 +121,15 @@ const patientsSlice = createSlice({
             .addCase(addPatientRecord.fulfilled, (state, action) => {
                 const { patientId, record } = action.payload;
                 const patient = state.list.find((p) => p.id === patientId);
+                console.log("Patient before adding record:", patient); // Log the patient object
+            
                 if (patient) {
-                    if (!patient.records) patient.records = []; // Initialize records if it doesn't exist
+                    if (!Array.isArray(patient.records)) {
+                        patient.records = []; // Initialize if it's not an array
+                    }
                     patient.records.push(record);
                 }
-            })
+            })            
             .addCase(addPatientRecord.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message;

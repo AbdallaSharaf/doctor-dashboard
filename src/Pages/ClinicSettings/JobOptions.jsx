@@ -16,7 +16,7 @@ const JobOptions = () => {
 
 
     const handleDelete = async (id) => {
-        dispatch(deleteOption({ endpoint, id }));
+        await dispatch(deleteOption({ endpoint, id }));
     };
 
     const handleEdit = (index) => {
@@ -25,7 +25,7 @@ const JobOptions = () => {
     };
 
     const handleSaveEdit = async (id) => {
-        dispatch(editOption({ endpoint, id, name: editedJob }));
+        await dispatch(editOption({ endpoint, id, name: editedJob }));
         setEditIndex(null);
     };
 

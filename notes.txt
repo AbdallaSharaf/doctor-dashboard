@@ -1,4 +1,5 @@
 clinic settings rendering-------------------------- //done
+read unread messages ------------------------------//done
 toggleVisibility team -----------------------------//semiDone
 inline edit on click outside appointments
-read unread messages ------------------------------//done
+navigating from addPatient Page

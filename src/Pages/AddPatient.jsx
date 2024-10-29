@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from '../helpers/Axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; // Importing an icon for removing selected items
@@ -7,28 +7,27 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useDispatch, useSelector } from 'react-redux';
 import {addPatient} from '../store/slices/patientsSlice'
+import {selectDiagnoses, selectDoctorNames, selectJobs, selectMedicines} from '../store/Selectors'
+
 import Swal from 'sweetalert2';
 
 const AddPatient = () => {
     const location = useLocation();
     const { patientData } = location.state || {};
     const navigate = useNavigate()
-    const [formData, setFormData] = useState({
-        name: patientData?.name || '',
-        phone: patientData?.phone || '',
-        age: patientData?.age || '',
-        gender: patientData?.gender || '',
-        firstAppointmentDate: '',
-        lastAppointmentDate: '',
-        doctorTreating: '',
-        diagnosis: [],
-        jobDone: [],
-        medicine: [],
-        casePhoto: undefined,  // File upload
-        nextAppointmentDate: '',
-        additionalNotes: ''
-    });
     const dispatch = useDispatch()
+    const doctors = useSelector(selectDoctorNames);
+    const diagnoses = useSelector(selectDiagnoses);
+    const jobs = useSelector(selectJobs);
+    const medicines = useSelector(selectMedicines);
+    const patients = useSelector((state) => state.patients.list);
+    const [otherOptionToggle, setOtherOptionToggle] = useState('')
+    const [otherOption, setOtherOption] = useState('');
+    
+    const [selectedDiagnoses, setSelectedDiagnoses] = useState([]);
+    const [selectedJobs, setSelectedJobs] = useState([]);
+    const [selectedMedicines, setSelectedMedicines] = useState([]);
+    const [casePhotos, setCasePhotos] = useState([]);
 
     const validationSchema = Yup.object().shape({
         name: Yup.string().required('Name is required'),
@@ -41,21 +40,24 @@ const AddPatient = () => {
         nextAppointmentDate: Yup.date().required('Next appointment date is required'),
     });
 
-    const doctors = useSelector(state => state.team.members);
-    const diagnoses = useSelector(state => state.clinicSettings.diagnoses);
-    const jobs = useSelector(state => state.clinicSettings.jobs);
-    const medicines = useSelector(state => state.clinicSettings.medicines);
-    const patients = useSelector((state) => state.patients.list);
-    const [otherOptionToggle, setOtherOptionToggle] = useState('')
-    const [otherOption, setOtherOption] = useState('');
-
-    console.log(patients)
     const formik = useFormik({
-        initialValues: formData,
+        initialValues: {
+            name: patientData?.name || '',
+            phone: patientData?.phone || '',
+            age: patientData?.age || '',
+            gender: patientData?.gender || '',
+            firstAppointmentDate: '',
+            lastAppointmentDate: '',
+            doctorTreating: '',
+            diagnosis: [],
+            jobDone: [],
+            medicine: [],
+            casePhoto: undefined,  // File upload
+            nextAppointmentDate: '',
+            additionalNotes: ''
+        },
         validationSchema: validationSchema,
-        onSubmit: async (values, { setSubmitting, resetForm }) => {
-            console.log('clicked');
-            setSubmitting(true);
+        onSubmit: async (values, { resetForm }) => {
             try {
                  // Check if the phone number already exists in the patients list
                 const existingPatient = patients.find(patient => patient.phone === values.phone);
@@ -66,18 +68,17 @@ const AddPatient = () => {
                         text: 'This phone number is already associated with an existing patient.',
                         icon: 'error',
                     });
-                    setSubmitting(false);
                     return;
                 }
     
                 let casePhotoUrl = '';
-                if (formData.casePhoto) {
-                    const storageRef = await axios.post('/upload', formData.casePhoto);
+                if (values.casePhoto) {
+                    const storageRef = await axios.post('/upload', values.casePhoto);
                     casePhotoUrl = storageRef.data.url;
                 }
     
                 // Dispatch addPatient action with both patient data and record data
-                const resultAction = dispatch(addPatient({
+                const actionResult = await dispatch(addPatient({
                     patientData: {
                         name: values.name,
                         phone: values.phone,
@@ -87,28 +88,42 @@ const AddPatient = () => {
                         lastAppointmentDate: values.lastAppointmentDate,
                     },
                     recordData: {
-                        doctorTreating: values.doctorTreating,
-                        diagnosis: formData.diagnosis,
-                        jobDone: formData.jobDone,
-                        medicine: formData.medicine,
-                        casePhoto: casePhotoUrl,
-                        nextAppointmentDate: values.nextAppointmentDate,
-                        additionalNotes: values.additionalNotes,
-                    }
+                            doctorTreating: values.doctorTreating,
+                            diagnosis: selectedDiagnoses,
+                            jobDone: selectedJobs,
+                            medicine: selectedMedicines,
+                            casePhoto: casePhotoUrl,
+                            nextAppointmentDate: values.nextAppointmentDate,
+                            additionalNotes: values.additionalNotes,
+                        }
                 }));
     
                 // Handle success or failure of addPatient action
-                
-                Swal.fire({
-                    title: 'Good Job!',
-                    text: 'Patient was added successfully',
-                    icon: 'success',
-                });
-
-                resetForm();
-                navigate(`/patients/patient-details/${values.phone}`);
-                console.log('Patient and record added successfully');
-
+                if (addPatient.fulfilled.match(actionResult)) {
+                    const newPatientId = actionResult.payload.id; // Now you can access the ID correctly
+        
+                    Swal.fire({
+                        title: 'Good Job!',
+                        text: 'Patient was added successfully',
+                        icon: 'success',
+                    });
+        
+                    resetForm();
+                    setSelectedDiagnoses([]);
+                    setSelectedJobs([]);
+                    setCasePhotos([]); // Clear photos after submission
+                    setSelectedMedicines([]);
+                    navigate(`/patients/patient-details/${newPatientId}`);
+                    console.log('Patient and record added successfully');
+                } else {
+                    // Handle the case where the action was rejected
+                    Swal.fire({
+                        title: 'Failed...',
+                        text: 'Oops, something went wrong: ' + actionResult.payload,
+                        icon: 'error',
+                    });
+                }
+        
             } catch (error) {
                 console.error('Error submitting contact form:', error.response ? error.response.data : error);
                 Swal.fire({
@@ -116,17 +131,14 @@ const AddPatient = () => {
                     text: 'Oops, something went wrong',
                     icon: 'error',
                 });
-            } finally {
-                setSubmitting(false);
             }
         },
     });
     
     
     // Handle adding selected item to an array
-    const handleAddSelectedItem = (e, field, customValue = '') => {
-        const value = e?.target?.value || customValue;
-    
+    const handleAddSelectedItem = (targetValue, field ,setter, selectedItems, customValue = '') => {
+        const value = targetValue || customValue;
         // Check if user selected "Other"
         if (value === 'other') {
             setOtherOptionToggle(field);  // Toggle custom input visibility
@@ -134,29 +146,37 @@ const AddPatient = () => {
         }
     
         // If there's a custom value or a standard value selected
-        if (value && !formData[field].includes(value)) {
-            setFormData((prevData) => ({
-                ...prevData,
-                [field]: [...prevData[field], value]
-            }));
+        if (value && !selectedItems.includes(value)) {
+            setter([...selectedItems, value]);
         }
     };
     
-    const handleCustomSubmit = (field) => {
-        if (otherOption && !formData[field].includes(otherOption)) {
-            handleAddSelectedItem(null, field, otherOption);
+    const handleCustomSubmit = (field, setter, selectedItems) => {
+        if (otherOption && !selectedItems.includes(otherOption)) {
+            handleAddSelectedItem(null, field, setter, selectedItems, otherOption);
             setOtherOption('');  // Clear custom input after submission
             setOtherOptionToggle('');  // Hide custom input field
         }
     };
 
+    const handlePhotoChange = (event) => {
+        const files = Array.from(event.target.files);
+        if (files.length + casePhotos.length <= 10) {
+          setCasePhotos([...casePhotos, ...files]);
+        } else {
+          Swal.fire({
+            title: 'Limit Exceeded',
+            text: 'You can upload up to 10 photos only.',
+            icon: 'warning',
+          });
+        }
+      };
+
     // Handle removing an item from the array
-    const handleRemoveItem = (field, itemToRemove) => {
-        setFormData((prevData) => ({
-            ...prevData,
-            [field]: prevData[field].filter((item) => item !== itemToRemove)
-        }));
-    };    
+    const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
+        setter(selectedItems.filter((item) => item !== itemToRemove));
+    };
+    
 
     return (
         <div className="bg-white p-6 rounded-md shadow-md">
@@ -249,9 +269,9 @@ const AddPatient = () => {
                         className="border p-2 rounded-md w-full"
                     >
                         <option value="">Select Doctor</option>
-                        {doctors.map((doctor) => (
-                            <option key={doctor.id} value={doctor.name}>
-                                {doctor.name}
+                        {doctors.map((doctor, index) => (
+                            <option key={index} value={doctor}>
+                                {doctor}
                             </option>
                         ))}
                     </select>
@@ -272,12 +292,12 @@ const AddPatient = () => {
                             placeholder="Enter custom diagnosis"
                             value={otherOption}
                             onChange={(e) => setOtherOption(e.target.value)}
-                            onBlur={(e) => handleCustomSubmit('diagnosis')}
+                            onBlur={(e) => handleCustomSubmit('diagnosis', setSelectedDiagnoses, selectedDiagnoses)}
                             className="border p-2 rounded-md w-full mt-2"
                         />
                         <button
                             type="button"
-                            onClick={() => handleCustomSubmit('diagnosis')}
+                            onClick={() => handleCustomSubmit('diagnosis', setSelectedDiagnoses, selectedDiagnoses)}
                             className="bg-blue-500 text-white p-2 rounded-md mt-2"
                         >
                             Save
@@ -292,27 +312,26 @@ const AddPatient = () => {
                     </div>
                     ):<select
                     name="diagnosis"
-                    {...formik.getFieldProps('diagnosis')}
-                    onChange={(e) => handleAddSelectedItem(e, 'diagnosis')}
+                    onChange={(e) => handleAddSelectedItem(e.target.value,'diagnosis',setSelectedDiagnoses, selectedDiagnoses)}
                     className="border p-2 rounded-md w-full"
                 >
                     <option value="">Select Diagnosis</option>
-                    {diagnoses.map((diagnosis) => (
-                        <option key={diagnosis.id} value={diagnosis.name}>
-                            {diagnosis.name}
+                    {diagnoses.map((diagnosis, index) => (
+                        <option key={index} value={diagnosis}>
+                            {diagnosis}
                         </option>
                     ))}
                     <option value="other">Other</option>
                 </select>}
                     {/* Display selected diagnoses */}
                     <div className="mt-2 space-x-2 flex flex-wrap">
-                        {formData.diagnosis.map((diag, index) => (
+                        {selectedDiagnoses.map((diag, index) => (
                             <span key={index} className="flex items-center bg-green-100 text-green-700 px-2 py-1 rounded">
                                 {diag}
                                 <FontAwesomeIcon
                                     icon={faXmark}
                                     className="h-4 w-4 ml-2 cursor-pointer text-red-500"
-                                    onClick={() => handleRemoveItem('diagnosis', diag)}
+                                    onClick={() => handleRemoveItem(setSelectedDiagnoses, selectedDiagnoses, diag)}
                                 />
                             </span>
                         ))}
@@ -330,12 +349,12 @@ const AddPatient = () => {
                             placeholder="Enter custom job"
                             value={otherOption}
                             onChange={(e) => setOtherOption(e.target.value)}
-                            onBlur={(e) => handleCustomSubmit('jobDone')}
+                            onBlur={(e) => handleCustomSubmit('jobDone', setSelectedJobs, selectedJobs)}
                             className="border p-2 rounded-md w-full mt-2"
                         />
                         <button
                             type="button"
-                            onClick={() => handleCustomSubmit('jobDone')}
+                            onClick={() => handleCustomSubmit('jobDone', setSelectedJobs, selectedJobs)}
                             className="bg-blue-500 text-white p-2 rounded-md mt-2"
                         >
                             Save
@@ -350,27 +369,26 @@ const AddPatient = () => {
                     </div>
                     ):<select
                     name="jobDone"
-                    {...formik.getFieldProps('jobDone')}
-                    onChange={(e) => handleAddSelectedItem(e, 'jobDone')}
+                    onChange={(e) => handleAddSelectedItem(e.target.value,'jobDone',setSelectedJobs, selectedJobs)}
                     className="border p-2 rounded-md w-full"
                 >
                     <option value="">Select Job</option>
-                    {jobs.map((job) => (
-                        <option key={job.id} value={job.name}>
-                            {job.name}
+                    {jobs.map((job, index) => (
+                        <option key={index} value={job}>
+                            {job}
                         </option>
                     ))}
                     <option value="other">Other</option>
                 </select>}
                     {/* Display selected jobs */}
                     <div className="mt-2 space-x-2 flex flex-wrap">
-                        {formData.jobDone.map((job, index) => (
+                        {selectedJobs.map((job, index) => (
                             <span key={index} className="flex items-center bg-blue-100 text-blue-700 px-2 py-1 rounded">
                                 {job}
                                 <FontAwesomeIcon
                                     icon={faXmark}
                                     className="h-4 w-4 ml-2 cursor-pointer text-red-500"
-                                    onClick={() => handleRemoveItem('jobDone', job)}
+                                    onClick={() => handleRemoveItem(setSelectedJobs, selectJobs, job)}
                                 />
                             </span>
                         ))}
@@ -388,12 +406,12 @@ const AddPatient = () => {
                             placeholder="Enter custom medicine"
                             value={otherOption}
                             onChange={(e) => setOtherOption(e.target.value)}
-                            onBlur={(e) => handleCustomSubmit('medicine')}
+                            onBlur={(e) => handleCustomSubmit('medicine', setSelectedMedicines, selectedMedicines)}
                             className="border p-2 rounded-md w-full mt-2"
                         />
                         <button
                             type="button"
-                            onClick={() => handleCustomSubmit('medicine')}
+                            onClick={() => handleCustomSubmit('medicine', setSelectedMedicines, selectedMedicines)}
                             className="bg-blue-500 text-white p-2 rounded-md mt-2"
                         >
                             Save
@@ -407,28 +425,27 @@ const AddPatient = () => {
                         </button>
                     </div>
                     ):<select
-                    name="diagnosis"
-                    {...formik.getFieldProps('medicine')}
-                    onChange={(e) => handleAddSelectedItem(e, 'medicine')}
+                    name="medicine"
+                    onChange={(e) => handleAddSelectedItem(e.target.value,'medicine',setSelectedMedicines, selectedMedicines)}
                     className="border p-2 rounded-md w-full"
                 >
                     <option value="">Select Medicine</option>
-                    {medicines.map((medicine) => (
-                        <option key={medicine.id} value={medicine.name}>
-                            {medicine.name}
+                    {medicines.map((medicine, index) => (
+                        <option key={index} value={medicine}>
+                            {medicine}
                         </option>
                     ))}
                     <option value="other">Other</option>
                 </select>}
                     {/* Display selected medicines */}
                     <div className="mt-2 space-x-2 flex flex-wrap">
-                        {formData.medicine.map((med, index) => (
+                        {selectedMedicines.map((med, index) => (
                             <span key={index} className="flex items-center bg-blue-100 text-blue-700 px-2 py-1 rounded">
                                 {med}
                                 <FontAwesomeIcon
                                     icon={faXmark}
                                     className="h-4 w-4 ml-2 cursor-pointer text-red-500"
-                                    onClick={() => handleRemoveItem('medicine', med)}
+                                    onClick={() => handleRemoveItem(setSelectedMedicines,selectedMedicines, med)}
                                 />
                             </span>
                         ))}
@@ -461,16 +478,31 @@ const AddPatient = () => {
             </div>
 
             <div>
-                <label htmlFor="casePhoto" className="block font-medium">Case Photo</label>
+            <label className="block mb-1">Case Photos (up to 10)</label>
                 <input
+                    name=''
                     type="file"
-                    {...formik.getFieldProps('casePhoto')}
-                    value={formik.values.casePhoto || ''}  // Provide an empty string instead of null
-                    className={`border p-2 rounded-md w-full ${formik.touched.casePhoto && formik.errors.casePhoto ? 'border-red-500' : ''}`}
+                    multiple
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    className="border p-2 rounded-md w-full"
                 />
-                {formik.touched.casePhoto && formik.errors.casePhoto ? (
-                    <p className='text-red-800'>{formik.errors.casePhoto}</p>
-                ) : null}
+                <div className="mt-2 flex flex-wrap">
+                    {casePhotos.map((photo, index) => (
+                    <div key={index} className="relative mr-2 mb-2">
+                        <img
+                        src={URL.createObjectURL(photo)}
+                        alt={`Preview ${index}`}
+                        className="h-20 w-20 object-cover rounded-md"
+                        />
+                        <FontAwesomeIcon
+                        icon={faXmark}
+                        className="absolute top-0 right-0 h-4 w-4 cursor-pointer text-red-500"
+                        onClick={() => handleRemoveItem(setCasePhotos, casePhotos, photo)}
+                        />
+                    </div>
+                    ))}
+            </div>
             </div>
 
             <button type="submit" className="bg-blue-500 text-white p-2 rounded-md">

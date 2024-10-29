@@ -10,7 +10,7 @@ import Appointments from './Pages/Appointments.jsx';
 import MessageDetailsPage from './Pages/MessageDetailsPage.jsx'
 import MessagesPage from './Pages/MessagesPage.jsx';
 import TeamPage from './Pages/TeamPage/TeamPage.jsx';
-import PatientDetailsPage from './Pages/PatientDetailsPage.jsx';
+import PatientDetailsPage from './Pages/PatientDetailsPage/PatientDetailsPage.jsx';
 import ClinicSettings from './Pages/ClinicSettings/ClinicSettings.jsx';
 import AddPatient from './Pages/AddPatient.jsx';
 import Patients from './Pages/Patients.jsx';
@@ -32,7 +32,7 @@ createRoot(document.getElementById('root')).render(
           <Route path='/schedule' element={<Schedule />} />
           <Route path="/booking/:id" element={<BookingDetails />} />
           <Route path="/appointments" element={<Appointments />} />
-          <Route path="/patients/patient-details/:phone" element={<PatientDetailsPage />} />
+          <Route path="/patients/patient-details/:id" element={<PatientDetailsPage />} />
           <Route path="/messages" element={<MessagesPage />} />
           <Route path="/clinic-settings" element={<ClinicSettings />} />
           <Route path="/patients" element={<Patients />} />

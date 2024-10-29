@@ -3,7 +3,7 @@ import axios from '../../helpers/Axios';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import TeamMember from './TeamMember';
-import TeamModal from '../../components/TeamModal';
+import TeamModal from '../../components/modals/TeamModal';
 import Swal from 'sweetalert2';
 import { useDispatch, useSelector } from 'react-redux';
 import { addTeamMember, editTeamMember, deleteTeamMember, reorderTeamMembers, saveMemberOrder } from '../../store/slices/teamSlice';
@@ -29,7 +29,7 @@ const TeamPage = () => {
   };
   
   // Add a new team member
-  const handleAddMember = (newMember) => {
+  const handleAddMember = async (newMember) => {
     if (!newMember.name || !newMember.job || !newMember.description || !newMember.image) {
       Swal.fire({
           icon: 'error',
@@ -39,7 +39,7 @@ const TeamPage = () => {
       });
       return; 
   }
-  dispatch(addTeamMember(newMember));
+  await dispatch(addTeamMember(newMember));
   Swal.fire({
     icon: 'success',
     title: 'Success',
@@ -52,7 +52,7 @@ const TeamPage = () => {
 
   // Edit a team member
   const handleEditMember = async () => {
-    dispatch(editTeamMember(editMember))
+    await dispatch(editTeamMember(editMember))
     setEditMember(null);
   };
   
@@ -72,7 +72,7 @@ const TeamPage = () => {
       });
   
     if (result.isConfirmed) {
-      dispatch(deleteTeamMember(id));
+      await dispatch(deleteTeamMember(id));
       Swal.fire('Deleted!', `${memberToDelete.name} has been deleted.`, 'success');
     }
   };
@@ -80,14 +80,14 @@ const TeamPage = () => {
   
   // Move member in the list (reordering)
   const handleMoveMember = useCallback(async (dragIndex, hoverIndex) => {
-    dispatch(reorderTeamMembers({ dragIndex, hoverIndex }));
+    await dispatch(reorderTeamMembers({ dragIndex, hoverIndex }));
       if (timeoutId) {
       clearTimeout(timeoutId);
     }
   
     // Set a new timeout to save changes after 2 minutes
-    const id = setTimeout(() => {
-      dispatch(saveMemberOrder(members)); // Dispatch the thunk to save order
+    const id = setTimeout(async () => {
+      await dispatch(saveMemberOrder(members)); // Dispatch the thunk to save order
     }, 120000); // 2 minutes
   
     setTimeoutId(id);
@@ -98,18 +98,18 @@ const TeamPage = () => {
   //------------------------------effects-------------------------------------
   
   useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      dispatch(saveMemberOrder(members)); // Dispatch the thunk to save order
+    const handleBeforeUnload = async (e) => {
+      await dispatch(saveMemberOrder(members)); // Dispatch the thunk to save order
       e.returnValue = '';
     };
   
     window.addEventListener('beforeunload', handleBeforeUnload);
   
     // Cleanup function
-    return () => {
+    return async () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       clearTimeout(timeoutId); // Clear timeout on unmount
-      dispatch(saveMemberOrder(members)); // Dispatch the thunk to save order
+      await dispatch(saveMemberOrder(members)); // Dispatch the thunk to save order
     };
   }, [timeoutId, members, dispatch]);
   //--------------------------end 0f effects---------------------------------

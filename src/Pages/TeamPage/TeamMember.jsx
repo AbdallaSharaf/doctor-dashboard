@@ -82,7 +82,7 @@ const TeamMember = ({
     if (saveTimeout) clearTimeout(saveTimeout);
 
     // Set new timeout for saving visibility
-    const timeoutId = setTimeout(dispatch(saveVisibilityChange({ id: member.id, isVisible })), 12000);
+    const timeoutId = setTimeout(async () => dispatch(saveVisibilityChange({ id: member.id, isVisible })), 12000);
     setSaveTimeout(timeoutId);
   };
 
@@ -110,16 +110,16 @@ const TeamMember = ({
   
   
   useEffect(() => {
-    const handleBeforeUnload = (e) => {
-        dispatch(saveVisibilityChange({ id: member.id, isVisible }));
+    const handleBeforeUnload = async (e) => {
+        await dispatch(saveVisibilityChange({ id: member.id, isVisible }));
       console.log('changed')
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
+    return  async () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       if (saveTimeout) clearTimeout(saveTimeout);
-      dispatch(saveVisibilityChange({ id: member.id, isVisible }));
+      await dispatch(saveVisibilityChange({ id: member.id, isVisible }));
     };
   }, [dispatch, saveTimeout]);
 

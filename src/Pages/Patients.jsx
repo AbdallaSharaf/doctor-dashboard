@@ -72,7 +72,7 @@ const handleBulkAction = async (action) => {
         });
         if (result.isConfirmed) {
             try {
-                dispatch(archivePatient(id))     
+                await dispatch(archivePatient(id))     
                 Swal.fire('Deleted!', 'The patient has been deleted.', 'success');
             } catch (error) {
                 console.error('Error deleting patient:', error);
@@ -196,7 +196,7 @@ const handleBulkAction = async (action) => {
                                     </td>
                                     <td className="text-sm p-2">{(currentPage - 1) * patientsPerPage + index + 1}</td>
                                     <td className="font-bold text-sm p-2">
-                                        <Link to={`/patients/patient-details/${patient.phone}`}>
+                                        <Link to={`/patients/patient-details/${patient.id}`}>
                                             {patient.name}
                                         </Link>
                                     </td>

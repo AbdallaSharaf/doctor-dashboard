@@ -15,7 +15,7 @@ const MedicineOptions = () => {
     const loading = useSelector((state) => state.clinicSettings.loading);
 
     const handleDelete = async (id) => {
-        dispatch(deleteOption({ endpoint, id }));
+        await dispatch(deleteOption({ endpoint, id }));
     };
 
     const handleEdit = (index) => {
@@ -24,7 +24,7 @@ const MedicineOptions = () => {
     };
 
     const handleSaveEdit = async (id) => {
-        dispatch(editOption({ endpoint, id, name: editedMedicine }));
+        await dispatch(editOption({ endpoint, id, name: editedMedicine }));
         setEditIndex(null);
     };
 

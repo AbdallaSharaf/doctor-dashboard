@@ -57,7 +57,7 @@ const MessagesPage = () => {
     const handleToggleReadStatus = async (message, unread) => {
         if (message) {
             const newUnreadStatus = !message.unread;
-            dispatch(markAsUnread({ id: message.id, unread: newUnreadStatus }));
+            await dispatch(markAsUnread({ id: message.id, unread: newUnreadStatus }));
         }
     };
 
@@ -71,7 +71,7 @@ const MessagesPage = () => {
             confirmButtonText: 'Yes, delete it!',
         });
         if (result.isConfirmed) {
-            dispatch(deleteMessage(id));
+            await dispatch(deleteMessage(id));
         }
     };
 
@@ -115,7 +115,7 @@ const MessagesPage = () => {
     
         await handleBulkAction(async (id) => {
             console.log('clicked')
-            dispatch(markAsUnread({ id: id, unread: newUnreadStatus }));
+            await dispatch(markAsUnread({ id: id, unread: newUnreadStatus }));
         });
     };
     
@@ -131,7 +131,7 @@ const MessagesPage = () => {
         
         if (result.isConfirmed) {
             await handleBulkAction(async (id) => {
-                dispatch(deleteMessage(id));
+                await dispatch(deleteMessage(id));
             });
         }
     };

@@ -15,9 +15,9 @@ const AddOptionForm = ({ endpoint, type }) => {
         }
     };
 
-    const handleAddOption = () => {
+    const handleAddOption = async () => {
         if (newOption.trim() === '') return;
-        dispatch(addOption({ endpoint, name: newOption }));
+        await dispatch(addOption({ endpoint, name: newOption }));
         setNewOption('');
     };
 

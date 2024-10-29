@@ -15,7 +15,7 @@ const DiagnosisOptions = () => {
     const inputRef = useRef();
 
     const handleDelete = async (id) => {
-        dispatch(deleteOption({ endpoint, id }));
+        await dispatch(deleteOption({ endpoint, id }));
     };
 
     const handleEdit = (index) => {
@@ -24,7 +24,7 @@ const DiagnosisOptions = () => {
     };
 
     const handleSaveEdit = async (id) => {
-        dispatch(editOption({ endpoint, id, name: editedDiagnosis }));
+        await dispatch(editOption({ endpoint, id, name: editedDiagnosis }));
         setEditIndex(null);
     };
 
