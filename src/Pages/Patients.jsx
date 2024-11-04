@@ -204,10 +204,11 @@ const handleBulkAction = async (action) => {
                                     <td className="text-sm p-2">{formatDateTime(patient.lastAppointmentDate)}</td>
                                     <td className="text-sm p-2">
                                         <div className="flex justify-center gap-2">
-                                        {patient.records && Object.values(patient.records).map((record, i) => (
+                                        {patient.records && Array.from(new Set(Object.values(patient.records).map(record => record.doctorTreating)))
+                                            .map((doctorId, i) => (
                                                 <img 
                                                     key={i} 
-                                                    src={doctorImages[record.doctorTreating]} 
+                                                    src={doctorImages[doctorId]} 
                                                     alt={`Doctor treating ${patient.name}`} 
                                                     className="w-8 h-8 rounded-full" 
                                                 />

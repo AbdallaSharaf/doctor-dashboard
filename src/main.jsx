@@ -18,6 +18,7 @@ import NotFound from './Pages/404Page.jsx';
 import { Provider } from 'react-redux';
 import Store from './store/Store.jsx';
 import FetchData from './store/fetchData.jsx';
+import ServicesPage from './Pages/ServicesSettings/Services.jsx';
 
 
 createRoot(document.getElementById('root')).render(
@@ -39,6 +40,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/add-patient" element={<AddPatient />} />
           <Route path="/team" element={<TeamPage />} />
           <Route path="/messages/:id" element={<MessageDetailsPage />} />
+          <Route path="/services" element={<ServicesPage />} />
           {/* 404 Page */}
           <Route path="*" element={<NotFound />} />
         </Route>

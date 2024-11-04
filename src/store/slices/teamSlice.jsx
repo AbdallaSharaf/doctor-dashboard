@@ -21,17 +21,27 @@ export const fetchTeamMembers = createAsyncThunk('teamMembers/fetch', async () =
 // Define the async thunk to save the visibility change
 export const saveVisibilityChange = createAsyncThunk(
   'team/saveVisibilityChange',
-  async ({ id, isVisible }) => {
-    try {
-      console.log(id)
-        const response = await axios.patch(`/teamMembers/${id}.json`, { isVisible });
-        return { id, isVisible: response.data.isVisible }; // Include id with the updated unread status
-    } catch (error) {
-        console.error('Error updating visibility status:', error);
-        throw error; // Ensure the error is caught by createAsyncThunk's rejected state
-    }
-}
+  async ({ id, isVisible }, { rejectWithValue }) => {
+      try {
+          // Check if the team member exists before updating
+          const url = `/teamMembers/${id}.json`;
+          const exists = await axios.get(url);
+
+          if (!exists.data) {
+              console.warn(`Team member with ID ${id} not found.`);
+              return rejectWithValue(`Team member not found`);
+          }
+
+          // Proceed with updating visibility if it exists
+          const response = await axios.patch(url, { isVisible });
+          return { id, isVisible: response.data.isVisible };
+      } catch (error) {
+          console.error('Error updating visibility status:', error);
+          return rejectWithValue(error.message);
+      }
+  }
 );
+
 
 
 

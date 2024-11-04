@@ -8,8 +8,9 @@ import { addPatientRecord } from '../../store/slices/patientsSlice'; // Adjust t
 import {selectDiagnoses, selectDoctorNames, selectJobs, selectMedicines} from '../../store/Selectors'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; // Importing an icon for removing selected items
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import { uploadPhoto } from '../../helpers/Helpers';
 
-const AddRecordModal = ({ isOpen, onClose, patientId }) => {
+const AddRecordModal = ({ isOpen, onClose, patientId, record }) => {
   const dispatch = useDispatch();
   const doctors = useSelector(selectDoctorNames);
   const diagnoses = useSelector(selectDiagnoses);
@@ -22,43 +23,44 @@ const AddRecordModal = ({ isOpen, onClose, patientId }) => {
   const [selectedMedicines, setSelectedMedicines] = useState([]);
   const [casePhotos, setCasePhotos] = useState([]);
 
-
+    console.log(record)
   const formik = useFormik({
     initialValues: {
-      doctorTreating: '',
-      casePhoto: '',
-      nextAppointmentDate: '',
-      additionalNotes: '',
+      doctorTreating: record.doctorTreating || '',
+      casePhotos: record.casePhotos || '',
+      dueDate: record.dueDate || '',
+      nextAppointmentDate: record.nextAppointmentDate || '',
+      price: record.price || 0,
+      additionalNotes: record.additionalNotes || '',
     },
     validationSchema: Yup.object({
       doctorTreating: Yup.string().required('Required'),
       nextAppointmentDate: Yup.date().required('Required'),
+      dueDate: Yup.date().required('Required'),
+      price: Yup.number().required('Required'),
       additionalNotes: Yup.string(),
     }),
     onSubmit: async (values, { resetForm }) => {
-      const recordData = {
-        doctorTreating: values.doctorTreating,
-        diagnoses: selectedDiagnoses,
-        jobs: selectedJobs,
-        medicines: selectedMedicines,
-        casePhoto: values.casePhoto,
-        nextAppointmentDate: values.nextAppointmentDate,
-        additionalNotes: values.additionalNotes,
-      };
-  
-      let casePhotoUrls = [];
-
-      // Upload photos
+        const recordData = {
+            doctorTreating: values.doctorTreating,
+            diagnoses: selectedDiagnoses,
+            jobs: selectedJobs,
+            medicines: selectedMedicines,
+            casePhotos: [], // Initialize as an empty array
+            dueDate: values.dueDate,
+            nextAppointmentDate: values.nextAppointmentDate,
+            additionalNotes: values.additionalNotes,
+        };
+    
+    // Upload photos and store their URLs in recordData
       if (casePhotos.length > 0) {
         try {
-          const uploadPromises = casePhotos.map(async (photo) => {
-            const formData = new FormData();
-            formData.append('file', photo);
-            const { data } = await axios.post('/upload', formData);
-            return data.url; // Assuming the URL is returned in this way
-          });
-          casePhotoUrls = await Promise.all(uploadPromises);
+          const uploadPromises = casePhotos.map(photo => uploadPhoto(photo)); // Call uploadPhoto
+          const casePhotoUrls = await Promise.all(uploadPromises); // Wait for all uploads to complete
+          console.log('casePhotoUrls')
+          recordData.casePhotos = casePhotoUrls; // Add the URLs to recordData
         } catch (error) {
+          console.log(error);
           Swal.fire({
             title: 'Error',
             text: 'Failed to upload case photos.',
@@ -67,37 +69,36 @@ const AddRecordModal = ({ isOpen, onClose, patientId }) => {
           return; // Exit if the photo upload fails
         }
       }
-  
-      try {
-        const actionResult = await dispatch(addPatientRecord({ patientId, recordData }));
-        
-        // Check if the action was fulfilled
-        if (addPatientRecord.fulfilled.match(actionResult)) {
-          Swal.fire({
-            title: 'Success!',
-            text: 'Record added successfully.',
-            icon: 'success',
-          });
-  
-          resetForm();
-          handleCloseModal(resetForm);
-        } else {
-          Swal.fire({
-            title: 'Failed',
-            text: actionResult.payload || 'Something went wrong!',
-            icon: 'error',
-          });
+
+    
+        try {
+            const actionResult = await dispatch(addPatientRecord({ patientId, recordData }));
+            
+            if (addPatientRecord.fulfilled.match(actionResult)) {
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Record added successfully.',
+                    icon: 'success',
+                });
+    
+                resetForm();
+                handleCloseModal(resetForm);
+            } else {
+                Swal.fire({
+                    title: 'Failed',
+                    text: actionResult.payload || 'Something went wrong!',
+                    icon: 'error',
+                });
+            }
+        } catch (error) {
+            console.error('Error adding patient record:', error);
+            Swal.fire({
+                title: 'Error',
+                text: 'Failed to add patient record. Please try again.',
+                icon: 'error',
+            });
         }
-      } catch (error) {
-        console.error('Error adding patient record:', error);
-        Swal.fire({
-          title: 'Error',
-          text: 'Failed to add patient record. Please try again.',
-          icon: 'error',
-        });
-      }
-    },
-  });
+    },})    
   
   const handleCloseModal = (resetForm) =>{
     resetForm()
@@ -159,8 +160,8 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
       <div className="bg-white rounded-lg p-6 shadow-md w-[80%] z-10">
         <h2 className="text-xl font-bold mb-4">Add Patient Record</h2>
         <form onSubmit={formik.handleSubmit}>
-            <div className='flex gap-10 w-full'>
-          <div className='w-1/2'>
+            <div className='grid grid-cols-2 gap-10 w-full'>
+            <div>
             <label className="block mb-1">Doctor Treating</label>
             <select
               name="doctorTreating"
@@ -177,10 +178,72 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
             {formik.touched.doctorTreating && formik.errors.doctorTreating ? (
               <div className="text-red-600">{formik.errors.doctorTreating}</div>
             ) : null}
-          </div>
 
- {/* Diagnosis Dropdown */}
-                <div className='w-1/2'>
+            <div>
+            <label className="block mb-1">Due Date</label>
+            <input
+              type="date"
+              {...formik.getFieldProps('dueDate')}
+              className="border p-2 w-full"
+            />
+            {formik.touched.dueDate && formik.errors.dueDate ? (
+              <div className="text-red-600">{formik.errors.dueDate}</div>
+            ) : null}
+          </div>
+            <div>
+            <label className="block mb-1">Next Appointment Date</label>
+            <input
+              type="date"
+              {...formik.getFieldProps('nextAppointmentDate')}
+              className="border p-2 w-full"
+            />
+            {formik.touched.nextAppointmentDate && formik.errors.nextAppointmentDate ? (
+              <div className="text-red-600">{formik.errors.nextAppointmentDate}</div>
+            ) : null}
+          </div>
+          <div>
+            <label className="block mb-1">Case Photos (up to 10)</label>
+            <input
+                name=''
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handlePhotoChange}
+                className="border p-2 rounded-md w-full"
+            />
+            <div className="mt-2 flex flex-wrap">
+                {casePhotos.map((photo, index) => (
+                <div key={index} className="relative mr-2 mb-2">
+                    <img
+                    src={URL.createObjectURL(photo)}
+                    alt={`Preview ${index}`}
+                    className="h-20 w-20 object-cover rounded-md"
+                    />
+                    <FontAwesomeIcon
+                    icon={faXmark}
+                    className="absolute top-0 right-0 h-4 w-4 cursor-pointer text-red-500"
+                    onClick={() => handleRemoveItem(setCasePhotos, casePhotos, photo)}
+                    />
+                </div>
+                ))}
+            </div>
+            </div>
+            <div>
+                <label className="block mb-1">Price</label>
+                <input
+                type="number"
+                {...formik.getFieldProps('price')}
+                className="border p-2 w-full"
+                />
+                {formik.touched.price && formik.errors.price ? (
+                <div className="text-red-600">{formik.errors.price}</div>
+                ) : null}
+            </div>
+            </div>
+
+            <div>
+
+                <div>
                     <label htmlFor="diagnosis" className="block font-medium">Select Diagnosis</label>
                    {/* Show custom input field if "Other" is selected */}
                    {otherOptionToggle==='diagnosis' ? (
@@ -235,23 +298,8 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
                         ))}
                     </div>
                 </div>
-                </div>
-                <div className='flex gap-10'>
-                
-                <div className='w-1/2'>
-            <label className="block mb-1">Next Appointment Date</label>
-            <input
-              type="date"
-              {...formik.getFieldProps('nextAppointmentDate')}
-              className="border p-2 w-full"
-            />
-            {formik.touched.nextAppointmentDate && formik.errors.nextAppointmentDate ? (
-              <div className="text-red-600">{formik.errors.nextAppointmentDate}</div>
-            ) : null}
-          </div>
-
-                {/* Medicine Dropdown */}
-                <div className='w-1/2'>
+                  {/* Medicine Dropdown */}
+                  <div>
                     <label htmlFor="medicine" className="block font-medium">Select Medicine</label>
                    {/* Show custom input field if "Other" is selected */}
                    {otherOptionToggle==='medicine' ? (
@@ -306,36 +354,7 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
                         ))}
                     </div>
                 </div>
-                </div>
-                <div className='flex gap-10'>
-                <div className='w-1/2'>
-  <label className="block mb-1">Case Photos (up to 10)</label>
-  <input
-    name=''
-    type="file"
-    multiple
-    accept="image/*"
-    onChange={handlePhotoChange}
-    className="border p-2 rounded-md w-full"
-  />
-  <div className="mt-2 flex flex-wrap">
-    {casePhotos.map((photo, index) => (
-      <div key={index} className="relative mr-2 mb-2">
-        <img
-          src={URL.createObjectURL(photo)}
-          alt={`Preview ${index}`}
-          className="h-20 w-20 object-cover rounded-md"
-        />
-        <FontAwesomeIcon
-          icon={faXmark}
-          className="absolute top-0 right-0 h-4 w-4 cursor-pointer text-red-500"
-          onClick={() => handleRemoveItem(setCasePhotos, casePhotos, photo)}
-        />
-      </div>
-    ))}
-  </div>
-</div>
-        <div className='w-1/2'>
+        <div>
         <label htmlFor="jobDone" className="block font-medium">Select Job</label>
                    {/* Show custom input field if "Other" is selected */}
                    {otherOptionToggle==='jobDone' ? (
@@ -396,7 +415,8 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
               className="border p-2 w-full h-32"
             />
           </div>
-                </div>
+            </div>
+        </div>
           </div>
           <button type="submit" className="mt-4 px-4 py-2 bg-blue-500 text-white rounded">
             Submit

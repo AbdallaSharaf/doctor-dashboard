@@ -1,5 +1,22 @@
 import axios from './Axios'
 import { format } from 'date-fns';
+import { uploadPhotoToCloudinary } from '../cloudinary';
+
+export const uploadPhoto = async (file) => {
+    try {
+        // Use the new Cloudinary function
+        const uploadResult = await uploadPhotoToCloudinary(file);
+        
+        // Cloudinary provides a secure URL in the response
+        console.log('File available at:', uploadResult.secure_url);
+        return uploadResult.secure_url; // Return the URL for further use
+    } catch (error) {
+        console.error('Error uploading file:', error);
+        throw error; // Handle the error as needed
+    }
+};
+
+
 
 export const clearPastDatesFromFirebase = async () => {
     try {

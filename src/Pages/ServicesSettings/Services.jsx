@@ -1,66 +1,59 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import TeamMember from './TeamMember';
-import TeamModal from '../../components/modals/TeamModal';
+import Service from './Service';
+import ServicesModal from '../../components/modals/ServicesModal';
 import Swal from 'sweetalert2';
 import { useDispatch, useSelector } from 'react-redux';
-import { addTeamMember, editTeamMember, deleteTeamMember, reorderTeamMembers, saveMemberOrder } from '../../store/slices/teamSlice';
+import { addService, editService, deleteService, reorderServices, saveServiceOrder } from '../../store/slices/servicesSlice';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import Spinner from '../../components/Spinner'; // Import Spinner
 
 
-const TeamPage = () => {
-  const [editMember, setEditMember] = useState(null);
+const ServicesPage = () => {
+  const [editedService, setEditedService] = useState(null);
   const [timeoutId, setTimeoutId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
   const dispatch = useDispatch();
-  const { members, loading } = useSelector((state) => state.team);
+  const services = useSelector((state) => state.services.list);
+  const loading  = useSelector((state) => state.services.loading);
   
   
   //--------------------------handlers-------------------------------
   
-  // Handle input changes for the new member form
-  const handleInputChange = (e, memberSetter) => {
+  // Handle input changes for the new service form
+  const handleInputChange = (e, serviceSetter) => {
     const { name, value } = e.target;
-    memberSetter(prev => ({ ...prev, [name]: value }));
+    serviceSetter(prev => ({ ...prev, [name]: value }));
   };
   
-  // Add a new team member
-  const handleAddMember = async (newMember) => {
-    if (!newMember.name || !newMember.job || !newMember.description || !newMember.image) {
-      Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'All fields are required before adding a new team member.',
-          confirmButtonText: 'OK',
-      });
-      return; 
-  }
-  await dispatch(addTeamMember(newMember));
-  Swal.fire({
-    icon: 'success',
-    title: 'Success',
-    text: `${newMember.name} has been successfully added to the team.`,
-    confirmButtonText: 'OK',
-  });
+  // Add a new services service
+  const handleAddService = async (serviceData, mainServiceId = null) => {
+    await dispatch(addService({ serviceData, mainServiceId }));
+    Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: `${serviceData.name} has been successfully added to the services.`,
+        confirmButtonText: 'OK',
+    });
 };
 
 
 
-  // Edit a team member
-  const handleEditMember = async () => {
-    await dispatch(editTeamMember(editMember))
-    setEditMember(null);
+
+  // Edit a services service
+  const handleEditService = async () => {
+    await dispatch(editService(editedService))
+    setEditedService(null);
   };
   
   
-  // Delete a team member
-  const handleDeleteMember = async (id) => {
-    const memberToDelete = members.find(member => member.id === id);
+  // Delete a services service
+  const handleDeleteService = async (id) => {
+    const serviceToDelete = services.find(service => service.id === id);
     const result = await Swal.fire({
-        title: `Are you sure you want to delete ${memberToDelete.name}?`,
+        title: `Are you sure you want to delete ${serviceToDelete.name}?`,
         text: "This action cannot be undone!",
         icon: 'warning',
         showCancelButton: true,
@@ -71,26 +64,26 @@ const TeamPage = () => {
       });
   
     if (result.isConfirmed) {
-      await dispatch(deleteTeamMember(id));
-      Swal.fire('Deleted!', `${memberToDelete.name} has been deleted.`, 'success');
+      await dispatch(deleteService({id}));
+      Swal.fire('Deleted!', `${serviceToDelete.name} has been deleted.`, 'success');
     }
   };
   
   
-  // Move member in the list (reordering)
-  const handleMoveMember = useCallback(async (dragIndex, hoverIndex) => {
-    await dispatch(reorderTeamMembers({ dragIndex, hoverIndex }));
+  // Move service in the list (reordering)
+  const handleMoveService = useCallback(async (dragIndex, hoverIndex) => {
+    await dispatch(reorderServices({ dragIndex, hoverIndex }));
       if (timeoutId) {
       clearTimeout(timeoutId);
     }
   
     // Set a new timeout to save changes after 2 minutes
     const id = setTimeout(async () => {
-      await dispatch(saveMemberOrder(members)); // Dispatch the thunk to save order
+      await dispatch(saveServiceOrder({services})); // Dispatch the thunk to save order
     }, 120000); // 2 minutes
   
     setTimeoutId(id);
-  }, [dispatch, timeoutId, members]);
+  }, [dispatch, timeoutId, services]);
   
   //------------------------------end of handlers-----------------------------
   
@@ -98,7 +91,7 @@ const TeamPage = () => {
   
   useEffect(() => {
     const handleBeforeUnload = async (e) => {
-      await dispatch(saveMemberOrder(members)); // Dispatch the thunk to save order
+      await dispatch(saveServiceOrder({services})); // Dispatch the thunk to save order
       e.returnValue = '';
     };
   
@@ -108,28 +101,28 @@ const TeamPage = () => {
     return async () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       clearTimeout(timeoutId); // Clear timeout on unmount
-      await dispatch(saveMemberOrder(members)); // Dispatch the thunk to save order
+      await dispatch(saveServiceOrder({services})); // Dispatch the thunk to save order
     };
-  }, [timeoutId, members, dispatch]);
+  }, [timeoutId, services, dispatch]);
   //--------------------------end 0f effects---------------------------------
 
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="w-full p-6">
         <div className='flex justify-between mb-10'>
-          <h2 className="text-lg font-semibold">Team Management</h2>
+          <h2 className="text-lg font-semibold">Services Management</h2>
           <button 
             onClick={() => setIsModalOpen(true)} 
             className="mb-2 py-2 px-4 bg-primary-btn hover:bg-hover-btn w-[170px] text-white rounded">
-              Add Member
+              Add Service
           </button>
         </div>
         
-        {/* Modal for adding new team member */}
-        <TeamModal 
+        {/* Modal for adding new services service */}
+        <ServicesModal 
           isModalOpen={isModalOpen} 
           setIsModalOpen={setIsModalOpen} 
-          handleAddMember={handleAddMember} 
+          handleAddService={handleAddService} 
         />
         
         {loading ? ( // Conditional rendering for loading spinner
@@ -144,26 +137,26 @@ const TeamPage = () => {
                     <FontAwesomeIcon icon={faBars} className="mr-3 text-gray-400 hidden" />
                   </th>
                   <th className="text-center font-semibold py-2 text-primary-text text-sm pr-6">NO</th>
-                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Image</th>
+                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Icon</th>
                   <th className="text-center font-semibold py-2 text-primary-text text-sm">Name</th>
-                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Job</th>
-                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Description</th>
+                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Short Description</th>
+                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Long Description</th>
                   <th className="text-center font-semibold py-2 text-primary-text text-sm">Show</th>
                   <th className="text-center font-semibold py-2 text-primary-text text-sm">Actions</th>
                 </tr>
               </thead>
 
               <tbody>
-                {members.map((member, index) => (
-                  <TeamMember 
-                    key={member.id} 
-                    member={member} 
+                {services.map((service, index) => (
+                  <Service 
+                    key={service.id} 
+                    service={service} 
                     index={index} 
-                    moveMember={handleMoveMember} 
-                    setEditMember={setEditMember} 
-                    handleDeleteMember={handleDeleteMember} 
-                    editMember={editMember} 
-                    handleEditMember={handleEditMember}
+                    moveService={handleMoveService} 
+                    setEditedService={setEditedService} 
+                    handleDeleteService={handleDeleteService} 
+                    editedService={editedService} 
+                    handleEditService={handleEditService}
                     handleInputChange={handleInputChange}
                   />
                 ))}
@@ -176,4 +169,4 @@ const TeamPage = () => {
   );
 };
 
-export default TeamPage;
+export default ServicesPage;

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const Sidebar = () => {
   return (
-    <div className=" min-w-[200px] min-h-screen bg-black shadow-md"> {/* Right-to-left alignment */}
+    <div className=" min-w-[265px] min-h-screen bg-black shadow-md"> {/* Right-to-left alignment */}
       <div className="flex flex-col items-center p-4 h-20 border-b">
         <Link to="/" ><h1 className="text-2xl font-bold text-white">Dashboard</h1></Link>
       </div>
@@ -25,6 +25,9 @@ const Sidebar = () => {
         </Link>
         <Link to="/team" className="p-4   text-[#9a9cae] hover:text-white">
           Team
+        </Link>
+        <Link to="/services" className="p-4   text-[#9a9cae] hover:text-white">
+          Services
         </Link>
         <Link to="/Clinic-settings" className="p-4   text-[#9a9cae] hover:text-white">
           Clinic Settings

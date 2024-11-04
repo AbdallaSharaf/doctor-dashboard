@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { motion, AnimatePresence } from 'framer-motion';
+import { uploadPhoto } from '../../helpers/Helpers';
 
 const TeamModal = ({ isModalOpen, setIsModalOpen, handleAddMember }) => {
     const [imagePreview, setImagePreview] = useState(null); // State for image preview
@@ -22,9 +23,21 @@ const TeamModal = ({ isModalOpen, setIsModalOpen, handleAddMember }) => {
                 .required('Description is required'),
             image: Yup.string().required('Image is required')
         }),
-        onSubmit: (values) => {
-            console.log(values)
-            handleAddMember(values);
+        onSubmit: async (values) => {
+            try {
+                const imageUrl = await uploadPhoto(formik.values.image); // Upload image
+                const newMember = {
+                    name: values.name,
+                    job: values.job,
+                    description: values.description,
+                    image: imageUrl // Store the URL in the new member object
+                };
+
+                handleAddMember(newMember); // Call the handler with the new member object
+            } catch (error) {
+                console.error('Error uploading photo:', error);
+                // Handle error (e.g., show a notification)
+            }
         },
     });
 
@@ -105,7 +118,7 @@ const TeamModal = ({ isModalOpen, setIsModalOpen, handleAddMember }) => {
                                 if (file) {
                                     const reader = new FileReader();
                                     reader.onloadend = () => {
-                                        formik.setFieldValue('image', reader.result);
+                                        formik.setFieldValue('image', file);
                                         setImagePreview(reader.result); // Set the image preview
                                     };
                                     reader.readAsDataURL(file);

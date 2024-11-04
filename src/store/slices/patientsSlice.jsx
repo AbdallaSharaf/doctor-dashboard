@@ -78,6 +78,46 @@ export const archivePatient = createAsyncThunk(
         }
     }
 );
+// export const addFieldsToAllRecords = createAsyncThunk(
+//     'patients/addFieldsToAllRecords',
+//     async (_, { getState, rejectWithValue }) => {
+//         try {
+//             const patients = getState().patients.list;
+
+//             // Collect all patch requests
+//             const updatePromises = patients.map(async (patient) => {
+//                 if (patient.records && typeof patient.records === 'object') {
+//                     const updatedRecords = Object.keys(patient.records).reduce((acc, recordId) => {
+//                         const record = patient.records[recordId];
+
+//                         // Update casePhoto to casePhotos as an array
+//                         acc[recordId] = {
+//                             ...record,
+//                             casePhotos: Array.isArray(record.casePhoto) ? record.casePhoto : [],
+//                         };
+//                         return acc;
+//                     }, {});
+
+//                     try {
+//                         await axios.patch(`/patients/${patient.id}.json`, { records: updatedRecords });
+//                         console.log('success')
+//                     } catch (error) {
+//                         console.log(error)
+//                     }
+//                     // Directly patch each patient's records
+//                 }
+//             });
+
+//             // Await all patches
+//             await Promise.all(updatePromises);
+
+//             return 'All records updated successfully with casePhotos field';
+//         } catch (error) {
+//             return rejectWithValue(error.message);
+//         }
+//     }
+// );
+
 
 // Patients Slice
 const patientsSlice = createSlice({
@@ -160,7 +200,17 @@ const patientsSlice = createSlice({
             .addCase(archivePatient.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message;
-            });
+            })
+            // .addCase(addFieldsToAllRecords.pending, (state) => {
+            //     state.loading = true;
+            // })
+            // .addCase(addFieldsToAllRecords.fulfilled, (state) => {
+            //     state.loading = false;
+            // })
+            // .addCase(addFieldsToAllRecords.rejected, (state, action) => {
+            //     state.loading = false;
+            //     state.error = action.error.message;
+            // })
     },
 });
 

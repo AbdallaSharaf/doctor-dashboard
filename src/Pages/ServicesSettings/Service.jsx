@@ -1,26 +1,26 @@
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Switch } from '@headlessui/react';
-import React, {useRef, useState, useEffect, useCallback} from 'react';
+import React, {useRef, useState, useEffect} from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { useDispatch } from 'react-redux';
-import { saveVisibilityChange } from '../../store/slices/teamSlice'; // Import the action
+import { saveVisibilityChange } from '../../store/slices/servicesSlice'; // Import the action
 
-const ItemType = 'TEAM_MEMBER';
+const ItemType = 'SERVICE';
 
-const TeamMember = ({
-  member,
+const Service = ({
+  service,
   index,
-  moveMember,
-  setEditMember,
-  handleDeleteMember,
-  editMember,
-  handleEditMember,
+  moveService,
+  setEditedService,
+  handleDeleteService,
+  editedService,
+  handleEditService,
   handleInputChange,
 }) => {
   const ref = useRef();
   const fileInputRef = useRef(); // Reference for file input
-  const [isVisible, setIsVisible] = useState(member.isVisible);
+  const [isVisible, setIsVisible] = useState(service.isVisible);
   const [saveTimeout, setSaveTimeout] = useState(null);
   const dispatch = useDispatch()
 
@@ -29,7 +29,7 @@ const TeamMember = ({
   // Drag source
   const [{ isDragging }, drag] = useDrag({
     type: ItemType,
-    item: { index, id: member.id },
+    item: { index, id: service.id },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -63,7 +63,7 @@ const TeamMember = ({
       if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
         return;
       }
-      moveMember(dragIndex, hoverIndex);
+      moveService(dragIndex, hoverIndex);
       draggedItem.index = hoverIndex;
     },
   });
@@ -81,7 +81,7 @@ const TeamMember = ({
     if (saveTimeout) clearTimeout(saveTimeout);
 
     // Set new timeout for saving visibility
-    const timeoutId = setTimeout(async () => dispatch(saveVisibilityChange({ id: member.id, isVisible })), 12000);
+    const timeoutId = setTimeout(async () => dispatch(saveVisibilityChange({ id: service.id, isVisible })), 12000);
     setSaveTimeout(timeoutId);
   };
 
@@ -93,9 +93,9 @@ const TeamMember = ({
   
       // Set up a callback to run when the file is read
       reader.onloadend = () => {
-        setEditMember((prevMember) => ({
-          ...prevMember,
-          image: reader.result, // Use the data URL from the FileReader
+        setEditedService((prevService) => ({
+          ...prevService,
+          icon: reader.result, // Use the data URL from the FileReader
         }));
   
         // Set the image preview if needed
@@ -110,15 +110,14 @@ const TeamMember = ({
   
   useEffect(() => {
     const handleBeforeUnload = async (e) => {
-        await dispatch(saveVisibilityChange({ id: member.id, isVisible }));
+        await dispatch(saveVisibilityChange({ id: service.id, isVisible }));
       console.log('changed')
     };
-
     window.addEventListener('beforeunload', handleBeforeUnload);
     return  async () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       if (saveTimeout) clearTimeout(saveTimeout);
-      await dispatch(saveVisibilityChange({ id: member.id, isVisible }));
+      await dispatch(saveVisibilityChange({ id: service.id, isVisible }));
     };
   }, [dispatch, saveTimeout]);
 
@@ -127,19 +126,19 @@ const TeamMember = ({
     <tr
     ref={ref}
     data-handler-id={handlerId}
-    onDoubleClick={() => setEditMember(member)}
-    className={`h-16 ${isDragging ? 'opacity-0' : 'opacity-100'} ${editMember ? 'bg-black' : 'cursor-grab'} ${index % 2 !== 0 ? 'bg-gray-100' : 'bg-white'}`}
+    onDoubleClick={() => setEditedService(service)}
+    className={`h-16 ${isDragging ? 'opacity-0' : 'opacity-100'} ${editedService ? 'bg-black' : 'cursor-grab'} ${index % 2 !== 0 ? 'bg-gray-100' : 'bg-white'}`}
     >
-    {editMember && editMember.id === member.id ? (
+    {editedService && editedService.id === service.id ? (
         <>
         <td className=" text-sm text-center"><FontAwesomeIcon icon={faBars} className="mr-3 text-gray-400" /></td>
         <td className=" text-sm text-center pr-6">{index+1}</td>
         <td className="flex justify-center relative">
             <img
-              src={editMember.image}
+              src={editedService.icon}
               className="w-12 h-12 rounded-full absolute -top-7 cursor-pointer"
               onClick={handleImageEdit} // Trigger image edit on click
-              alt="Team member"
+              alt="Service"
             />
             <input
               type="file"
@@ -153,8 +152,8 @@ const TeamMember = ({
             <input
             type="text"
             name="name"
-            value={editMember.name}
-            onChange={(e) => handleInputChange(e, setEditMember)}
+            value={editedService.name}
+            onChange={(e) => handleInputChange(e, setEditedService)}
             className="border p-2 rounded-md focus:outline-none text-sm text-center focus:ring-2 flex justify-center mx-auto focus:ring-blue-400"
             placeholder="Name"
             />
@@ -163,8 +162,8 @@ const TeamMember = ({
             <input
             type="text"
             name="job"
-            value={editMember.job}
-            onChange={(e) => handleInputChange(e, setEditMember)}
+            value={editedService.shortDescription}
+            onChange={(e) => handleInputChange(e, setEditedService)}
             className="border p-2 rounded-md focus:outline-none text-sm text-center focus:ring-2 flex justify-center mx-auto focus:ring-blue-400"
             placeholder="Job"
             />
@@ -173,8 +172,8 @@ const TeamMember = ({
             <input
             type="text"
             name="description"
-            value={editMember.description}
-            onChange={(e) => handleInputChange(e, setEditMember)}
+            value={editedService.longDescription}
+            onChange={(e) => handleInputChange(e, setEditedService)}
             className="border p-2 rounded-md focus:outline-none text-sm text-center focus:ring-2 flex justify-center mx-auto focus:ring-blue-400"
             placeholder="Description"
             />
@@ -183,19 +182,19 @@ const TeamMember = ({
             <Switch
               checked={isVisible}
               onChange={handleToggleVisibility}
-              className={`${member.isVisible ? 'bg-green-500' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full`}
+              className={`${service.isVisible ? 'bg-green-500' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full`}
             >
               <span className="sr-only">Toggle visibility</span>
               <span
-                className={`${member.isVisible ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                className={`${service.isVisible ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition`}
               />
             </Switch>
         </td>
         <td className="space-x-2 mx-auto flex items-center justify-center h-16">
-            <button onClick={handleEditMember} className="bg-green-500 hover:bg-green-400 text-secondary-text rounded p-1  transition duration-150 w-20">
+            <button onClick={handleEditService} className="bg-green-500 hover:bg-green-400 text-secondary-text rounded p-1  transition duration-150 w-20">
             Save
             </button>
-            <button onClick={() => setEditMember(null)} className="bg-red-500 text-white py-1 rounded-md hover:bg-red-400 transition duration-150 w-20">
+            <button onClick={() => setEditedService(null)} className="bg-red-500 text-white py-1 rounded-md hover:bg-red-400 transition duration-150 w-20">
             Discard
             </button>
         </td>
@@ -204,10 +203,10 @@ const TeamMember = ({
         <>
         <td className="text-sm text-center"><FontAwesomeIcon icon={faBars} className="mr-3 text-gray-400" /></td>
         <td className=" text-sm text-center pr-6 ">{index+1}</td>
-        <td className="flex justify-center relative"><img src={member.image} className="w-12 h-12 rounded-full absolute -top-7"/></td>
-        <td className="font-bold text-sm text-center">{member.name}</td>
-        <td className="text-sm text-center text-gray-500">{member.job}</td>
-        <td className="text-sm text-center text-gray-500">{member.description}</td>
+        <td className="flex justify-center relative"><img src={service.icon} className="w-12 h-12 rounded-full absolute -top-7"/></td>
+        <td className="font-bold text-sm text-center">{service.name}</td>
+        <td className="text-sm text-center text-gray-500">{service.shortDescription}</td>
+        <td className="text-sm text-center text-gray-500">{service.longDescription}</td>
         <td className="text-center">
             <Switch
               checked={isVisible}
@@ -218,10 +217,10 @@ const TeamMember = ({
             </Switch>
         </td>
         <td className="space-x-2 flex items-center justify-center h-16">
-            <button onClick={() => setEditMember(member)} className="bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-1  transition duration-150 w-20">
+            <button onClick={() => setEditedService(service)} className="bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-1  transition duration-150 w-20">
             Edit
             </button>
-            <button onClick={() => handleDeleteMember(member.id)} className="bg-white hover:bg-gray-100 text-primary-text rounded p-1  transition duration-150 w-20">
+            <button onClick={() => handleDeleteService(service.id)} className="bg-white hover:bg-gray-100 text-primary-text rounded p-1  transition duration-150 w-20">
             Delete
             </button>
         </td>
@@ -232,4 +231,4 @@ const TeamMember = ({
   );
 };
 
-export default TeamMember;
+export default Service;

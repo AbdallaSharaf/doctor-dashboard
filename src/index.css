@@ -31,3 +31,11 @@
   --text-primary: #fff;
   --text-link: #fff;
 }
+.date-slider {
+  overflow-x: auto;
+  scrollbar-width: none; /* For Firefox */
+}
+
+.date-slider::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Chrome, Safari, and Opera */
+}

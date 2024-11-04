@@ -35,7 +35,7 @@ const MainDataCard = ({patientData}) => {
         }
       };
   return (
-        <div className="bg-white py-8 px-9 mt-4 w-full rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.02)] border border-gray-200">
+        <div className="bg-white py-8 px-9 h-fit mt-4 w-full rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.02)] border border-gray-200">
         <img src="https://placehold.co/100" alt="" className="rounded-full w-100 h-100 mx-auto my-4" />
         <div className="text-center font-medium mb-2 text-xl">
             {editMode ? (
@@ -64,10 +64,10 @@ const MainDataCard = ({patientData}) => {
             Edit
             </button> : 
             <div className='flex justify-center gap-4'>
-            <button onClick={handleSave} className="px-4 py-2 bg-blue-400 bg-opacity-20 text-blue-400 hover:text-secondary-text hover:bg-opacity-100 duration-200 transition-all ease-in-out w-20 font-medium text-sm rounded-md">
+            <button onClick={handleSave} className="px-4 py-2 bg-blue-400 bg-opacity-20 text-blue-400 hover:text-secondary-text hover:bg-opacity-100 duration-200 transition-all ease-in-out w-18 font-medium text-xs rounded-md">
                 Save
             </button>
-            <button onClick={()=>setEditMode(false)} className="px-4 py-2 bg-white bg-opacity-20 text-primary-text hover:bg-gray-100 transition-all duration-200 ease-in-out w-18 font-medium text-sm rounded-md">
+            <button onClick={()=>setEditMode(false)} className="px-4 py-2 bg-white bg-opacity-20 text-primary-text hover:bg-gray-100 transition-all duration-200 ease-in-out w-18 font-medium text-xs rounded-md">
                 Discard
             </button>
             </div>}
@@ -82,7 +82,7 @@ const MainDataCard = ({patientData}) => {
                 className="border p-1 w-full text-sm"
             />
             ) : (
-            <p className='p-[5px]'>{patientData.phone}</p>
+            <p className='py-[5px] font-extralight'>{patientData.phone}</p>
             )}
         </div>
         <div className="text-sm my-4">
@@ -95,7 +95,7 @@ const MainDataCard = ({patientData}) => {
                 className="border p-1 w-full text-sm"
             />
             ) : (
-            <p className='p-[5px]'>{patientData.age}</p>
+            <p className='py-[5px] font-extralight'>{patientData.age}</p>
             )}
         </div>
         <div className="text-sm my-4">
@@ -118,33 +118,33 @@ const MainDataCard = ({patientData}) => {
             </button>
             </div>
         ): (
-            <p className='p-[5px]'>{capitalizeFirstLetter(patientData.gender)}</p>
+            <p className='py-[5px] font-extralight'>{capitalizeFirstLetter(patientData.gender)}</p>
             )}
         </div>
         <div className="text-sm my-4">
             <p className="font-medium mb-1">First Appointment Date:</p>
             {editMode ? (
             <input
-                type="datetime-local"
+                type="date"
                 value={editedData.firstAppointmentDate}
                 onChange={(e) => handleFieldChange('firstAppointmentDate', e.target.value)}
                 className="border p-1 w-full"
             />
             ) : (
-            <p className='p-[5px]'>{formatDateTime(patientData.firstAppointmentDate)}</p>
+            <p className='py-[5px] font-extralight'>{formatDateTime(patientData.firstAppointmentDate)}</p>
             )}
         </div>
         <div className="text-sm my-4">
             <p className="font-medium mb-1">Last Appointment Date:</p>
             {editMode ? (
             <input
-                type="datetime-local"
+                type="date"
                 value={editedData.lastAppointmentDate}
                 onChange={(e) => handleFieldChange('lastAppointmentDate', e.target.value)}
                 className="border p-1 w-full"
             />
             ) : (
-            <p className='p-[5px]'>{formatDateTime(patientData.lastAppointmentDate)}</p>
+            <p className='py-[5px] font-extralight '>{formatDateTime(patientData.lastAppointmentDate)}</p>
             )}
         </div>
         </div>

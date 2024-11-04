@@ -239,7 +239,7 @@ const AddPatient = () => {
             <div>
                 <label htmlFor="firstAppointmentDate" className="block font-medium">First Appointment Date & Time</label>
                 <input
-                    type="datetime-local"
+                    type="date"
                     {...formik.getFieldProps('firstAppointmentDate')}
                     className={`border p-2 rounded-md w-full ${formik.touched.firstAppointmentDate && formik.errors.firstAppointmentDate ? 'border-red-500' : ''}`}
                 />
@@ -251,7 +251,7 @@ const AddPatient = () => {
             <div>
                 <label htmlFor="lastAppointmentDate" className="block font-medium">Last Appointment Date & Time</label>
                 <input
-                    type="datetime-local"
+                    type="date"
                     {...formik.getFieldProps('lastAppointmentDate')}
                     className={`border p-2 rounded-md w-full ${formik.touched.lastAppointmentDate && formik.errors.lastAppointmentDate ? 'border-red-500' : ''}`}
                 />

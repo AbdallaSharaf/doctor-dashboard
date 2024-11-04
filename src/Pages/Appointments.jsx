@@ -13,7 +13,6 @@ import Swal from 'sweetalert2';
 import BulkActionsDropdown from '../components/BulkActionsDropdown';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-    
     addAppointment,
     updateAppointment,
     deleteAppointment,
@@ -476,7 +475,7 @@ return (
                                         <button onClick={() =>handleSave(editId)} className="bg-green-500 hover:bg-green-400 text-secondary-text rounded p-1  transition duration-150 w-16">
                                             Save
                                         </button>
-                                        <button onClick={() => setEditData(null)} className="bg-red-500 text-white py-1 rounded-md hover:bg-red-400 transition duration-150 w-16">
+                                        <button onClick={() => setEditId(null)} className="bg-red-500 text-white py-1 rounded-md hover:bg-red-400 transition duration-150 w-16">
                                             Discard
                                         </button>
                                     </div>

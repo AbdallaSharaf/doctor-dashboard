@@ -22,13 +22,20 @@ const PatientDetailsPage = () => {
     return <div>No patient found</div>;
   }
 
+    // Sort records by dueDate in ascending order
+    const sortedRecords = Object.values(patientData.records).sort((a, b) => {
+      return new Date(a.dueDate) - new Date(b.dueDate); // Ensure dueDate is in a valid date format
+    });
+  
+  
+
   return (
-    <div className="container mx-auto p-10">
+    <div className="container mx-auto p-8 mt-4">
       <h1 className="text-2xl font-bold">Patient History: {patientData.name}</h1>
-      <div className="grid grid-cols-3 gap-10 ">
+      <div className="grid grid-cols-3 gap-14 ">
         <MainDataCard patientData={patientData} />
         <div className='col-span-2'>
-          <RecordsSystem patientId={patientData.id} patientRecords={patientData.records}/>
+          <RecordsSystem patientId={patientData.id} patientRecords={sortedRecords} />
         </div>
       </div>
     </div>
