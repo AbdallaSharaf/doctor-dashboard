@@ -1,37 +1,54 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from "react-router-dom";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBook, faDragon, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 
 const Sidebar = () => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const toggleSidebar = () => setIsCollapsed(!isCollapsed);
+
   return (
-    <div className=" min-w-[265px] min-h-screen bg-black shadow-md"> {/* Right-to-left alignment */}
-      <div className="flex flex-col items-center p-4 h-20 border-b">
-        <Link to="/" ><h1 className="text-2xl font-bold text-white">Dashboard</h1></Link>
+    <div
+      className={`min-h-screen group bg-black shadow-md transition-all duration-300
+                  ${isCollapsed ? 'w-20 hover:w-64 ' : 'w-64 relative'}`}
+    >
+      <div className="flex relative items-center justify-between p-4 h-20 border-b border-white border-opacity-30">
+        <Link to="/" className="text-lg font-medium text-white flex gap-3 items-center">
+          <FontAwesomeIcon icon={faDragon} className={`${isCollapsed ? 'text-2xl group-hover:text-4xl' : 'text-4xl'} text-red-500`} />
+          <h1 className={`${isCollapsed ? 'hidden group-hover:block' : 'block'}`}>Dashboard</h1>
+        </Link>
+        <button
+          onClick={toggleSidebar}
+          className={`text-gray-400 text-xs bg-white w-8 h-8 rounded-md hover:text-blue-400 
+                      transition-all duration-200 absolute -right-4 shadow-md 
+                      ${isCollapsed ? 'rotate-180' : ''}`}
+        >
+          <FontAwesomeIcon icon={faArrowRight} />
+        </button>
       </div>
-      <nav className="mt-10 flex flex-col ">
-        <Link to="/" className="p-4   text-[#9a9cae] hover:text-white">
-          Overview
-        </Link>
-        <Link to="/appointments" className="p-4   text-[#9a9cae] hover:text-white">
-          Appointments
-        </Link>
-        <Link to="/Patients" className="p-4   text-[#9a9cae] hover:text-white">
-          Patients
-        </Link>
-        <Link to="/Schedule" className="p-4   text-[#9a9cae] hover:text-white">
-          Schedule
-        </Link>
-        <Link to="/messages" className="p-4   text-[#9a9cae] hover:text-white">
-          Messages
-        </Link>
-        <Link to="/team" className="p-4   text-[#9a9cae] hover:text-white">
-          Team
-        </Link>
-        <Link to="/services" className="p-4   text-[#9a9cae] hover:text-white">
-          Services
-        </Link>
-        <Link to="/Clinic-settings" className="p-4   text-[#9a9cae] hover:text-white">
-          Clinic Settings
-        </Link>
+      <nav className="mt-6 flex flex-col space-y-2">
+        {[
+          { path: "/", label: "Overview" },
+          { path: "/appointments", label: "Appointments" },
+          { path: "/patients", label: "Patients" },
+          { path: "/schedule", label: "Schedule" },
+          { path: "/team", label: "Team" },
+          { path: "/services", label: "Services" },
+          { path: "/messages", label: "Messages" },
+          { path: "/clinic-settings", label: "Settings" },
+        ].map(({ path, label }) => (
+          <Link
+            to={path}
+            key={label}
+            className="p-4 text-[#9a9cae] hover:text-white flex items-center"
+          >
+            <FontAwesomeIcon className='px-3' icon={faBook} />
+            <span className={`${isCollapsed ? 'hidden group-hover:block' : 'block'}`}>
+              {label}
+            </span>
+          </Link>
+        ))}
       </nav>
     </div>
   );

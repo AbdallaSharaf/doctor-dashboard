@@ -1,10 +1,10 @@
 // AddRecordModal.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import Swal from 'sweetalert2';
 import { useDispatch, useSelector } from 'react-redux';
-import { addPatientRecord } from '../../store/slices/patientsSlice'; // Adjust the import path
+import { addPatientRecord, updateRecord } from '../../store/slices/patientsSlice'; // Adjust the import path
 import {selectDiagnoses, selectDoctorNames, selectJobs, selectMedicines} from '../../store/Selectors'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; // Importing an icon for removing selected items
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
@@ -16,23 +16,37 @@ const AddRecordModal = ({ isOpen, onClose, patientId, record }) => {
   const diagnoses = useSelector(selectDiagnoses);
   const jobs = useSelector(selectJobs);
   const medicines = useSelector(selectMedicines);
-  const [otherOptionToggle, setOtherOptionToggle] = useState('')
+  const [otherOptionToggle, setOtherOptionToggle] = useState('');
   const [otherOption, setOtherOption] = useState('');
   const [selectedDiagnoses, setSelectedDiagnoses] = useState([]);
   const [selectedJobs, setSelectedJobs] = useState([]);
   const [selectedMedicines, setSelectedMedicines] = useState([]);
   const [casePhotos, setCasePhotos] = useState([]);
 
-    console.log(record)
+  useEffect(() => {
+    if (record) {
+    formik.setValues({
+        doctorTreating: record.doctorTreating || '',
+        dueDate: record.dueDate || '',
+        nextAppointmentDate: record.nextAppointmentDate || '',
+        price: record.price || 0,
+        additionalNotes: record.additionalNotes || '',
+        });
+      setSelectedDiagnoses(record.diagnoses || []);
+      setSelectedJobs(record.jobs || []);
+      setSelectedMedicines(record.medicines || []);
+      setCasePhotos(record.casePhotos || []);
+    }
+  }, [record]);
+
   const formik = useFormik({
     initialValues: {
-      doctorTreating: record.doctorTreating || '',
-      casePhotos: record.casePhotos || '',
-      dueDate: record.dueDate || '',
-      nextAppointmentDate: record.nextAppointmentDate || '',
-      price: record.price || 0,
-      additionalNotes: record.additionalNotes || '',
-    },
+        doctorTreating: '',
+        dueDate: '',
+        nextAppointmentDate: '',
+        price: 0,
+        additionalNotes: '',
+      },
     validationSchema: Yup.object({
       doctorTreating: Yup.string().required('Required'),
       nextAppointmentDate: Yup.date().required('Required'),
@@ -46,49 +60,85 @@ const AddRecordModal = ({ isOpen, onClose, patientId, record }) => {
             diagnoses: selectedDiagnoses,
             jobs: selectedJobs,
             medicines: selectedMedicines,
-            casePhotos: [], // Initialize as an empty array
+            casePhotos: casePhotos, // Initialize as an empty array
             dueDate: values.dueDate,
             nextAppointmentDate: values.nextAppointmentDate,
             additionalNotes: values.additionalNotes,
+            price: values.price
         };
     
     // Upload photos and store their URLs in recordData
-      if (casePhotos.length > 0) {
-        try {
-          const uploadPromises = casePhotos.map(photo => uploadPhoto(photo)); // Call uploadPhoto
-          const casePhotoUrls = await Promise.all(uploadPromises); // Wait for all uploads to complete
-          console.log('casePhotoUrls')
-          recordData.casePhotos = casePhotoUrls; // Add the URLs to recordData
-        } catch (error) {
-          console.log(error);
-          Swal.fire({
-            title: 'Error',
-            text: 'Failed to upload case photos.',
-            icon: 'error',
-          });
-          return; // Exit if the photo upload fails
+    if (casePhotos.length > 0) {
+      try {
+        // Initialize the existing URLs
+    const existingUrls = (Array.isArray(recordData.casePhotos) ? recordData.casePhotos : []).filter(url => typeof url === 'string')
+    // Filter the casePhotos to get only the file objects
+    const newPhotos = casePhotos.filter(photo => photo instanceof File); // Keep only File objects
+        console.log(newPhotos)
+    
+        // If there are new photos to upload
+        if (newPhotos.length > 0) {
+          const uploadPromises = await newPhotos.map(photo => uploadPhoto(photo)); // Upload new photos only
+          const newPhotoUrls = await Promise.all(uploadPromises); // Wait for all uploads to complete
+          // Combine the existing URLs with the newly uploaded URLs
+          recordData.casePhotos = [...existingUrls, ...newPhotoUrls]; 
+        } else {
+          // If no new photos, just use the existing casePhotos
+          recordData.casePhotos = existingUrls;
         }
+    
+      } catch (error) {
+        console.log(error);
+        Swal.fire({
+          title: 'Error',
+          text: 'Failed to upload case photos.',
+          icon: 'error',
+        });
+        return; // Exit if the photo upload fails
       }
+    }
+    
+    
 
     
         try {
-            const actionResult = await dispatch(addPatientRecord({ patientId, recordData }));
-            
-            if (addPatientRecord.fulfilled.match(actionResult)) {
-                Swal.fire({
-                    title: 'Success!',
-                    text: 'Record added successfully.',
-                    icon: 'success',
-                });
-    
-                resetForm();
-                handleCloseModal(resetForm);
-            } else {
-                Swal.fire({
-                    title: 'Failed',
-                    text: actionResult.payload || 'Something went wrong!',
-                    icon: 'error',
-                });
+            const recordId = record.id
+            console.log(recordId)
+            const actionResult = record ? await dispatch(updateRecord({patientId, recordId, updatedRecordData: recordData})): await dispatch(addPatientRecord({ patientId, recordData }));
+            if (record){
+                if (updateRecord.fulfilled.match(actionResult)) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Record updated successfully.',
+                        icon: 'success',
+                    });
+        
+                    resetForm();
+                    handleCloseModal(resetForm);
+                } else {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: actionResult.payload || 'Something went wrong!',
+                        icon: 'error',
+                    });
+                }
+            }else{
+                if (addPatientRecord.fulfilled.match(actionResult)) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Record added successfully.',
+                        icon: 'success',
+                    });
+        
+                    resetForm();
+                    handleCloseModal(resetForm);
+                } else {
+                    Swal.fire({
+                        title: 'Failed',
+                        text: actionResult.payload || 'Something went wrong!',
+                        icon: 'error',
+                    });
+                }
             }
         } catch (error) {
             console.error('Error adding patient record:', error);
@@ -215,9 +265,9 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
                 {casePhotos.map((photo, index) => (
                 <div key={index} className="relative mr-2 mb-2">
                     <img
-                    src={URL.createObjectURL(photo)}
-                    alt={`Preview ${index}`}
-                    className="h-20 w-20 object-cover rounded-md"
+                        src={photo instanceof File ? URL.createObjectURL(photo) : photo}
+                        alt={`Preview ${index}`}
+                        className="h-20 w-20 object-cover rounded-md"
                     />
                     <FontAwesomeIcon
                     icon={faXmark}

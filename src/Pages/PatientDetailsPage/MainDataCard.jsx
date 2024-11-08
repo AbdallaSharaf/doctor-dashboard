@@ -2,14 +2,19 @@ import React, {useState, useEffect} from 'react'
 import { updatePatient } from '../../store/slices/patientsSlice';
 import { formatDateTime, capitalizeFirstLetter } from '../../helpers/Helpers';
 import { useDispatch } from 'react-redux';
-
+import { uploadPhoto } from '../../helpers/Helpers';
 const MainDataCard = ({patientData}) => {
     const dispatch = useDispatch();
     const [editMode, setEditMode] = useState(false);
     const [editedData, setEditedData] = useState({});
+    const [selectedImage, setSelectedImage] = useState(null); // Store selected image file
+    const [imagePreview, setImagePreview] = useState(patientData.imageUrl); // Store image URL for preview
+
+    
     useEffect(() => {
         if (patientData) {
           setEditedData({
+            photo: patientData?.photo || 'https://placehold.co/100',
             name: patientData.name,
             phone: patientData.phone,
             age: patientData.age,
@@ -17,6 +22,7 @@ const MainDataCard = ({patientData}) => {
             firstAppointmentDate: patientData.firstAppointmentDate,
             lastAppointmentDate: patientData.lastAppointmentDate,
           });
+          setImagePreview(patientData.photo); // Initial image preview
         }
       }, [patientData]);
     
@@ -29,14 +35,50 @@ const MainDataCard = ({patientData}) => {
       };
     
       const handleSave = async () => {
-        if (patientData && editMode) {
-          await dispatch(updatePatient({ id: patientData.id, updatedData: editedData }));
-          setEditMode(false);
+        try {
+            let photoUrl = editedData.photo;
+
+            // Upload the image if a new file has been selected
+            if (selectedImage) {
+                const uploadResult = await uploadPhoto(selectedImage);
+                photoUrl = uploadResult; // Get the secure URL from Cloudinary
+            }
+
+            // Dispatch the update with the uploaded photo URL
+            await dispatch(updatePatient({ id: patientData.id, updatedData: { ...editedData, photo: photoUrl } }));
+            setEditMode(false);
+        } catch (error) {
+            console.error('Error saving patient data:', error);
         }
-      };
+    };
+
+    // Handle image upload
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+        setSelectedImage(file);
+        setImagePreview(URL.createObjectURL(file)); // Show preview of selected image
+        }
+    };
+
+
   return (
         <div className="bg-white py-8 px-9 h-fit mt-4 w-full rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.02)] border border-gray-200">
-        <img src="https://placehold.co/100" alt="" className="rounded-full w-100 h-100 mx-auto my-4" />
+             <div className="relative w-24 h-24 mb-4 mx-auto overflow-hidden rounded-full bg-gray-200">
+                <img 
+                    src={imagePreview || 'https://placehold.co/100'} 
+                    alt="Patient" 
+                    className="object-cover w-full h-full cursor-pointer" 
+                    onClick={() => editMode && document.getElementById('fileInput').click()} 
+                />
+                <input 
+                    type="file" 
+                    id="fileInput" 
+                    accept="image/*" 
+                    onChange={handleImageChange} 
+                    style={{ display: 'none' }} // Hide the file input
+                />
+            </div>
         <div className="text-center font-medium mb-2 text-xl">
             {editMode ? (
             <input

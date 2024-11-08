@@ -6,8 +6,8 @@ const Layout = () => {
 
   return (
     <div className="flex">
-      <Sidebar />
-      <Outlet />
+      <div className="w-fit"><Sidebar /></div>
+      <div className="w-full"><Outlet /></div>
     </div>
   );
 };

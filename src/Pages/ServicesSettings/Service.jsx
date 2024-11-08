@@ -4,7 +4,9 @@ import { Switch } from '@headlessui/react';
 import React, {useRef, useState, useEffect} from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { useDispatch } from 'react-redux';
-import { saveVisibilityChange } from '../../store/slices/servicesSlice'; // Import the action
+import { saveVisibilityChange, deleteService } from '../../store/slices/servicesSlice'; // Import the action
+import ServicesModal from '../../components/modals/ServicesModal';
+import Swal from 'sweetalert2';
 
 const ItemType = 'SERVICE';
 
@@ -12,17 +14,17 @@ const Service = ({
   service,
   index,
   moveService,
-  setEditedService,
-  handleDeleteService,
-  editedService,
-  handleEditService,
-  handleInputChange,
+  isModalOpen,
+  setIsModalOpen,
 }) => {
   const ref = useRef();
-  const fileInputRef = useRef(); // Reference for file input
   const [isVisible, setIsVisible] = useState(service.isVisible);
   const [saveTimeout, setSaveTimeout] = useState(null);
+  const [editedService, setEditedService] = useState(null);
   const dispatch = useDispatch()
+
+
+   
 
   // State for visibility toggle
 
@@ -71,42 +73,36 @@ const Service = ({
   // Connect drag source and drop target to the same ref
   drag(drop(ref));
 
-  // Function to open file input dialog
-  const handleImageEdit = () => {
-    fileInputRef.current.click(); // Trigger the hidden file input click
-  };
-
   const handleToggleVisibility = () => {
     setIsVisible((prev) => !prev);
     if (saveTimeout) clearTimeout(saveTimeout);
 
     // Set new timeout for saving visibility
-    const timeoutId = setTimeout(async () => dispatch(saveVisibilityChange({ id: service.id, isVisible })), 12000);
-    setSaveTimeout(timeoutId);
+    const timeoutId = setTimeout(() => {
+        dispatch(saveVisibilityChange({ id: service.id, isVisible }));
+      }, 12000);
+          setSaveTimeout(timeoutId);
   };
 
-  // Function to handle file input change
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader(); // Create a new FileReader instance
   
-      // Set up a callback to run when the file is read
-      reader.onloadend = () => {
-        setEditedService((prevService) => ({
-          ...prevService,
-          icon: reader.result, // Use the data URL from the FileReader
-        }));
-  
-        // Set the image preview if needed
-        setImagePreview(reader.result);
+    // Delete a services service
+    const handleDeleteService = async (id, name) => {
+        const result = await Swal.fire({
+            title: `Are you sure you want to delete ${name}?`,
+            text: "This action cannot be undone!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+          });
+      
+        if (result.isConfirmed) {
+          await dispatch(deleteService({id}));
+          Swal.fire('Deleted!', `${name} has been deleted.`, 'success');
+        }
       };
-  
-      // Read the file as a data URL
-      reader.readAsDataURL(file);
-    }
-  };
-  
   
   useEffect(() => {
     const handleBeforeUnload = async (e) => {
@@ -124,110 +120,40 @@ const Service = ({
 
   return (
     <tr
-    ref={ref}
-    data-handler-id={handlerId}
-    onDoubleClick={() => setEditedService(service)}
-    className={`h-16 ${isDragging ? 'opacity-0' : 'opacity-100'} ${editedService ? 'bg-black' : 'cursor-grab'} ${index % 2 !== 0 ? 'bg-gray-100' : 'bg-white'}`}
+      ref={ref}
+      data-handler-id={handlerId}
+      onDoubleClick={() => setEditedService(service)}
+      className={`h-16 ${isDragging ? 'opacity-0' : 'opacity-100'} ${editedService ? 'bg-black' : 'cursor-grab'} ${index % 2 !== 0 ? 'bg-gray-100' : 'bg-white'}`}
     >
-    {editedService && editedService.id === service.id ? (
-        <>
-        <td className=" text-sm text-center"><FontAwesomeIcon icon={faBars} className="mr-3 text-gray-400" /></td>
-        <td className=" text-sm text-center pr-6">{index+1}</td>
-        <td className="flex justify-center relative">
-            <img
-              src={editedService.icon}
-              className="w-12 h-12 rounded-full absolute -top-7 cursor-pointer"
-              onClick={handleImageEdit} // Trigger image edit on click
-              alt="Service"
-            />
-            <input
-              type="file"
-              accept="image/*"
-              ref={fileInputRef}
-              className="hidden"
-              onChange={handleFileChange} // Handle the file input change
-            />
-          </td>
-        <td>
-            <input
-            type="text"
-            name="name"
-            value={editedService.name}
-            onChange={(e) => handleInputChange(e, setEditedService)}
-            className="border p-2 rounded-md focus:outline-none text-sm text-center focus:ring-2 flex justify-center mx-auto focus:ring-blue-400"
-            placeholder="Name"
-            />
-        </td>
-        <td>
-            <input
-            type="text"
-            name="job"
-            value={editedService.shortDescription}
-            onChange={(e) => handleInputChange(e, setEditedService)}
-            className="border p-2 rounded-md focus:outline-none text-sm text-center focus:ring-2 flex justify-center mx-auto focus:ring-blue-400"
-            placeholder="Job"
-            />
-        </td>
-        <td>
-            <input
-            type="text"
-            name="description"
-            value={editedService.longDescription}
-            onChange={(e) => handleInputChange(e, setEditedService)}
-            className="border p-2 rounded-md focus:outline-none text-sm text-center focus:ring-2 flex justify-center mx-auto focus:ring-blue-400"
-            placeholder="Description"
-            />
-        </td>
-        <td className="text-center">
-            <Switch
-              checked={isVisible}
-              onChange={handleToggleVisibility}
-              className={`${service.isVisible ? 'bg-green-500' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full`}
-            >
-              <span className="sr-only">Toggle visibility</span>
-              <span
-                className={`${service.isVisible ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition`}
-              />
-            </Switch>
-        </td>
-        <td className="space-x-2 mx-auto flex items-center justify-center h-16">
-            <button onClick={handleEditService} className="bg-green-500 hover:bg-green-400 text-secondary-text rounded p-1  transition duration-150 w-20">
-            Save
-            </button>
-            <button onClick={() => setEditedService(null)} className="bg-red-500 text-white py-1 rounded-md hover:bg-red-400 transition duration-150 w-20">
-            Discard
-            </button>
-        </td>
-        </>
-    ) : (
-        <>
-        <td className="text-sm text-center"><FontAwesomeIcon icon={faBars} className="mr-3 text-gray-400" /></td>
-        <td className=" text-sm text-center pr-6 ">{index+1}</td>
-        <td className="flex justify-center relative"><img src={service.icon} className="w-12 h-12 rounded-full absolute -top-7"/></td>
-        <td className="font-bold text-sm text-center">{service.name}</td>
-        <td className="text-sm text-center text-gray-500">{service.shortDescription}</td>
-        <td className="text-sm text-center text-gray-500">{service.longDescription}</td>
-        <td className="text-center">
+          <td className="text-sm text-center w-12"><FontAwesomeIcon icon={faBars} className="mr-3 text-gray-400" /></td>
+          <td className="text-sm text-center pr-6 w-10">{index + 1}</td>
+          <td className="flex justify-center relative max-w-24"><img src={service.icon} className="w-12 h-12 rounded-full absolute -top-7" /></td>
+          <td className="font-bold text-sm text-center w-32 truncate">{service.name}</td>
+          <td className="text-sm text-center text-gray-500 max-w-20 truncate">{service.shortDescription}</td>
+          <td className="text-sm text-center text-gray-500 max-w-20 truncate">{service.longDescription}</td>
+          <td className="text-center w-16">
             <Switch
               checked={isVisible}
               onChange={handleToggleVisibility}
               className="group inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition data-[checked]:bg-blue-600"
-              >
-                <span className="size-4 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6" />
+            >
+              <span className="size-4 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6" />
             </Switch>
-        </td>
-        <td className="space-x-2 flex items-center justify-center h-16">
-            <button onClick={() => setEditedService(service)} className="bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-1  transition duration-150 w-20">
-            Edit
+          </td>
+          <td className="space-x-2 flex items-center justify-center h-16">
+            <button onClick={() => setIsModalOpen(true)} className="bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-1 transition duration-150 w-20">
+              Edit
             </button>
-            <button onClick={() => handleDeleteService(service.id)} className="bg-white hover:bg-gray-100 text-primary-text rounded p-1  transition duration-150 w-20">
-            Delete
+            <ServicesModal 
+                isModalOpen={isModalOpen} 
+                setIsModalOpen={setIsModalOpen}
+                existingService={service}
+                />
+            <button onClick={() => handleDeleteService(service.id, service.name)} className="bg-white hover:bg-gray-100 text-primary-text rounded p-1 transition duration-150 w-20">
+              Delete
             </button>
-        </td>
-        </>
-    )}
+          </td>
     </tr>
-
   );
 };
 

@@ -5,14 +5,13 @@ import Service from './Service';
 import ServicesModal from '../../components/modals/ServicesModal';
 import Swal from 'sweetalert2';
 import { useDispatch, useSelector } from 'react-redux';
-import { addService, editService, deleteService, reorderServices, saveServiceOrder } from '../../store/slices/servicesSlice';
+import { deleteService, reorderServices, saveServiceOrder } from '../../store/slices/servicesSlice';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import Spinner from '../../components/Spinner'; // Import Spinner
 
 
 const ServicesPage = () => {
-  const [editedService, setEditedService] = useState(null);
   const [timeoutId, setTimeoutId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
   const dispatch = useDispatch();
@@ -28,25 +27,7 @@ const ServicesPage = () => {
     serviceSetter(prev => ({ ...prev, [name]: value }));
   };
   
-  // Add a new services service
-  const handleAddService = async (serviceData, mainServiceId = null) => {
-    await dispatch(addService({ serviceData, mainServiceId }));
-    Swal.fire({
-        icon: 'success',
-        title: 'Success',
-        text: `${serviceData.name} has been successfully added to the services.`,
-        confirmButtonText: 'OK',
-    });
-};
 
-
-
-
-  // Edit a services service
-  const handleEditService = async () => {
-    await dispatch(editService(editedService))
-    setEditedService(null);
-  };
   
   
   // Delete a services service
@@ -122,7 +103,6 @@ const ServicesPage = () => {
         <ServicesModal 
           isModalOpen={isModalOpen} 
           setIsModalOpen={setIsModalOpen} 
-          handleAddService={handleAddService} 
         />
         
         {loading ? ( // Conditional rendering for loading spinner
@@ -153,11 +133,9 @@ const ServicesPage = () => {
                     service={service} 
                     index={index} 
                     moveService={handleMoveService} 
-                    setEditedService={setEditedService} 
-                    handleDeleteService={handleDeleteService} 
-                    editedService={editedService} 
-                    handleEditService={handleEditService}
                     handleInputChange={handleInputChange}
+                    isModalOpen={isModalOpen} 
+                    setIsModalOpen={setIsModalOpen} 
                   />
                 ))}
               </tbody>

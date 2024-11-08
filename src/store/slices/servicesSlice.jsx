@@ -12,34 +12,41 @@ export const fetchServices = createAsyncThunk('services/fetchServices', async ()
             const service = { id: key, ...response.data[key] };
             // Fetch sub-services if any
             const subResponse = await axios.get(`/services/${key}/subServices.json`);
-            service.subServices = subResponse.data ? Object.keys(subResponse.data).map(subKey => ({
-                id: subKey,
-                ...subResponse.data[subKey]
-            })) : [];
+            service.subServices = subResponse.data 
+                ? Object.keys(subResponse.data).map(subKey => ({
+                    id: subKey,
+                    ...subResponse.data[subKey]
+                })).sort((a, b) =>{
+                    const orderA = a.order ?? Infinity; // Treat missing order as a very high number
+                    const orderB = b.order ?? Infinity;
+                    return orderA - orderB;
+                }) // Sort sub-services by order
+                : [];
             return service;
         })
     );
-    return servicesData;
+
+    // Sort main services by order before returning
+    return servicesData.sort((a, b) => a.order - b.order);
 });
+
 
 
 // Add a new service with optional sub-services
 export const addService = createAsyncThunk(
     'services/addService',
     async ({ serviceData, mainServiceId }, { rejectWithValue }) => {
-        console.log(mainServiceId)
-        console.log(serviceData)
         
         try {
             if (mainServiceId) {
                 // Add sub-service
                 const response = await axios.post(`/services/${mainServiceId}/subServices.json`, serviceData);
-                console.log(response)
+                console.log(response.data)
                 return { mainServiceId, id: response.data.name, ...serviceData };
             } else {
                 // Add main service
                 const response = await axios.post('/services.json', serviceData);
-                console.log(serviceData)
+                console.log(response.data)
                 return { id: response.data.name, ...serviceData };
             }
         } catch (error) {
@@ -80,8 +87,7 @@ export const saveServiceOrder = createAsyncThunk(
                             : `/services/${service.id}.json`;
                         
                         // Attempt to patch with order
-                        const response = await axios.patch(url, { order: index });
-                        console.log(url)
+                        await axios.patch(url, { order: index });
                         return { id: service.id, status: 'success' };
                     } catch (error) {
                         // Capture individual failures with service ID and error message

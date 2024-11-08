@@ -12,6 +12,8 @@ import ActionsDropdown from '../components/AppointmentsActionsDropdown';
 import Swal from 'sweetalert2';
 import BulkActionsDropdown from '../components/BulkActionsDropdown';
 import { useDispatch, useSelector } from 'react-redux';
+import Lottie from 'lottie-react';
+import noDataAnimation from '../assets/Animation - 1730816811189.json'
 import {
     addAppointment,
     updateAppointment,
@@ -68,6 +70,7 @@ const Appointments = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [appointmentsPerPage, setAppointmentsPerPage] = useState(5);
+    const patients = useSelector(state => state.patients.list)
     const navigate = useNavigate()
     const rowRef = useRef(); // Ref for the editable row
     
@@ -90,23 +93,26 @@ const Appointments = () => {
 
     //---------------------end of helpers------------------
     
-
     //----------------------------memos----------------------------
-
     const sortedAppointments = React.useMemo(() => {
         let sortableAppointments = [...appointments];
-        
+    
         if (sortConfig.key) {
             sortableAppointments.sort((a, b) => {
                 let aValue = a[sortConfig.key];
                 let bValue = b[sortConfig.key];
-                
+    
                 // Custom sorting logic for time
-                if (sortConfig.key === 'time') {    
+                if (sortConfig.key === 'time') {
                     aValue = convert12HourTo24Hour(a.time);
                     bValue = convert12HourTo24Hour(b.time);
                 }
-                
+    
+                // Use localeCompare for string comparison, especially for names
+                if (typeof aValue === 'string' && typeof bValue === 'string') {
+                    return aValue.localeCompare(bValue, 'ar', { sensitivity: 'base' }) * (sortConfig.direction === 'ascending' ? 1 : -1);
+                }
+    
                 if (aValue < bValue) {
                     return sortConfig.direction === 'ascending' ? -1 : 1;
                 }
@@ -118,6 +124,7 @@ const Appointments = () => {
         }
         return sortableAppointments;
     }, [appointments, sortConfig]);
+    
     
     
     const filteredAppointments = React.useMemo(() => {
@@ -170,59 +177,78 @@ const Appointments = () => {
         setEditData((prev) => ({ ...prev, [name]: value }));
     };
     
-    const handleBulkAction = async (action) => {
-        switch (action) {
-            case 'approve':
-            try {
-                await Promise.all(selectedAppointments.map(id => handleChangeStatus(id, 'approved'))).then(setSelectedAppointments([]))
-                Swal.fire('Success!', `The selected appointments have been marked as approved.`, 'success');
-            } catch (error) {
-                console.error('Error updating status:', error);
-                Swal.fire('Error!', 'There was a problem updating the status.', 'error');
-            }
-            break;
-            case 'pending':
-            try {
-                await Promise.all(selectedAppointments.map(id => handleChangeStatus(id, 'pending'))).then(setSelectedAppointments([]))
-                Swal.fire('Success!', `The selected appointments have been marked as pending.`, 'success');
-            } catch (error) {
-                console.error('Error updating status:', error);
-                Swal.fire('Error!', 'There was a problem updating the status.', 'error');
-            }
-            break;
-            case 'cancelled':
-            try {
-                await Promise.all(selectedAppointments.map(id => handleChangeStatus(id, 'cancelled'))).then(setSelectedAppointments([]))
-                Swal.fire('Success!', `The selected appointments have been marked as cancelled.`, 'success');
-            } catch (error) {
-                console.error('Error updating status:', error);
-                Swal.fire('Error!', 'There was a problem updating the status.', 'error');
-            }            
-            break;
-            case 'delete':
-            try {
-                await Promise.all(selectedAppointments.map(id => handleDeleteAppointment(id))).then(setSelectedAppointments([]))
-                Swal.fire('Success!', `The selected appointments have been deleted.`, 'success');
-            } catch (error) {
-                console.error('Error updating status:', error);
-                Swal.fire('Error!', 'There was a problem deleting the selected appointments.', 'error');
-            }           
-            break;
-            case 'message':
-                
-            break;
-            default:
-            break;
+const handleBulkAction = async (action) => {
+
+    try {
+        // Define status message for each action type
+        const actionMessages = {
+            approve: 'approved',
+            pending: 'pending',
+            cancelled: 'cancelled',
+            delete: 'deleted'
+        };
+
+        if (action === 'message') {
+            // Handle custom message action here if needed
+            return;
         }
-    };
-                        
+
+        // Perform the selected bulk action
+        if (action === 'delete') {
+            const result = await Swal.fire({
+                title: 'Are you sure?',
+                text: 'You are about to delete the selected appointments. This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete them!',
+                cancelButtonText: 'Cancel'
+            });
+    
+            if (result.isConfirmed) {
+                try {
+                    await Promise.all(selectedAppointments.map(async id => await dispatch(deleteAppointment(id))));
+                     // Show success Swal
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: `The selected appointments have been deleted.`,
+                        timer: 1000,
+                        showConfirmButton: false
+                    });
+                } catch (error) {
+                    console.error('Error deleting appointment:', error);
+                    Swal.fire('Error!', 'There was a problem deleting the appointment.', 'error');
+                }
+            }
+            
+        } else {
+            await Promise.all(selectedAppointments.map(id => handleChangeStatus(id, actionMessages[action])));
+        }
+
+        // Reset selected appointments after successful action
+        setSelectedAppointments([]);
+
+    } catch (error) {
+        console.error('Error updating status:', error);
+        
+        // Show error Swal
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'There was a problem processing the bulk action. Please try again later.',
+            confirmButtonText: 'OK'
+        });
+    }
+};
+                
                         
     const handleSave = async (id) => {
         const dataToBePushed = { 
             ...editData,
             time: convert24HourTo12Hour(editData.time), 
         };
-        
         try {
             await dispatch(updateAppointment({ id, updatedData: dataToBePushed }));
             setEditId(null);
@@ -253,7 +279,7 @@ const Appointments = () => {
     };
     
     
-    const handleAddPatient = (appointment) => {
+    const handleAddPatient = async (appointment) => {
         // Extract necessary data from the appointment
         const patientData = {
             name: appointment.name,
@@ -264,10 +290,36 @@ const Appointments = () => {
             appointmentDate: appointment.date,
             appointmentTime: appointment.time,
         };
+        
+        // Check for existing patients by phone number
+        const existingPatient = patients.find(patient => patient.phone === patientData.phone);
     
-        // Navigate to the new patient form page, passing patientData as state
-        navigate('/add-patient', { state: { patientData } });
+        if (existingPatient) {
+            // Show SweetAlert prompt if patient already exists
+            Swal.fire({
+                title: 'Patient Already Exists',
+                text: 'A patient with this phone number already exists. Would you like to view their data or add a new record?',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Add Record',
+                cancelButtonText: 'View Data'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // If user chooses to add a record, navigate to patient details and trigger modal open
+                    navigate(`/patients/patient-details/${existingPatient.id}`, {
+                        state: { openAddRecordModal: true }  // Pass state to open modal
+                    });
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    // If user chooses to view data, navigate to patient details without opening the modal
+                    navigate(`/patients/patient-details/${existingPatient.id}`);
+                }
+            });
+        } else {
+            // If no matching patient, navigate to add-patient form with pre-filled data
+            navigate('/add-patient', { state: { patientData } });
+        }
     };
+    
     
 
     const handleReply = (type, phoneNumber) => {
@@ -300,18 +352,24 @@ const Appointments = () => {
                 }
             }
         };
+
         document.addEventListener('mousedown', handleClickOutside);
+
         return () => {
-            if(!editId)document.removeEventListener('mousedown', handleClickOutside);   
-            // Cleanup
+            // Always remove the event listener on cleanup
+            document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [editId]); // Dependency on editId
+    }, [editId, editData]); // Dependency on editId
+
+
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [appointmentsPerPage]); // Dependency on editId
 
 //--------------------------------------end of effects--------------------------------------
 
-
 return (
-    <div className="p-7 w-full">
+    <div className="p-7 ">
             <div className='flex justify-between mb-6'>
             <h2 className="text-lg font-semibold">Appointments</h2>
                 <button onClick={() => setIsModalOpen(true)} className="mb-2 py-2 px-4 bg-primary-btn hover:bg-hover-btn w-[170px] text-white rounded">
@@ -360,7 +418,8 @@ return (
             {loading ? ( // Conditional rendering for loading spinner
                 <Spinner /> // Use Spinner component
                 ) : (
-            <table className="w-full  table-auto">
+                    currentAppointments.length > 0 ? 
+            ( <table className="w-full table-auto">
                 <thead>
                     <tr className='text-center border-b-[16px] border-white'>
                         <th className="px-2 ">
@@ -471,7 +530,7 @@ return (
                             </td>
                             <td className=" text-sm p-2">
                                 {editId === appointment.id ? (
-                                    <div className="space-x-2 mx-auto flex items-center justify-center h-16">
+                                    <div className="space-x-2 mx-auto flex items-center justify-center h-[38px]">
                                         <button onClick={() =>handleSave(editId)} className="bg-green-500 hover:bg-green-400 text-secondary-text rounded p-1  transition duration-150 w-16">
                                             Save
                                         </button>
@@ -493,7 +552,17 @@ return (
                         </tr>
                     ))}
                 </tbody>
-            </table>)}
+            </table>) : (
+         <div className="flex flex-col items-center justify-center h-64 space-y-4">
+         <Lottie 
+             animationData={noDataAnimation} 
+             loop={true} 
+             style={{ width: 150, height: 150 }} 
+             className="mb-4"
+         />
+         <p className="text-gray-500 text-lg">There are no appointments to display.</p>
+     </div>
+        ))}
             <div className="mt-4 flex justify-between">
             <div className="mb-4 flex justify-between items-center">
                 <label htmlFor="appointments-per-page" className="mr-4">Show:</label>

@@ -24,7 +24,6 @@ const Patients = () => {
     const [patientsPerPage, setPatientsPerPage] = useState(5);
     const [selectedStatus, setSelectedStatus] = useState('All');
     const dispatch = useDispatch()
-    console.log(patients)
     const handleCheckboxChange = (id) => {
         setSelectedPatients((prevSelected) =>
             prevSelected.includes(id)
@@ -37,15 +36,39 @@ const handleBulkAction = async (action) => {
     switch (action) {
         case 'delete':
             try {
-                await Promise.all(selectedPatients.map(id => handleDelete(id))).then(setSelectedPatients([]))
-                Swal.fire('Success!', `The selected patients have been deleted.`, 'success');
-            } catch (error) {
+                const result = await Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'You are about to delete the selected patients. This action cannot be undone.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete them!',
+                    cancelButtonText: 'Cancel'
+                });
+        
+                if (result.isConfirmed) {
+                    try {
+                await Promise.all(selectedPatients.map(async id => await dispatch(archivePatient(id)))).then(setSelectedPatients([]))
+                // Show success Swal
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: `The selected patients have been deleted.`,
+                    timer: 1000,
+                    showConfirmButton: false
+                });
+                } catch (error) {
+                    console.error('Error deleting patient:', error);
+                    Swal.fire('Error!', 'There was a problem deleting the patient.', 'error');
+                }          
+            } }catch (error) {
                 console.error('Error updating status:', error);
                 Swal.fire('Error!', 'There was a problem deleting the selected patients.', 'error');
             }           
             break;
             case 'message':
-                
+                setSelectedPatients([])
                 break;
                 default:
                     break;
@@ -111,7 +134,38 @@ const handleBulkAction = async (action) => {
         });
     }, [patients, searchQuery, selectedStatus]);
     
+    const getNextAppointmentDate = (records) => {
+        const futureAppointments = records
+          .map(record => new Date(record.nextAppointmentDate))
+          .filter(date => date > new Date()); // Only keep future dates
+        if (futureAppointments.length === 0) {
+          return "No upcoming appointments";
+        }
+        const nextAppointment = new Date(
+          Math.min(...futureAppointments.map(date => date.getTime()))
+        );
+      
+        return nextAppointment.toLocaleDateString(); // Format as needed
+      }
+    
+      function getTotalAmounts(records) {
+        const totals = records.reduce(
+          (acc, record) => {
+            acc.totalPaid += record.price.paid || 0;
+            acc.totalRemaining += record.price.remaining || 0;
+            return acc;
+          },
+          { totalPaid: 0, totalRemaining: 0 }
+        );
 
+          // Remove decimal points by flooring or rounding
+            const totalPaid = Math.floor(totals.totalPaid);
+            const totalRemaining = Math.floor(totals.totalRemaining);
+                
+        return `(${totalPaid}, ${totalRemaining})`;
+      }
+
+    // Sort records by dueDate in ascending order
     const totalPages = Math.ceil(filteredPatients.length / patientsPerPage);
     const currentPatients = filteredPatients.slice((currentPage - 1) * patientsPerPage, currentPage * patientsPerPage);
     return (
@@ -135,10 +189,10 @@ const handleBulkAction = async (action) => {
                 <div className="text-sm">
                     {selectedPatients.length > 0 && 
                         <div className="flex">
-                            <button onClick={handleBulkAction('message')} className="bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-2 text-sm">
+                            <button onClick={() => handleBulkAction('message')} className="bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-2 text-sm">
                                 Send Message
                             </button>
-                            <button onClick={handleBulkAction('delete')} className="ml-4 p-2 text-sm hover:bg-gray-100 rounded text-primary-text">
+                            <button onClick={() => handleBulkAction('delete')} className="ml-4 p-2 text-sm hover:bg-gray-100 rounded text-primary-text">
                                 Delete All
                             </button>
                         </div>
@@ -179,7 +233,13 @@ const handleBulkAction = async (action) => {
                                 <th className="font-normal text-sm p-2">No</th>
                                 <th className="font-normal text-sm p-2">Name</th>
                                 <th className="font-normal text-sm p-2">First Appointment</th>
-                                <th className="font-normal text-sm p-2">Last Appointment</th>
+                                <th className="font-normal text-sm p-2">Next Appointment</th>
+                                <th className="font-normal text-sm p-2">
+                                    <div>
+                                        <h1>Total Payments</h1>
+                                        <h1>(Paid, Remaining)</h1>
+                                    </div>
+                                </th>
                                 <th className="font-normal text-sm p-2">Doctor Treating</th>
                                 <th className="font-normal text-sm p-2">Actions</th>
                             </tr>
@@ -201,19 +261,50 @@ const handleBulkAction = async (action) => {
                                         </Link>
                                     </td>
                                     <td className="text-sm p-2">{formatDateTime(patient.firstAppointmentDate)}</td>
-                                    <td className="text-sm p-2">{formatDateTime(patient.lastAppointmentDate)}</td>
+                                    <td className="text-sm p-2">{getNextAppointmentDate(patient.records)}</td>
+                                    <td className="text-sm p-2">{getTotalAmounts(patient.records)}</td>
                                     <td className="text-sm p-2">
-                                        <div className="flex justify-center gap-2">
-                                        {patient.records && Array.from(new Set(Object.values(patient.records).map(record => record.doctorTreating)))
-                                            .map((doctorId, i) => (
+                                    <div className="relative flex justify-center group gap-2">
+                                    {patient.records && (() => {
+                                        const uniqueDoctors = Array.from(
+                                            new Set(Object.values(patient.records).map(record => record.doctorTreating))
+                                        );
+
+                                        return (
+                                            <>
+                                            {/* Display up to 3 doctor images */}
+                                            {uniqueDoctors.slice(0, 2).map((doctorId, i) => (
                                                 <img 
-                                                    key={i} 
-                                                    src={doctorImages[doctorId]} 
-                                                    alt={`Doctor treating ${patient.name}`} 
-                                                    className="w-8 h-8 rounded-full" 
+                                                key={i} 
+                                                src={doctorImages[doctorId]} 
+                                                alt={`Doctor treating ${patient.name}`} 
+                                                className="w-8 h-8 rounded-full" 
                                                 />
                                             ))}
-                                        </div>
+
+                                            {/* Show additional doctor count if more than 3 */}
+                                            {uniqueDoctors.length > 1 && (
+                                                <div className="w-8 h-8 flex items-center justify-center bg-gray-300 text-xs font-semibold rounded-full cursor-pointer relative">
+                                                +{uniqueDoctors.length - 1}
+
+                                                {/* Hover block showing all doctor images */}
+                                                <div className="absolute top-full mt-1 hidden group-hover:inline-flex gap-2 bg-white shadow-lg border border-gray-200 z-50 w-auto min-w-max px-2 py-1 rounded-md">
+                                                
+                                                {uniqueDoctors.slice(2).map((doctorId, j) => (
+                                                    <img 
+                                                        key={j} 
+                                                        src={doctorImages[doctorId]} 
+                                                        alt={`Doctor treating ${patient.name}`} 
+                                                        className="w-8 h-8 rounded-full" 
+                                                    />
+                                                    ))}
+                                                </div>
+                                                </div>
+                                            )}
+                                            </>
+                                        );
+                                        })()}
+                                    </div>
                                     </td>
                                     <td className="text-sm p-2">
                                         <PatientActionsDropdown
