@@ -17,7 +17,7 @@ const RecordsSystem = ({ patientId, patientRecords }) => {
     const overviewRef = useRef(null); // Create a ref for the overview section
     const [selectedPhoto, setSelectedPhoto] = useState(null);
     const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0); // To track the index of the selected photo
-    
+
     
     const handleAddRecordClick = (record) => {
         if (record) setIsEditing(true)
@@ -392,19 +392,24 @@ const renderOverview = () => {
         <table className="table-auto w-full">
           <thead>
             <tr className="font-medium h-14">
-              <th className="w-1/12 text-left text-sm pl-4">NO</th>
-              <th className="w-4/12 text-left text-sm pl-4">Date</th>
-              <th className="w-5/12 text-left text-sm">Doctor</th>
-              <th className="w-2/12"></th>
+              <th className="text-sm pl-4">NO</th>
+              <th className="text-sm pl-4">Date</th>
+              <th className="text-sm">Doctor</th>
+              <th className="text-sm">Payment</th>
+              <th className=""></th>
             </tr>
           </thead>
           <tbody>
             {currentRecords.map((record, index) => (
               <tr key={index} className={`${index % 2 === 0 ? 'bg-gray-100' : ''}`}>
-                <td className="pl-4 py-3 text-sm">{index + 1 + (currentPage - 1) * 5}</td>
-                <td className="py-3 text-sm pl-4">{formatDateTime(record.dueDate)}</td>
-                <td className="py-3 text-sm">{record.doctorTreating}</td>
-                <td className="py-3 text-sm">
+                <td className="pl-4 py-3 text-sm text-center">{index + 1 + (currentPage - 1) * 5}</td>
+                <td className="py-3 text-sm text-center pl-4">{formatDateTime(record.dueDate)}</td>
+                <td className="py-3 text-sm text-center">{record.doctorTreating}</td>
+                <td className="text-sm text-center p-2 flex justify-center text-white gap-2">
+                    <p className='px-2 py-1 bg-green-400 rounded-md'>{Math.floor(record.price.paid)}</p>
+                    <p className='px-2 py-1 bg-red-400 rounded-md'>{Math.floor(record.price.remaining)}</p>
+                </td>
+                <td className="py-3 text-sm text-center">
                   <button
                     onClick={() => handleViewRecord(index)}
                     className="px-4 py-2 bg-blue-400 bg-opacity-20 text-blue-400 hover:text-secondary-text hover:bg-opacity-100 duration-200 transition-all ease-in-out font-medium text-xs w-fit rounded-md"
@@ -454,6 +459,20 @@ const renderOverview = () => {
           </div>
           <div className='group'>
           <button
+            onClick={() => setActiveTab('records')}
+            className={`transition-all  duration-300 ease-in-out ${
+                activeTab === 'records' ? 'text-blue-500 ' : 'group-hover:text-blue-500'
+              }`}>
+            Records
+          </button>
+          <div
+                    className={`mt-2 ${
+                        activeTab === 'records' ? 'bg-blue-500 h-[2px] overflow-hidden transition-all duration-500 ease-in-out w-full' : 'bg-blue-500 h-[2px] w-0 group-hover:w-full transition-all duration-500 ease-in-out'
+                      }`}
+                  />
+          </div>
+          <div className='group'>
+          <button
             onClick={() => setActiveTab('case photos')}
             className={`transition-all duration-300 ease-in-out ${
                 activeTab === 'case photos' ? 'text-blue-500 ' : 'group-hover:text-blue-500'
@@ -474,10 +493,12 @@ const renderOverview = () => {
         </button>
       </div>
       <div className='bg-white py-8 px-9 mt-6 w-full rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.02)] border border-gray-200'>
-        {activeTab === 'overview' ? renderOverview() : renderCasePhotos()}
-      </div>
-      <div className='bg-white py-8 px-9 mt-6 w-full rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.02)] border border-gray-200'>
-        {renderAllRecords()}
+      {
+        activeTab === 'overview' ? renderOverview() :
+        activeTab === 'case photos' ? renderCasePhotos() :
+        activeTab === 'records' ? renderAllRecords() :
+        null
+      }
       </div>
       <AddRecordModal isOpen={isModalOpen} onClose={handleCloseModal} patientId={patientId} record={isEditing ? patientRecords[selectedRecordIndex] : null}/>
     </div>

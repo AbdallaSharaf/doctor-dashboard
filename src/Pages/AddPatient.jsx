@@ -11,6 +11,11 @@ import {selectDiagnoses, selectDoctorNames, selectJobs, selectMedicines} from '.
 
 import Swal from 'sweetalert2';
 
+// List of Egyptian cities
+const egyptianCities = [
+    "Cairo", "Alexandria", 'Tanta'
+];
+
 const AddPatient = () => {
     const location = useLocation();
     const { patientData } = location.state || {};
@@ -48,6 +53,7 @@ const AddPatient = () => {
             gender: patientData?.gender || '',
             firstAppointmentDate: '',
             lastAppointmentDate: '',
+            city: '',
             doctorTreating: '',
             diagnosis: [],
             jobDone: [],
@@ -86,6 +92,7 @@ const AddPatient = () => {
                         gender: values.gender,
                         firstAppointmentDate: values.firstAppointmentDate,
                         lastAppointmentDate: values.lastAppointmentDate,
+                        city: values.city,
                     },
                     recordData: {
                             doctorTreating: values.doctorTreating,
@@ -249,14 +256,21 @@ const AddPatient = () => {
             </div>
 
             <div>
-                <label htmlFor="lastAppointmentDate" className="block font-medium">Last Appointment Date & Time</label>
-                <input
-                    type="date"
-                    {...formik.getFieldProps('lastAppointmentDate')}
-                    className={`border p-2 rounded-md w-full ${formik.touched.lastAppointmentDate && formik.errors.lastAppointmentDate ? 'border-red-500' : ''}`}
-                />
-                {formik.touched.lastAppointmentDate && formik.errors.lastAppointmentDate ? (
-                    <p className='text-red-800'>{formik.errors.lastAppointmentDate}</p>
+                <label htmlFor="city" className="block font-medium">City</label>
+                <select
+                    {...formik.getFieldProps('city')}
+                    className={`border p-2 rounded-md w-full ${formik.touched.city && formik.errors.city ? 'border-red-500' : ''}`}
+                >
+                    <option value="">Select a city</option>
+                    {egyptianCities.map((city) => (
+                        <option key={city} value={city}>
+                            {city}
+                        </option>
+                    ))}
+                    <option value="">Other</option>
+                </select>
+                {formik.touched.city && formik.errors.city ? (
+                    <p className='text-red-800'>{formik.errors.city}</p>
                 ) : null}
             </div>
 

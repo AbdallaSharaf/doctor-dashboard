@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import axios from '../helpers/Axios';
 import { capitalizeFirstLetter, convert24HourTo12Hour, convert12HourTo24Hour } from '../helpers/Helpers';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
@@ -14,6 +13,8 @@ import BulkActionsDropdown from '../components/BulkActionsDropdown';
 import { useDispatch, useSelector } from 'react-redux';
 import Lottie from 'lottie-react';
 import noDataAnimation from '../assets/Animation - 1730816811189.json'
+import PhoneWithActions from '../components/PhoneWithActions';
+
 import {
     addAppointment,
     updateAppointment,
@@ -70,6 +71,7 @@ const Appointments = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [appointmentsPerPage, setAppointmentsPerPage] = useState(5);
+    const [phoneHovered, setPhoneHovered] = useState(false);
     const patients = useSelector(state => state.patients.list)
     const navigate = useNavigate()
     const rowRef = useRef(); // Ref for the editable row
@@ -331,7 +333,16 @@ const handleBulkAction = async (action) => {
         }
     };
     
-    
+    const handleCopyPhone = (phone) => {
+        navigator.clipboard.writeText(phone)
+          .then(() => {
+            alert('Phone number copied!');
+          })
+          .catch((err) => {
+            console.error('Error copying phone number:', err);
+          });
+      };
+
     const handleCheckboxChange = (id) => {
         setSelectedAppointments((prevSelected) =>
             prevSelected.includes(id)
@@ -385,7 +396,7 @@ return (
             </div>
             <div className='p-7 rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.04)] border border-gray-200]'>
             <div className='flex justify-between items-center mb-6'>
-            <div className='flex gap-4'>
+            <div className='flex gap-4 items-center'>
             <div className='w-[140px]'>
             <CustomDropdown
                 options={statusOptions}
@@ -393,12 +404,9 @@ return (
                 setSelectedStatus={setSelectedStatus}
             />
             </div>
-            {selectedAppointments.length > 0 && (
-                <div>
-                    <BulkActionsDropdown handleBulkAction={handleBulkAction} />
-                </div>
-            )}
-
+            <div>
+                <BulkActionsDropdown handleBulkAction={handleBulkAction} isActive={selectedAppointments.length > 0}/>
+            </div>
             </div>
             <div className="relative p-2 text-sm">
                 <FontAwesomeIcon 
@@ -499,7 +507,7 @@ return (
                                     appointment.time
                                 )}
                             </td>
-                            <td className=" text-sm p-2">
+                            <td className="text-sm p-2" onMouseEnter={() => setPhoneHovered(appointment.id)} onMouseLeave={() => setPhoneHovered(null)}>
                                 {editId === appointment.id ? (
                                     <input 
                                         type="text" 
@@ -509,7 +517,7 @@ return (
                                         className="border border-gray-300 rounded p-1 max-w-32"
                                     />
                                 ) : (
-                                    appointment.phone
+                                    <PhoneWithActions phone={appointment.phone} handleCopyPhone={handleCopyPhone} handleReply={handleReply} isHovered={phoneHovered} id={appointment.id}/>
                                 )}
                             </td>
                             <td className={``}>

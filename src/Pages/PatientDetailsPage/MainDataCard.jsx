@@ -3,6 +3,13 @@ import { updatePatient } from '../../store/slices/patientsSlice';
 import { formatDateTime, capitalizeFirstLetter } from '../../helpers/Helpers';
 import { useDispatch } from 'react-redux';
 import { uploadPhoto } from '../../helpers/Helpers';
+
+// List of Egyptian cities
+const egyptianCities = [
+    "Cairo", "Alexandria", 'Tanta'
+];
+
+
 const MainDataCard = ({patientData}) => {
     const dispatch = useDispatch();
     const [editMode, setEditMode] = useState(false);
@@ -21,6 +28,7 @@ const MainDataCard = ({patientData}) => {
             gender: patientData.gender,
             firstAppointmentDate: patientData.firstAppointmentDate,
             lastAppointmentDate: patientData.lastAppointmentDate,
+            city: patientData.city || "", // Adding city field with default value
           });
           setImagePreview(patientData.photo); // Initial image preview
         }
@@ -161,6 +169,26 @@ const MainDataCard = ({patientData}) => {
             </div>
         ): (
             <p className='py-[5px] font-extralight'>{capitalizeFirstLetter(patientData.gender)}</p>
+            )}
+        </div>
+        <div className="text-sm my-4">
+            <p className="font-medium mb-1">City:</p>
+            {editMode ? (
+                <select
+                    value={editedData.city}
+                    onChange={(e) => handleFieldChange("city", e.target.value)}
+                    className="border p-1 w-full text-sm"
+                >
+                    <option value="">Select a city</option>
+                    {egyptianCities.map((city) => (
+                        <option key={city} value={city}>
+                            {city}
+                        </option>
+                    ))}
+                    <option value="">Other</option>
+                </select>
+            ) : (
+                <p className="py-[5px] font-extralight">{editedData.city || "Not specified"}</p>
             )}
         </div>
         <div className="text-sm my-4">

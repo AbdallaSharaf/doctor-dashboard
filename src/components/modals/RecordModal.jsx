@@ -29,7 +29,7 @@ const AddRecordModal = ({ isOpen, onClose, patientId, record }) => {
         doctorTreating: record.doctorTreating || '',
         dueDate: record.dueDate || '',
         nextAppointmentDate: record.nextAppointmentDate || '',
-        price: record.price || 0,
+        price: record.price.paid + record.price.remaining || 0,
         additionalNotes: record.additionalNotes || '',
         });
       setSelectedDiagnoses(record.diagnoses || []);
@@ -44,14 +44,17 @@ const AddRecordModal = ({ isOpen, onClose, patientId, record }) => {
         doctorTreating: '',
         dueDate: '',
         nextAppointmentDate: '',
-        price: 0,
+        price: {paid: 0, remaining: 0},
         additionalNotes: '',
       },
     validationSchema: Yup.object({
       doctorTreating: Yup.string().required('Required'),
       nextAppointmentDate: Yup.date().required('Required'),
       dueDate: Yup.date().required('Required'),
-      price: Yup.number().required('Required'),
+      price: Yup.object({
+        paid: Yup.number().required("Paid amount is required"),
+        remaining: Yup.number().required("Remaining amount is required"),
+      }),
       additionalNotes: Yup.string(),
     }),
     onSubmit: async (values, { resetForm }) => {
@@ -97,10 +100,6 @@ const AddRecordModal = ({ isOpen, onClose, patientId, record }) => {
         return; // Exit if the photo upload fails
       }
     }
-    
-    
-
-    
         try {
             const recordId = record.id
             console.log(recordId)
@@ -279,16 +278,35 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
             </div>
             </div>
             <div>
-                <label className="block mb-1">Price</label>
-                <input
-                type="number"
-                {...formik.getFieldProps('price')}
-                className="border p-2 w-full"
-                />
-                {formik.touched.price && formik.errors.price ? (
-                <div className="text-red-600">{formik.errors.price}</div>
-                ) : null}
-            </div>
+              <label className="block mb-1">Price</label>
+              <div  className='flex gap-4 justify-between'>
+              {/* Paid Field */}
+              <div className="mb-3 w-1/2">
+                  <label className="block mb-1">Paid</label>
+                  <input
+                      type="number"
+                      {...formik.getFieldProps('price.paid')}
+                      className="border p-2 w-full"
+                  />
+                  {formik.touched.price?.paid && formik.errors.price?.paid ? (
+                      <div className="text-red-600">{formik.errors.price.paid}</div>
+                  ) : null}
+              </div>
+
+              {/* Remaining Field */}
+              <div className="mb-3 w-1/2">
+                  <label className="block mb-1">Remaining</label>
+                  <input
+                      type="number"
+                      {...formik.getFieldProps('price.remaining')}
+                      className="border p-2 w-full"
+                  />
+                  {formik.touched.price?.remaining && formik.errors.price?.remaining ? (
+                      <div className="text-red-600">{formik.errors.price.remaining}</div>
+                  ) : null}
+              </div>
+              </div>
+          </div>
             </div>
 
             <div>

@@ -3,3 +3,5 @@ read unread messages ------------------------------//done
 toggleVisibility team -----------------------------//semiDone
 inline edit on click outside appointments
 navigating from addPatient Page
+cities handling 
+messages

@@ -13,7 +13,6 @@ import { archivePatient } from '../store/slices/patientsSlice'; // Import Redux 
 import Swal from 'sweetalert2';
 
 
-
 const Patients = () => {
     const patients = useSelector(state => state.patients.list); // Get patients from Redux state
     const loading = useSelector(state => state.patients.loading); // Loading state from Redux
@@ -162,7 +161,7 @@ const handleBulkAction = async (action) => {
             const totalPaid = Math.floor(totals.totalPaid);
             const totalRemaining = Math.floor(totals.totalRemaining);
                 
-        return `(${totalPaid}, ${totalRemaining})`;
+        return {totalPaid, totalRemaining};
       }
 
     // Sort records by dueDate in ascending order
@@ -187,16 +186,25 @@ const handleBulkAction = async (action) => {
                     />
                 </div>
                 <div className="text-sm">
-                    {selectedPatients.length > 0 && 
-                        <div className="flex">
-                            <button onClick={() => handleBulkAction('message')} className="bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-2 text-sm">
-                                Send Message
-                            </button>
-                            <button onClick={() => handleBulkAction('delete')} className="ml-4 p-2 text-sm hover:bg-gray-100 rounded text-primary-text">
-                                Delete All
-                            </button>
-                        </div>
-                    }
+                <div className="flex">
+                    {/* Send Message Button */}
+                    <button
+                    onClick={() => handleBulkAction('message')}
+                    className={`bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-2 text-sm ${!selectedPatients.length > 0 ? 'cursor-not-allowed opacity-50' : ''}`}
+                    disabled={!selectedPatients.length > 0} // Disable the button when isActive is false
+                    >
+                    Send Message
+                    </button>
+
+                    {/* Delete All Button */}
+                    <button
+                    onClick={() => handleBulkAction('delete')}
+                    className={`ml-4 p-2 text-sm hover:bg-gray-100 rounded text-primary-text ${!selectedPatients.length > 0 ? 'cursor-not-allowed opacity-50' : ''}`}
+                    disabled={!selectedPatients.length > 0} // Disable the button when isActive is false
+                    >
+                    Delete All
+                    </button>
+                </div>
                 </div>
                 </div>
                     <div className="relative p-2 text-sm">
@@ -234,12 +242,8 @@ const handleBulkAction = async (action) => {
                                 <th className="font-normal text-sm p-2">Name</th>
                                 <th className="font-normal text-sm p-2">First Appointment</th>
                                 <th className="font-normal text-sm p-2">Next Appointment</th>
-                                <th className="font-normal text-sm p-2">
-                                    <div>
-                                        <h1>Total Payments</h1>
-                                        <h1>(Paid, Remaining)</h1>
-                                    </div>
-                                </th>
+                                <th className="font-normal text-sm p-2">No. of Records</th>
+                                <th className="font-normal text-sm p-2"><h1>Total Payments</h1></th>
                                 <th className="font-normal text-sm p-2">Doctor Treating</th>
                                 <th className="font-normal text-sm p-2">Actions</th>
                             </tr>
@@ -262,7 +266,11 @@ const handleBulkAction = async (action) => {
                                     </td>
                                     <td className="text-sm p-2">{formatDateTime(patient.firstAppointmentDate)}</td>
                                     <td className="text-sm p-2">{getNextAppointmentDate(patient.records)}</td>
-                                    <td className="text-sm p-2">{getTotalAmounts(patient.records)}</td>
+                                    <td className="text-sm p-2">{patient.records.length}</td>
+                                    <td className="text-sm p-2 flex justify-center text-white gap-2">
+                                        <p className='px-2 py-1 bg-green-400 rounded-md'>{getTotalAmounts(patient.records).totalPaid}</p>
+                                        <p className='px-2 py-1 bg-red-400 rounded-md'>{getTotalAmounts(patient.records).totalRemaining}</p>
+                                    </td>
                                     <td className="text-sm p-2">
                                     <div className="relative flex justify-center group gap-2">
                                     {patient.records && (() => {

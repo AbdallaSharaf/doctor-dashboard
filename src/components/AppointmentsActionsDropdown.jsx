@@ -1,116 +1,53 @@
 import React from 'react';
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'; // Import the Menu component
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faCheckCircle,
+  faBan,
+  faUserPlus,
+  faTrash,
+  faHourglass,
+} from '@fortawesome/free-solid-svg-icons';
 
-const ActionsDropdown = ({ appointment, handleChangeStatus, handleEditClick, handleRejectDelete, handleReply, handleAddPatient}) => {
+
+import { Tooltip } from 'react-tooltip';
+
+const AppointmentActionsDropdown = ({ appointment, handleChangeStatus, handleRejectDelete, handleAddPatient }) => {
   return (
-    <Menu as="div" className="relative inline-block text-left">
-      <div>
-        <MenuButton className="inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-          Actions
-        </MenuButton>
-      </div>
-      <MenuItems className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-        <div className="py-1">
-        <MenuItem>
-        {({ focus }) => (
-            <button
-            className={`${
-                focus ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-            } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-            onClick={() => handleChangeStatus(appointment.id, 'approved')}
-            >
-            Mark as Approved
-            </button>
-        )}
-        </MenuItem>
-        <MenuItem>
-            {({ focus }) => (
-            <button
-                className={`${
-                focus ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                onClick={() => handleChangeStatus(appointment.id, 'pending')}
-            >
-                Mark as Pending
-            </button>
-            )}
-        </MenuItem>
-        <MenuItem>
-            {({ focus }) => (
-            <button
-                className={`${
-                focus ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                onClick={() => handleChangeStatus(appointment.id, 'cancelled')}
-            >
-                Mark as Cancelled
-            </button>
-            )}
-        </MenuItem>
-        <MenuItem>
-            {({ focus }) => (
-            <button
-                className={`${
-                focus ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                onClick={() => handleReply('call',appointment.phone)}
-            >
-                Call Reply
-            </button>
-            )}
-        </MenuItem>
-        <MenuItem>
-            {({ focus }) => (
-            <button
-                className={`${
-                focus ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                onClick={() => handleReply('whatsapp',appointment.phone)}
-            >
-                WhatsApp Reply
-            </button>
-            )}
-        </MenuItem>
-        <MenuItem>
-            {({ focus }) => (
-            <button
-                className={`${
-                focus ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                onClick={() => handleAddPatient(appointment)}
-            >
-                Add Patient
-            </button>
-            )}
-        </MenuItem>
-          <MenuItem>
-            {({ focus }) => (
-              <button
-              className={`${
-                  focus ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                onClick={() => handleEditClick(appointment)}
-              >
-                Edit
-              </button>
-            )}
-          </MenuItem>
-          <MenuItem>
-            {({ focus }) => (
-              <button
-              className={`${
-                  focus ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                onClick={() => handleRejectDelete(appointment.id)}
-                >
-                Delete
-              </button>
-            )}
-          </MenuItem>
-        </div>
-      </MenuItems>
-    </Menu>
+    <div className="flex gap-4 justify-center">
+      {/* Add Patient */}
+      <button onClick={() => handleAddPatient(appointment)} data-tooltip-id="add-patient-single-tooltip">
+        <FontAwesomeIcon icon={faUserPlus} className="text-purple-500 text-xl hover:text-purple-600" />
+      </button>
+      <Tooltip id="add-patient-single-tooltip" content="Add as New Patient" place="top" />
+
+      {/* Conditionally Render Approve or Pending */}
+      {
+        appointment.status === 'pending' ? (
+          <button onClick={() => handleChangeStatus(appointment.id, 'approved')} data-tooltip-id="approve-single-tooltip">
+            <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 text-xl hover:text-green-600" />
+          </button>
+        ) : (
+          <button onClick={() => handleChangeStatus(appointment.id, 'pending')} data-tooltip-id="pending-single-tooltip">
+            <FontAwesomeIcon icon={faHourglass} className="text-yellow-500 text-xl hover:text-yellow-600" />
+          </button>
+        )
+      }
+      <Tooltip id="approve-single-tooltip" content="Mark as Approved" place="top" />
+      <Tooltip id="pending-single-tooltip" content="Mark as Pending" place="top" />
+
+      {/* Cancelled */}
+      <button onClick={() => handleChangeStatus(appointment.id, 'cancelled')} data-tooltip-id="cancelled-single-tooltip">
+        <FontAwesomeIcon icon={faBan} className="text-gray-500 text-xl hover:text-gray-600" />
+      </button>
+      <Tooltip id="cancelled-single-tooltip" content="Mark as Cancelled" place="top" />
+
+      {/* Delete */}
+      <button onClick={() => handleRejectDelete(appointment.id)} data-tooltip-id="delete-single-tooltip">
+        <FontAwesomeIcon icon={faTrash} className="text-red-500 text-xl hover:text-red-600" />
+      </button>
+      <Tooltip id="delete-single-tooltip" content="Delete Appointment" place="top" />
+    </div>
   );
 };
 
-export default ActionsDropdown;
+export default AppointmentActionsDropdown;

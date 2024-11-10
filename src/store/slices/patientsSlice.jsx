@@ -9,7 +9,6 @@ export const fetchPatients = createAsyncThunk('patients/fetchPatients', async ()
     const response = await axios.get('/patients.json');
     return Object.keys(response.data).map(key => {
         const patient = { id: key, ...response.data[key] };
-
         // Ensure records have their Firebase-generated IDs
         if (patient.records && typeof patient.records === 'object') {
             patient.records = Object.keys(patient.records).map(recordKey => {
@@ -17,7 +16,6 @@ export const fetchPatients = createAsyncThunk('patients/fetchPatients', async ()
                 return { id: recordKey, ...record }; // Firebase record ID is the key in records
             });
         }
-
         return patient;
     });
 });
@@ -163,52 +161,52 @@ export const archivePatient = createAsyncThunk(
         }
     }
 );
-// export const addFieldsToAllRecords = createAsyncThunk(
-//     'patients/addFieldsToAllRecords',
-//     async (_, { getState, rejectWithValue }) => {
-//         try {
-//             const patients = getState().patients.list;
 
-//             // Collect all patch requests
-//             const updatePromises = patients.map(async (patient) => {
-//                 if (patient.records && typeof patient.records === 'object') {
-//                     const updatedRecords = Object.keys(patient.records).reduce((acc, recordId) => {
-//                         const record = patient.records[recordId];
+export const addFieldsToAllRecords = createAsyncThunk(
+    'patients/addFieldsToAllRecords',
+    async (_, { getState, rejectWithValue }) => {
+        try {
+            const patients = getState().patients.list;
 
-//                         // If `price` is missing, set a random price value
-//                         let price = record.price ?? Math.floor(Math.random() * 1000) + 100;
+            // Collect all patch requests
+            const updatePromises = patients.map(async (patient) => {
+                if (patient.records && typeof patient.records === 'object') {
+                    const updatedRecords = Object.keys(patient.records).reduce((acc, recordId) => {
+                        const record = patient.records[recordId];
 
-//                         // Split `price` into `paid` and `remaining` parts
-//                         const paid = Math.floor(Math.random() * price); // Random paid amount
-//                         const remaining = price - paid;
+                        // If `price` is missing, set a random price value
+                        let price = record.price ?? Math.floor(Math.random() * 1000) + 100;
 
-//                         // Set `price` to an object with `paid` and `remaining` fields
-//                         acc[recordId] = {
-//                             ...record,
-//                             price: { paid, remaining },
-//                         };
-//                         return acc;
-//                     }, {});
+                        // Split `price` into `paid` and `remaining` parts
+                        const paid = Math.floor(Math.random() * price); // Random paid amount
+                        const remaining = price - paid;
 
-//                     try {
-//                         await axios.patch(`/patients/${patient.id}.json`, { records: updatedRecords });
-//                         console.log('success');
-//                     } catch (error) {
-//                         console.log(error);
-//                     }
-//                 }
-//             });
+                        // Set `price` to an object with `paid` and `remaining` fields
+                        acc[recordId] = {
+                            ...record,
+                            price: { paid, remaining },
+                        };
+                        return acc;
+                    }, {});
 
-//             // Await all patches
-//             await Promise.all(updatePromises);
+                    try {
+                        await axios.patch(`/patients/${patient.id}.json`, { records: updatedRecords });
+                        console.log('success');
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
+            });
 
-//             return 'All records updated successfully with updated price field';
-//         } catch (error) {
-//             return rejectWithValue(error.message);
-//         }
-//     }
-// );
+            // Await all patches
+            await Promise.all(updatePromises);
 
+            return 'All records updated successfully with updated price field';
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
 
 // Patients Slice
 const patientsSlice = createSlice({
@@ -311,16 +309,16 @@ const patientsSlice = createSlice({
               .addCase(deleteRecord.rejected, (state, action) => {
                 state.error = action.payload;
               })
-            // .addCase(addFieldsToAllRecords.pending, (state) => {
-            //     state.loading = true;
-            // })
-            // .addCase(addFieldsToAllRecords.fulfilled, (state) => {
-            //     state.loading = false;
-            // })
-            // .addCase(addFieldsToAllRecords.rejected, (state, action) => {
-            //     state.loading = false;
-            //     state.error = action.error.message;
-            // })
+            .addCase(addFieldsToAllRecords.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(addFieldsToAllRecords.fulfilled, (state) => {
+                state.loading = false;
+            })
+            .addCase(addFieldsToAllRecords.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message;
+            })
     },
 });
 

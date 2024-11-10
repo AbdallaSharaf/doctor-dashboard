@@ -1,79 +1,66 @@
 import React from 'react';
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'; // Import Menu components
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCheckCircle, faHourglassHalf, faBan, faTrash, faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import { Tooltip } from 'react-tooltip';
 
-const BulkActionsDropdown = ({ handleBulkAction }) => {
+const BulkActionsDropdown = ({ handleBulkAction, isActive }) => {
   return (
-    <Menu as="div" className="relative inline-block text-left">
-      <div>
-        <MenuButton className="inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-          Bulk Actions
-        </MenuButton>
-      </div>
-      <MenuItems className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-        <div className="py-1">
-          <MenuItem>
-            {({ focus }) => (
-              <button
-                className={`${
-                  focus ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                onClick={() => handleBulkAction('approve')}
-              >
-                Mark Selected as Approved
-              </button>
-            )}
-          </MenuItem>
-          <MenuItem>
-            {({ focus }) => (
-              <button
-                className={`${
-                  focus ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                onClick={() => handleBulkAction('pending')}
-              >
-                Mark Selected as Pending
-              </button>
-            )}
-          </MenuItem>
-          <MenuItem>
-            {({ focus }) => (
-              <button
-                className={`${
-                  focus ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                onClick={() => handleBulkAction('cancelled')}
-              >
-                Mark Selected as Cancelled
-              </button>
-            )}
-          </MenuItem>
-          <MenuItem>
-            {({ focus }) => (
-              <button
-                className={`${
-                  focus ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                onClick={() => handleBulkAction('delete')}
-              >
-                Delete Selected
-              </button>
-            )}
-          </MenuItem>
-          <MenuItem>
-            {({ focus }) => (
-              <button
-                className={`${
-                  focus ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                onClick={() => handleBulkAction('message')}
-              >
-                Send Message to Selected
-              </button>
-            )}
-          </MenuItem>
-        </div>
-      </MenuItems>
-    </Menu>
+    <div className="flex justify-center gap-3 items-center">
+      {/* Approve Button */}
+      <button
+        onClick={() => handleBulkAction('approve')}
+        className={`text-xl ${isActive ? 'text-green-500 hover:text-green-600' : 'text-gray-400 cursor-not-allowed'}`}
+        data-tooltip-id="approve-tooltip"
+        disabled={!isActive} // Disable the button when isActive is false
+      >
+        <FontAwesomeIcon icon={faCheckCircle} />
+      </button>
+      <Tooltip id="approve-tooltip" content="Mark Selected as Approved" place="top" />
+
+      {/* Pending Button */}
+      <button
+        onClick={() => handleBulkAction('pending')}
+        className={`text-xl ${isActive ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-400 cursor-not-allowed'}`}
+        data-tooltip-id="pending-tooltip"
+        disabled={!isActive}
+      >
+        <FontAwesomeIcon icon={faHourglassHalf} />
+      </button>
+      <Tooltip id="pending-tooltip" content="Mark Selected as Pending" place="top" />
+
+      {/* Cancelled Button */}
+      <button
+        onClick={() => handleBulkAction('cancelled')}
+        className={`text-xl ${isActive ? 'text-gray-500 hover:text-gray-600' : 'text-gray-400 cursor-not-allowed'}`}
+        data-tooltip-id="cancelled-tooltip"
+        disabled={!isActive}
+      >
+        <FontAwesomeIcon icon={faBan} />
+      </button>
+      <Tooltip id="cancelled-tooltip" content="Mark Selected as Cancelled" place="top" />
+
+      {/* Delete Button */}
+      <button
+        onClick={() => handleBulkAction('delete')}
+        className={`text-xl ${isActive ? 'text-red-500 hover:text-red-600' : 'text-gray-400 cursor-not-allowed'}`}
+        data-tooltip-id="delete-tooltip"
+        disabled={!isActive}
+      >
+        <FontAwesomeIcon icon={faTrash} />
+      </button>
+      <Tooltip id="delete-tooltip" content="Delete Selected" place="top" />
+
+      {/* Message Button */}
+      <button
+        onClick={() => handleBulkAction('message')}
+        className={`text-xl ${isActive ? 'text-blue-500 hover:text-blue-600' : 'text-gray-400 cursor-not-allowed'}`}
+        data-tooltip-id="message-tooltip"
+        disabled={!isActive}
+      >
+        <FontAwesomeIcon icon={faEnvelope} />
+      </button>
+      <Tooltip id="message-tooltip" content="Send Message to Selected" place="top" />
+    </div>
   );
 };
 
