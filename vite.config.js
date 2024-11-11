@@ -11,10 +11,11 @@ export default defineConfig({
         name: 'Clinic Dashboard',
         short_name: 'Dashboard',
         theme_color: '#ffffff',
-        background_color: '#ffffff',         // Background color for the splash screen
-        display: 'standalone',               // Ensures the app appears like a native mobile app
-        orientation: 'portrait',             // Preferred screen orientation (optional)
-        id: '/doctor-dashboard/',  // Specify the App ID
+        background_color: '#ffffff',
+        display: 'standalone',
+        orientation: 'portrait',
+        id: '/doctor-dashboard/',
+        start_url: '/doctor-dashboard/', // Add this line
         icons: [
           {
             src: '/doctor-dashboard/pwa-icon.png',
@@ -37,7 +38,7 @@ export default defineConfig({
             src: '/doctor-dashboard/screenshots/desktop1.png',
             sizes: '1280x720',
             type: 'image/png',
-            form_factor: 'wide', // Indicating this is a wide screenshot (desktop)
+            form_factor: 'wide',
           },
         ]
       },
