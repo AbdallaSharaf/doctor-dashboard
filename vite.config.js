@@ -15,7 +15,7 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait',
         id: '/doctor-dashboard/',
-        start_url: '/doctor-dashboard/', // Add this line
+        start_url: '/doctor-dashboard/',
         icons: [
           {
             src: '/doctor-dashboard/pwa-icon.png',
