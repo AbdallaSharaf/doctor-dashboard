@@ -20,7 +20,6 @@ import Store from './store/Store.jsx';
 import FetchData from './store/fetchData.jsx';
 import ServicesPage from './Pages/ServicesSettings/Services.jsx';
 
-
 createRoot(document.getElementById('root')).render(
   <>
     <HashRouter>
@@ -49,3 +48,14 @@ createRoot(document.getElementById('root')).render(
     </HashRouter>
   </>,
 );
+
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/doctor-dashboard/service-worker.js')
+    .then(registration => {
+      console.log('Service Worker registered:', registration);
+    })
+    .catch(error => {
+      console.log('Service Worker registration failed:', error);
+    });
+}
