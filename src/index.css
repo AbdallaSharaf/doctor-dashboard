@@ -8,6 +8,10 @@
   }
 }
 
+.sidebar {
+  @apply text-[var(--sidebar-text-primary)];
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -20,16 +24,22 @@
   --btn-hover: #3d96ff;
   --color-primary: #407fd5;
   --bg-primary: #fff;
+  --sidebar-text-primary: #000;
+  --sidebar-toggler: #fff;
   --text-primary: #838383;
   --text-secondary: #fff;
   --text-link: #407fd5;
+  --border-color: #e5e7eb;
 }
 
 .dark {
   --color-primary: #1e3a8a;
   --bg-primary: #000;
+  --sidebar-text-primary: #fff;
+  --sidebar-toggler: #26272f;
   --text-primary: #fff;
   --text-link: #fff;
+  --border-color: #e5e7eb2b;
 }
 
 /* Hide scrollbar for Webkit-based browsers */

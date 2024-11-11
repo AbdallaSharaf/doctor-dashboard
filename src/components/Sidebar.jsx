@@ -1,30 +1,33 @@
 import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBook, faDragon, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { faBook, faDragon, faArrowRight, faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-
+  const [isDarkMode, setIsDarkMode] = useState(false)
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
-
+  const toggleDarkMode = () => {
+    document.documentElement.classList.toggle('dark', !isDarkMode);
+    setIsDarkMode(!isDarkMode)
+  }
   return (
-    <div className='group/width'>
+    <div className='group/width text-sidebar-primary-text'>
     <div className={`${isCollapsed ? 'w-20 group-hover/width:w-64' : 'w-64 '} transition-all duration-300`}></div>
     <div
-      className={`fixed min-h-screen group bg-black shadow-md transition-all duration-300
-                  ${isCollapsed ? 'w-20 group-hover/width:w-64' : 'w-64 '} z-50`}
+      className={`fixed min-h-screen group shadow-md transition-all duration-300
+                  ${isCollapsed ? 'w-20 group-hover/width:w-64' : 'w-64 '} z-30 border-r border-border-color`}
     >
-      <div className="flex relative items-center justify-between p-4 h-20 border-b border-white border-opacity-30">
-        <Link to="/" className="text-lg font-medium text-white flex gap-3 items-center">
+      <div className="flex relative items-center justify-between px-4 pt-6 pb-2">
+        <Link to="/" className="text-lg font-medium flex gap-3 items-center">
           <FontAwesomeIcon icon={faDragon} className={`${isCollapsed ? 'text-2xl group-hover:text-4xl' : 'text-4xl'} text-red-500`} />
           <h1 className={`${isCollapsed ? 'hidden group-hover:block' : 'block'}`}>Dashboard</h1>
         </Link>
         <button
           onClick={toggleSidebar}
-          className={`text-gray-400 text-xs bg-white w-8 h-8 rounded-md hover:text-blue-400 
+          className={`text-gray-400 text-xs w-8 bg-sidebar-toggler h-8 rounded-md hover:text-blue-400 
                       transition-all duration-200 absolute -right-4 shadow-md
-                      ${isCollapsed ? 'rotate-180' : ''}`}
+                      ${!isCollapsed ? 'rotate-180' : ''} z-50`}
         >
           <FontAwesomeIcon icon={faArrowRight} />
         </button>
@@ -44,15 +47,21 @@ const Sidebar = () => {
           <Link
             to={path}
             key={label}
-            className="p-4 text-[#9a9cae] hover:text-white flex items-center"
+            className="p-4 flex items-center"
           >
-            <FontAwesomeIcon className='px-3' icon={faBook} />
+            <FontAwesomeIcon className='px-3 text-[#99A1B7]' icon={faBook} />
             <span className={`${isCollapsed ? 'hidden group-hover:inline-block' : 'inline-block'} whitespace-nowrap`}>
               {label}
             </span>
           </Link>
         ))}
       </nav>
+      <div className='absolute bottom-0 w-full px-4'>
+        <button className='text-sm pb-6 flex items-center' onClick={()=>toggleDarkMode()}>
+          <FontAwesomeIcon icon={ isDarkMode? faMoon: faSun } className='px-3 text-[#99A1B7]'/>
+          <p className={`${isCollapsed ? 'hidden group-hover:inline-block' : 'inline-block'} `}>{isDarkMode ? 'Dark Mode' : 'Light Mode'}</p>
+        </button>
+      </div>
     </div>
     </div>
     </div>
