@@ -38,7 +38,8 @@ const MessagesPage = () => {
     const currentMessages = filteredMessages.slice(indexOfFirstMessage, indexOfLastMessage);
     
     //---------- helper function ----------
-
+    console.log(loading)
+    
     const formatTimestamp = (timestamp) => {
         const date = new Date(timestamp);
         return new Intl.DateTimeFormat('en-US', {

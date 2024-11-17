@@ -10,11 +10,11 @@ const PhoneWithActions = ({ phone, id, handleReply, handleCopyPhone, isHovered }
       
       {/* Tooltip with Buttons */}
       {isHovered === id && (
-        <div className="absolute left-0 bottom-[140%] mt-2 p-2 bg-black shadow-lg rounded-md border border-gray-300 z-10">
+        <div className="absolute left-0 bottom-[140%] mt-2 py-1 bg-black shadow-lg dark:bg-primary-bg z-10">
           {/* Tooltip Triangle */}
-          <div className="absolute left-1/2  transform -translate-x-1/2 bottom-[-8px] w-0 h-0 border-l-[12px] border-r-[12px] border-t-[15px] border-transparent border-t-black z-20" />
+          <div className="absolute left-1/2  transform -translate-x-1/2 bottom-[-8px] w-0 h-0 border-l-[12px] border-r-[12px] border-t-[15px] border-transparent border-t-black dark:border-t-primary-bg z-20" />
           
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-3 mx-4">
             {/* Call Reply */}
             <button
               onClick={() => handleReply('call', phone)}

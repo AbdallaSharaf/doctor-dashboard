@@ -1,19 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { capitalizeFirstLetter, convert24HourTo12Hour, convert12HourTo24Hour } from '../helpers/Helpers';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faChevronUp, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faChevronDown, faChevronUp, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import AppointmentModal from '../components/modals/AppointmentModal';
 import CustomDropdown from '../components/CustomDropdown';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '@mui/material/Pagination';
 import PaginationItem from '@mui/material/PaginationItem'; // Import PaginationItem
-import ActionsDropdown from '../components/AppointmentsActionsDropdown';
+import ActionsDropdown from '../components/actions/AppointmentsActionsDropdown';
 import Swal from 'sweetalert2';
-import BulkActionsDropdown from '../components/BulkActionsDropdown';
+import BulkActionsDropdown from '../components/actions/BulkActionsDropdown';
 import { useDispatch, useSelector } from 'react-redux';
 import Lottie from 'lottie-react';
 import noDataAnimation from '../assets/Animation - 1730816811189.json'
-import PhoneWithActions from '../components/PhoneWithActions';
+import PhoneWithActions from '../components/actions/PhoneWithActions';
+
 
 import {
     addAppointment,
@@ -21,6 +22,9 @@ import {
     deleteAppointment,
 } from '../store/slices/appointmentsSlice';
 import Spinner from '../components/Spinner';
+import { MobileViewModal } from '../components/modals/MobileViewModal';
+import SelectAllCheckbox from '../components/checkbox/SelectAllCheckbox';
+import IndividualCheckbox from '../components/checkbox/IndividualCheckbox';
 
 
 const getStatusClass = (status) => {
@@ -68,14 +72,17 @@ const Appointments = () => {
     const [editId, setEditId] = useState(null);
     const [selectedAppointments, setSelectedAppointments] = useState([]); 
     const [editData, setEditData] = useState({});
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [addAppointmentModalOpen, setAddAppointmentModalOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const [appointmentsPerPage, setAppointmentsPerPage] = useState(5);
+    const [appointmentsPerPage, setAppointmentsPerPage] = useState(10);
     const [phoneHovered, setPhoneHovered] = useState(false);
+    const [isMobileViewModalOpen, setIsMobileViewModalOpen] = useState(false);
+    const [mobileViewAppointment, setMobileViewAppointment] = useState(null);
+
     const patients = useSelector(state => state.patients.list)
     const navigate = useNavigate()
     const rowRef = useRef(); // Ref for the editable row
-    
+
     //  -------------------- helpers ------------------
     const getArrow = (key) => {
         if (sortConfig.key === key) {
@@ -91,6 +98,16 @@ const Appointments = () => {
             direction = 'descending';
         }
         setSortConfig({ key, direction });
+    };
+
+    const openMobileViewModal = (appointment) => {
+        setMobileViewAppointment(appointment)
+        setIsMobileViewModalOpen(true);
+    };
+    
+    const closeMobileViewModal = () => {
+        setIsMobileViewModalOpen(false);
+        setMobileViewAppointment(null)
     };
 
     //---------------------end of helpers------------------
@@ -156,10 +173,8 @@ const Appointments = () => {
             time: convertedTime,
             status: 'pending'
         }));
-        setIsModalOpen(false); // Close the modal
+        setAddAppointmentModalOpen(false); // Close the modal
     };
-    
-    
     
     
     const handleChangeStatus = async (id, newStatus) => {
@@ -179,6 +194,14 @@ const Appointments = () => {
         setEditData((prev) => ({ ...prev, [name]: value }));
     };
     
+    const handleCheckboxChange = (id) => {
+        setSelectedAppointments((prevSelected) =>
+            prevSelected.includes(id)
+        ? prevSelected.filter(selectedId => selectedId !== id)
+        : [...prevSelected, id]
+        );
+    };
+
 const handleBulkAction = async (action) => {
 
     try {
@@ -342,14 +365,6 @@ const handleBulkAction = async (action) => {
             console.error('Error copying phone number:', err);
           });
       };
-
-    const handleCheckboxChange = (id) => {
-        setSelectedAppointments((prevSelected) =>
-            prevSelected.includes(id)
-        ? prevSelected.filter(selectedId => selectedId !== id)
-        : [...prevSelected, id]
-        );
-    };
 //--------------------------------------end of handlers--------------------------------------
 
 
@@ -381,20 +396,24 @@ const handleBulkAction = async (action) => {
 
 return (
     <div className="p-7 ">
-            <div className='flex justify-between mb-6'>
+            <div className='flex justify-between items-center mb-6 '>
             <h2 className="text-lg font-semibold">Appointments</h2>
-                <button onClick={() => setIsModalOpen(true)} className="mb-2 py-2 px-4 bg-primary-btn hover:bg-hover-btn w-[170px] text-white rounded">
-                    Add Appointment
-                </button>
-    
+            <button
+                onClick={() => setAddAppointmentModalOpen(true)}
+                className="py-2 px-4 bg-primary-btn hover:bg-hover-btn text-white rounded flex items-center justify-center 
+                            w-[170px]"
+                >
+                Add Appointment
+            </button>
+
                 <AppointmentModal
-                    isModalOpen={isModalOpen}
-                    setIsModalOpen={setIsModalOpen}
+                    addAppointmentModalOpen={addAppointmentModalOpen}
+                    setAddAppointmentModalOpen={setAddAppointmentModalOpen}
                     handleSubmit={handleAddAppointment}
                 />
 
             </div>
-            <div className='p-7 rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.04)] border border-gray-200]'>
+            <div className='bg-table-container-bg p-4 md:p-7 rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.04)] dark:border-transparent border border-gray-200]'>
             <div className='flex justify-between items-center mb-6'>
             <div className='flex gap-4 items-center'>
             <div className='w-[140px]'>
@@ -404,19 +423,19 @@ return (
                 setSelectedStatus={setSelectedStatus}
             />
             </div>
-            <div>
+            <div className='hidden md:block'>
                 <BulkActionsDropdown handleBulkAction={handleBulkAction} isActive={selectedAppointments.length > 0}/>
             </div>
             </div>
             <div className="relative p-2 text-sm">
                 <FontAwesomeIcon 
                     icon={faMagnifyingGlass} 
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" 
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2" 
                 />
                 <input
                     type="text"
                     placeholder="Search Appointment"
-                    className="p-2 pl-8 bg-gray-100 rounded w-full"
+                    className="p-2 pl-8 sidebar border border-transparent rounded w-full"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -427,19 +446,11 @@ return (
                 <Spinner /> // Use Spinner component
                 ) : (
                     currentAppointments.length > 0 ? 
-            ( <table className="w-full table-auto">
+            (<> <table className="w-full table-auto md:table hidden">
                 <thead>
-                    <tr className='text-center border-b-[16px] border-white'>
-                        <th className="px-2 ">
-                            <input
-                            type="checkbox"
-                            className='scale-125'
-                            onChange={(e) =>
-                                setSelectedAppointments(
-                                    e.target.checked ? filteredAppointments.map(app => app.id) : []
-                                )
-                            }
-                            checked={selectedAppointments.length === filteredAppointments.length && filteredAppointments.length > 0}/>
+                    <tr className='text-center border-b-[16px] border-transparent'>
+                        <th className="px-2">
+                            <SelectAllCheckbox entries={filteredAppointments} selectedEntries={selectedAppointments} setSelectedEntries={setSelectedAppointments}/>
                         </th>
                         <th className=" font-normal text-sm p-2">NO</th>
                         <th className=" font-normal text-sm p-2 cursor-pointer" onClick={() => sortBy('name')}>
@@ -460,13 +471,9 @@ return (
                 </thead>
                 <tbody>
                     {currentAppointments.map((appointment, index) => (
-                        <tr ref={editId === appointment.id ? rowRef : null} onDoubleClick={() => handleEditClick(appointment)} key={appointment.id} className={`h-14 text-center ${editId === appointment.id ? 'bg-black bg-opacity-20' : ''} ${index % 2 ===0 ? 'bg-gray-100 bg-opacity-80':''}`}>
+                        <tr ref={editId === appointment.id ? rowRef : null} onDoubleClick={() => handleEditClick(appointment)} key={appointment.id} className={`h-14 text-center ${index % 2 ===0 ? 'bg-even-row-bg':''}`}>
                             <td className="p-2">
-                                <input
-                                type="checkbox"
-                                className='scale-125'
-                                checked={selectedAppointments.includes(appointment.id)}
-                                onChange={() => handleCheckboxChange(appointment.id)}/>
+                                <IndividualCheckbox entry={appointment} selectedEntries={selectedAppointments} handleCheckboxChange={handleCheckboxChange}/>
                             </td>
                             <td className="text-sm p-2">{index + 1}</td>
                             <td className="font-bold text-sm p-2">
@@ -560,7 +567,42 @@ return (
                         </tr>
                     ))}
                 </tbody>
-            </table>) : (
+            </table>
+            <div className='flex flex-col justify-between items-center md:hidden'>
+                {currentAppointments.map((appointment, id) => (
+                    <div className={`${id % 2 ===0 ? 'bg-even-row-bg':''} flex justify-between items-center w-full px-3 py-2`} key={id}>
+                    <div className='flex justify-between items-center w-full' onClick={() => openMobileViewModal(appointment)}>
+                        <div >
+                        <p className='font-medium'>{appointment.name}</p>
+                        <p className='text-sm font-light'>{appointment.date}</p>
+                        <p className={`${getStatusClass(appointment.status)} bg-opacity-0 text-sm`}>{capitalizeFirstLetter(appointment.status)}</p>
+                        </div>
+                        <div onClick={(e) => e.stopPropagation()}>
+                        <ActionsDropdown
+                            appointment={appointment}
+                            handleChangeStatus={handleChangeStatus}
+                            handleEditClick={handleEditClick}
+                            handleRejectDelete={handleDeleteAppointment}
+                            handleReply={handleReply}
+                            handleAddPatient={handleAddPatient}
+                        />
+                        </div>
+                    </div>
+                    <MobileViewModal 
+                        isOpen={isMobileViewModalOpen} 
+                        onClose={closeMobileViewModal} 
+                        appointment={mobileViewAppointment}
+                        handleChangeStatus={handleChangeStatus}
+                        handleEditClick={handleEditClick}
+                        handleRejectDelete={handleDeleteAppointment}
+                        handleReply={handleReply}
+                        handleAddPatient={handleAddPatient}
+                        handleCopyPhone={handleCopyPhone}
+                    />
+                    </div>
+                ))}
+            </div>
+            </>) : (
          <div className="flex flex-col items-center justify-center h-64 space-y-4">
          <Lottie 
              animationData={noDataAnimation} 
@@ -571,8 +613,8 @@ return (
          <p className="text-gray-500 text-lg">There are no appointments to display.</p>
      </div>
         ))}
-            <div className="mt-4 flex justify-between">
-            <div className="mb-4 flex justify-between items-center">
+            <div className="mt-4 flex justify-center md:justify-between text-secondary-text">
+            <div className="mb-4 justify-between items-center hidden md:flex">
                 <label htmlFor="appointments-per-page" className="mr-4">Show:</label>
                 <div className='w-[150px]'>
                 <CustomDropdown 
@@ -583,17 +625,23 @@ return (
                 </div>
             </div>    
             <Pagination
-                count={totalPages}
-                page={currentPage}
-                onChange={(event, value) => setCurrentPage(value)}
-                shape="rounded"
-                color="#1B84FF"
-                siblingCount={1} // Show one sibling on each side of the current page
-                boundaryCount={1} 
-                renderItem={(item) => (
-                    <PaginationItem {...item} />
-                )}
+            count={totalPages}
+            page={currentPage}
+            onChange={(event, value) => setCurrentPage(value)}
+            shape="rounded"
+            siblingCount={1}
+            boundaryCount={1}
+            renderItem={(item) => (
+                <PaginationItem
+                {...item}
+                classes={{
+                    root: "text-primary-text dark:text-primary-text", // Default text color
+                    selected: "bg-pagination-500-important dark: bg-pagination-500-dark-important", // Use the important class
+                }}
+                />
+            )}
             />
+
             </div>
         </div>
         </div>

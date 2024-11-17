@@ -53,7 +53,7 @@ const MedicineOptions = () => {
     }, [editIndex, medicines]);
 
     return (
-        <div className="bg-white p-6 rounded-md shadow-md">
+        <div className="p-6 rounded-md shadow-md">
             <h2 className="text-2xl font-semibold mb-4">Medicine Options</h2>
             <AddOptionForm endpoint="/settings/medicines" type="Medicine" />
             <div className="flex flex-wrap mt-4 space-x-4 w-fit">

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBook, faDragon, faArrowRight, faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
 
-const Sidebar = () => {
+const DesktopSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false)
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
@@ -12,10 +12,10 @@ const Sidebar = () => {
     setIsDarkMode(!isDarkMode)
   }
   return (
-    <div className='group/width text-sidebar-primary-text'>
+    <div className='group/width'>
     <div className={`${isCollapsed ? 'w-20 group-hover/width:w-64' : 'w-64 '} transition-all duration-300`}></div>
     <div
-      className={`fixed min-h-screen group shadow-md transition-all duration-300
+      className={`fixed min-h-screen sidebar group shadow-md transition-all duration-300
                   ${isCollapsed ? 'w-20 group-hover/width:w-64' : 'w-64 '} z-30 border-r border-border-color`}
     >
       <div className="flex relative items-center justify-between px-4 pt-6 pb-2">
@@ -58,8 +58,8 @@ const Sidebar = () => {
       </nav>
       <div className='absolute bottom-0 w-full px-4'>
         <button className='text-sm pb-6 flex items-center' onClick={()=>toggleDarkMode()}>
-          <FontAwesomeIcon icon={ isDarkMode? faMoon: faSun } className='px-3 text-[#99A1B7]'/>
-          <p className={`${isCollapsed ? 'hidden group-hover:inline-block' : 'inline-block'} `}>{isDarkMode ? 'Dark Mode' : 'Light Mode'}</p>
+          <FontAwesomeIcon icon={ !isDarkMode? faMoon: faSun } className='px-3 text-[#99A1B7]'/>
+          <p className={`${isCollapsed ? 'hidden group-hover:inline-block' : 'inline-block'} `}>{!isDarkMode ? 'Dark Mode' : 'Light Mode'}</p>
         </button>
       </div>
     </div>
@@ -68,4 +68,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default DesktopSidebar;

@@ -1,16 +1,20 @@
 import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Pagination from '@mui/material/Pagination';
 import CustomDropdown from '../components/CustomDropdown';
 import Spinner from '../components/Spinner';
 import { PaginationItem } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
-import PatientActionsDropdown from '../components/PatientActionsDropdown';
+import PatientActionsDropdown from '../components/actions/PatientActionsDropdown';
 import { useDispatch, useSelector } from 'react-redux';
 import { formatDateTime } from '../helpers/Helpers';
 import { archivePatient } from '../store/slices/patientsSlice'; // Import Redux actions
 import Swal from 'sweetalert2';
+import Lottie from 'lottie-react';
+import noDataAnimation from '../assets/Animation - 1730816811189.json'
+import SelectAllCheckbox from '../components/checkbox/SelectAllCheckbox';
+import IndividualCheckbox from '../components/checkbox/IndividualCheckbox';
 
 
 const Patients = () => {
@@ -20,7 +24,7 @@ const Patients = () => {
     const [selectedPatients, setSelectedPatients] = useState([])
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const [patientsPerPage, setPatientsPerPage] = useState(5);
+    const [patientsPerPage, setPatientsPerPage] = useState(10);
     const [selectedStatus, setSelectedStatus] = useState('All');
     const dispatch = useDispatch()
     const handleCheckboxChange = (id) => {
@@ -83,7 +87,7 @@ const handleBulkAction = async (action) => {
             window.open(`https://wa.me/${phoneNumber}`);
         }
     };
-    
+
     const handleDelete = async (id) => {
         const result = await Swal.fire({
             title: 'Are you sure?',
@@ -169,24 +173,24 @@ const handleBulkAction = async (action) => {
     const currentPatients = filteredPatients.slice((currentPage - 1) * patientsPerPage, currentPage * patientsPerPage);
     return (
         <div className="p-7 w-full">
-            <div className='flex justify-between mb-6'>
+            <div className='flex justify-between items-center mb-6'>
                 <h2 className="text-lg font-semibold">Patients</h2>
-                <Link to="/add-patient" className="mb-2 py-2 px-4 bg-primary-btn hover:bg-hover-btn w-[170px] text-center text-white rounded">
+                <Link to="/add-patient" className="py-2 px-4 bg-primary-btn hover:bg-hover-btn text-white rounded flex items-center justify-center 
+                            w-[170px]">
                     Add Patient
                 </Link>
             </div>
-            <div className='p-7 rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.04) border border-gray-200]'>
-                <div className='flex justify-between items-center  mb-7'>
-                <div className='flex gap-4 w-full'>
-                <div className='w-44'>
+            <div className='bg-table-container-bg p-4 md:p-7 rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.04)] dark:border-transparent border border-gray-200]'>
+                <div className='flex justify-between items-center  mb-6'>
+                <div className='flex gap-4 items-center'>
+                <div className='w-[140px]'>
                     <CustomDropdown 
                         options={filterOptions} 
                         selectedStatus={{ value: selectedStatus, label: `${selectedStatus}` }} 
                         setSelectedStatus={setSelectedStatus} 
                     />
                 </div>
-                <div className="text-sm">
-                <div className="flex">
+                <div className="md:flex hidden text-sm">
                     {/* Send Message Button */}
                     <button
                     onClick={() => handleBulkAction('message')}
@@ -206,37 +210,29 @@ const handleBulkAction = async (action) => {
                     </button>
                 </div>
                 </div>
-                </div>
                     <div className="relative p-2 text-sm">
                         <FontAwesomeIcon
                             icon={faMagnifyingGlass} 
-                            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" 
+                            className="absolute left-4 top-1/2 transform -translate-y-1/2 " 
                         />
                         <input
                             type="text"
                             placeholder="Search Patients"
-                            className="p-2 pl-8 bg-gray-100 rounded w-full"
+                            className="p-2 pl-8 sidebar border border-transparent rounded w-full"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
                 </div>
-                {loading ? (
-                    <Spinner />
+                {loading ? ( // Conditional rendering for loading spinner
+                <Spinner /> // Use Spinner component
                 ) : (
-                    <table className="w-full table-auto">
+                    patients.length > 0 ? 
+                    (<> <table className="w-full table-auto md:table hidden">
                         <thead>
-                            <tr className='text-center border-b-[16px] border-white'>
+                            <tr className='text-center border-b-[16px] border-transparent'>
                                 <th className="px-2 ">
-                                    <input
-                                    type="checkbox"
-                                    className='scale-125'
-                                    onChange={(e) =>
-                                        setSelectedPatients(
-                                            e.target.checked ? patients.map(patient => patient.id) : []
-                                        )
-                                    }
-                                    checked={selectedPatients.length === patients.length && patients.length > 0}/>
+                                    <SelectAllCheckbox selectedEntries={selectedPatients} setSelectedEntries={setSelectedPatients} entries={patients}/>
                                 </th>
                                 <th className="font-normal text-sm p-2">No</th>
                                 <th className="font-normal text-sm p-2">Name</th>
@@ -250,13 +246,9 @@ const handleBulkAction = async (action) => {
                         </thead>
                         <tbody>
                             {currentPatients.map((patient, index) => (
-                                <tr key={patient.id} className={`text-center ${index % 2 === 0 ? 'bg-gray-100 bg-opacity-80' : ''} h-14`}>
+                                <tr key={patient.id} className={`text-center ${index % 2 === 0 ? 'bg-even-row-bg' : ''} h-14`}>
                                     <td className="p-2">
-                                        <input
-                                        type="checkbox"
-                                        className='scale-125'
-                                        checked={selectedPatients.includes(patient.id)}
-                                        onChange={() => handleCheckboxChange(patient.id)}/>
+                                        <IndividualCheckbox entry={patient} selectedEntries={selectedPatients} handleCheckboxChange={handleCheckboxChange} />
                                     </td>
                                     <td className="text-sm p-2">{(currentPage - 1) * patientsPerPage + index + 1}</td>
                                     <td className="font-bold text-sm p-2">
@@ -325,9 +317,36 @@ const handleBulkAction = async (action) => {
                             ))}
                         </tbody>
                     </table>
-                )}
-                <div className="mt-4 flex justify-between">
-            <div className="mb-4 flex justify-between items-center">
+                    <div className='flex flex-col justify-between items-center md:hidden'>
+                    {currentPatients.map((patient, id) => (
+                    <Link className={`${id % 2 ===0 ? 'bg-even-row-bg':''} flex justify-between items-center w-full px-3 py-2`} key={id} to={`/patients/patient-details/${patient.id}`}>
+                        <div >
+                        <p className='font-medium'>{patient.name}</p>
+                        <p className='text-sm font-light'>{getNextAppointmentDate(patient.records)}</p>
+                        </div>
+                        <div onClick={(e) => e.stopPropagation()}>
+                        <PatientActionsDropdown
+                            patient={patient}
+                            onReply={handleReply}
+                            onDelete={handleDelete}
+                        />
+                        </div>
+                    </Link>
+                ))}
+            </div>
+                </>) : (
+         <div className="flex flex-col items-center justify-center h-64 space-y-4">
+         <Lottie 
+             animationData={noDataAnimation} 
+             loop={true} 
+             style={{ width: 150, height: 150 }} 
+             className="mb-4"
+         />
+         <p className="text-gray-500 text-lg">There are no patients to display.</p>
+     </div>
+        ))}
+                <div className="mt-4 flex justify-center md:justify-between text-secondary-text">
+            <div className="mb-4 justify-between items-center hidden md:flex">
                 <label htmlFor="patients-per-page" className="mr-4">Show:</label>
                 <div className='w-[150px]'>
                 <CustomDropdown 
@@ -338,16 +357,21 @@ const handleBulkAction = async (action) => {
                 </div>
             </div>    
             <Pagination
-                count={totalPages}
-                page={currentPage}
-                onChange={(event, value) => setCurrentPage(value)}
-                shape="rounded"
-                color="#1B84FF"
-                siblingCount={1} // Show one sibling on each side of the current page
-                boundaryCount={1} 
-                renderItem={(item) => (
-                    <PaginationItem {...item} />
-                )}
+            count={totalPages}
+            page={currentPage}
+            onChange={(event, value) => setCurrentPage(value)}
+            shape="rounded"
+            siblingCount={1}
+            boundaryCount={1}
+            renderItem={(item) => (
+                <PaginationItem
+                {...item}
+                classes={{
+                    root: "text-primary-text dark:text-primary-text", // Default text color
+                    selected: "bg-pagination-500-important dark: bg-pagination-500-dark-important", // Use the important class
+                }}
+                />
+            )}
             />
             </div>
             </div>

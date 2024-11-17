@@ -31,7 +31,7 @@ const CustomDropdown = ({ options, selectedStatus, setSelectedStatus }) => {
             <div>
                 <button
                     type="button"
-                    className="inline-flex w-full justify-between rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="inline-flex w-full justify-between rounded-md dark:border-transparent border border-gray-300 px-4 py-2 text-sm font-medium sidebar"
                     onClick={() => setIsOpen((prev) => !prev)}
                 >
                     {selectedStatus.label ? (typeof selectedStatus.label === "string" ? capitalizeFirstLetter(selectedStatus.label) : selectedStatus.label) : "Select Status"}
@@ -41,13 +41,13 @@ const CustomDropdown = ({ options, selectedStatus, setSelectedStatus }) => {
 
             {/* Dropdown Menu */}
             {isOpen && (
-                <ul className="absolute right-0 z-10 mt-2 w-full origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                <ul className="absolute right-0 z-10 mt-2 w-full origin-top-right rounded-md sidebar shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                     {options.map((option) => (
                         <li
                             key={option.value}
                             className={`${
-                                selectedStatus.value === option.value ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                              } group flex rounded-md items-center w-full px-2 py-2 text-sm hover:bg-gray-100 cursor-pointer`}
+                                selectedStatus.value === option.value ? 'text-gray-900 dark:text-gray-500' : ''
+                              } group flex rounded-md items-center w-full px-2 py-2 text-sm cursor-pointer`}
                             onClick={() => handleSelect(option)}
                         >
                             {option.label}

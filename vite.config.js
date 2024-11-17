@@ -46,7 +46,7 @@ export default defineConfig({
         runtimeCaching: [
           // Caching Firebase API requests (e.g., teamMembers.json)
           {
-            urlPattern: ({ url }) => url.pathname.startsWith('/'),
+            urlPattern: ({ url }) => url.pathname.startsWith('/bookings'),
             handler: 'NetworkFirst',  // Use the NetworkFirst strategy to prioritize the network
             options: {
               cacheName: 'firebase-api-cache',

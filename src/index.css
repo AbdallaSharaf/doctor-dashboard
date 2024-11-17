@@ -10,6 +10,7 @@
 
 .sidebar {
   @apply text-[var(--sidebar-text-primary)];
+  @apply bg-sidebar-bg
 }
 
 @keyframes spin {
@@ -19,6 +20,12 @@
 .direction-rtl{
   direction: rtl;
 }
+.bg-pagination-500-important {
+  background-color: #e5e7eb60 !important;
+}
+.bg-pagination-500-dark-important {
+  background-color: #cbcccf4f !important;
+}
 :root {
   --btn-primary: #1B84FF;
   --btn-hover: #3d96ff;
@@ -26,18 +33,27 @@
   --bg-primary: #fff;
   --sidebar-text-primary: #000;
   --sidebar-toggler: #fff;
+  --even-row-bg:#f3f4f69b;
   --text-primary: #838383;
+  --sidebar-bg: #fff;
   --text-secondary: #fff;
   --text-link: #407fd5;
+  --bg--table-container: #fff;
   --border-color: #e5e7eb;
 }
 
 .dark {
   --color-primary: #1e3a8a;
-  --bg-primary: #000;
-  --sidebar-text-primary: #fff;
+  --bg-primary: #0d0e11;
+  --sidebar-text-primary: #ffffff76;
   --sidebar-toggler: #26272f;
-  --text-primary: #fff;
+  --sidebar-bg: #0D0E12;
+  --text-primary: #ffffff76;
+  --even-row-bg:#0d0e125b;
+  --btn-hover: #0c2e54ad;
+  --btn-primary: #0c2e54;
+  --bg-searchbox: #2A2A3C;
+  --bg-table-container: #15171c;
   --text-link: #fff;
   --border-color: #e5e7eb2b;
 }

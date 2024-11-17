@@ -54,7 +54,7 @@ const JobOptions = () => {
     }, [editIndex, jobs]);
 
     return (
-        <div className="bg-white p-6 rounded-md shadow-md">
+        <div className="p-6 rounded-md shadow-md">
             <h2 className="text-2xl font-semibold mb-4">Job Options</h2>
             <AddOptionForm endpoint="/settings/jobs" type="Job" />
             <div className="flex flex-wrap mt-4 space-x-4 w-fit">

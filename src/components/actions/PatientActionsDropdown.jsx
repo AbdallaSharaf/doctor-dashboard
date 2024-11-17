@@ -14,7 +14,7 @@ const PatientActionsDropdown = ({ patient, onReply, onDelete }) => {
                 data-tooltip-id="whatsapp-tooltip"
                 data-tooltip-content="Send WhatsApp message"
             >
-                <FontAwesomeIcon icon={faWhatsapp} className="text-lg" />
+                <FontAwesomeIcon icon={faWhatsapp} className="text-xl" />
             </button>
             <button
                 onClick={() => onReply('call', patient.phone)}
@@ -22,7 +22,7 @@ const PatientActionsDropdown = ({ patient, onReply, onDelete }) => {
                 data-tooltip-id="call-tooltip"
                 data-tooltip-content="Make a phone call"
             >
-                <FontAwesomeIcon icon={faPhone} className="text-lg" />
+                <FontAwesomeIcon icon={faPhone} className="text-xl" />
             </button>
             <button
                 onClick={() => onDelete(patient.id)}
@@ -30,7 +30,7 @@ const PatientActionsDropdown = ({ patient, onReply, onDelete }) => {
                 data-tooltip-id="delete-tooltip"
                 data-tooltip-content="Delete patient"
             >
-                <FontAwesomeIcon icon={faTrash} className="text-lg" />
+                <FontAwesomeIcon icon={faTrash} className="text-xl" />
             </button>
 
             {/* Define tooltips */}
