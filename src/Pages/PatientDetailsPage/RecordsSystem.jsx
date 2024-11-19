@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AddRecordModal from '../../components/modals/RecordModal'; // Adjust the import path
 import { formatDateTime } from '../../helpers/Helpers';
 import Pagination from '@mui/material/Pagination';
@@ -37,6 +37,16 @@ const RecordsSystem = ({ patientId, patientRecords }) => {
         overviewRef.current.scrollIntoView({ behavior: 'smooth' });
       }
   };
+
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.classList.add('overflow-hidden');
+    } else {
+      document.body.classList.remove('overflow-hidden');
+    }
+  
+    return () => document.body.classList.remove('overflow-hidden'); // Cleanup on component unmount
+  }, [isModalOpen]);
 
 
   const renderCasePhotos = () => {
@@ -134,15 +144,22 @@ const RecordsSystem = ({ patientId, patientRecords }) => {
             return null; // If no photos in the record, return null
           })}
           <div className="mt-4 flex justify-end">
-            <Pagination
-              count={totalPages}
-              page={currentPage}
-              onChange={(event, value) => setCurrentPage(value)}
-              shape="rounded"
-              color="#1B84FF"
-              siblingCount={1} // Show one sibling on each side of the current page
-              boundaryCount={1}
-              renderItem={(item) => <PaginationItem {...item} />}
+          <Pagination
+            count={totalPages}
+            page={currentPage}
+            onChange={(event, value) => setCurrentPage(value)}
+            shape="rounded"
+            siblingCount={1}
+            boundaryCount={1}
+            renderItem={(item) => (
+                <PaginationItem
+                {...item}
+                classes={{
+                    root: "text-primary-text dark:text-primary-text", // Default text color
+                    selected: "bg-pagination-500-important dark: bg-pagination-500-dark-important", // Use the important class
+                }}
+                />
+            )}
             />
           </div>
         </div>
@@ -243,7 +260,7 @@ const renderOverview = () => {
       };
     
     if (!record) return <p>No records available</p>;
-  
+      console.log(selectedPhotoIndex)
     return (
       <div ref={overviewRef} id="overview" className='scroll-mt-12'>
         <div className='flex items-center justify-between mb-4'>
@@ -271,7 +288,7 @@ const renderOverview = () => {
         {/* Render selected record details */}
         <div>
           {/* Record Fields with Fallback Messages */}
-          <div className='w-full justify-between grid grid-cols-2 items-center mb-5'>
+          <div className='w-full justify-between grid md:grid-cols-2 grid-cols-1 items-center mb-5'>
             <div>
               <div className='border-l-4 mb-5 pl-3 flex flex-col justify-evenly border-gray-500 border-opacity-15 py-1'>
                 <h1 className='font-medium'>Date</h1>
@@ -287,15 +304,15 @@ const renderOverview = () => {
               </div>
             </div>
             <div>
-              <div className='border-r-4 mb-5 text-right pr-3 flex flex-col justify-evenly border-gray-500 border-opacity-15 py-1'>
+              <div className='md:border-r-4 md:border-l-0 border-l-4 mb-5 md:text-right pl-3 md:pr-3 flex flex-col justify-evenly border-gray-500 border-opacity-15 py-1'>
                 <h1 className='font-medium'>Diagnoses</h1>
                 <p className='font-thin text-sm'>{record.diagnoses?.length ? record.diagnoses.join(', ') : 'No diagnoses available'}</p>
               </div>
-              <div className='border-r-4 mb-5 text-right pr-3 flex flex-col justify-evenly border-gray-500 border-opacity-15 py-1'>
+              <div className='md:border-r-4 md:border-l-0 border-l-4 mb-5 md:text-right pl-3 md:pr-3 flex flex-col justify-evenly border-gray-500 border-opacity-15 py-1'>
                 <h1 className='font-medium'>Jobs Done</h1>
                 <p className='font-thin text-sm'>{record.jobs?.length ? record.jobs.join(', ') : 'No jobs recorded'}</p>
               </div>
-              <div className='border-r-4 mb-5 text-right pr-3 flex flex-col justify-evenly border-gray-500 border-opacity-15 py-1'>
+              <div className='md:border-r-4 md:border-l-0 border-l-4 md:mb-5 md:text-right pl-3 md:pr-3 flex flex-col justify-evenly border-gray-500 border-opacity-15 py-1'>
                 <h1 className='font-medium'>Medicines</h1>
                 <p className='font-thin text-sm'>{record.medicines?.length ? record.medicines.join(', ') : 'No medicines prescribed'}</p>
               </div>
@@ -328,7 +345,7 @@ const renderOverview = () => {
   
           <div className='w-full mb-5 py-1'>
             <div className='px-4 py-2 flex ml-auto w-fit'>
-              <h1 className='font-semibold pr-2 text-black'>Total Due:</h1>
+              <h1 className='font-semibold pr-2'>Total Due:</h1>
               <p className='font-thin'>{record.price ? `${record.price.paid + record.price.remaining} EGP` : 'Price not set'}</p>
             </div>
           </div>
@@ -340,7 +357,7 @@ const renderOverview = () => {
             onClick={closeModal} // Close modal when clicked outside
           >
             <div
-              className="bg-white p-6 rounded-lg shadow-lg max-w-fit w-full"
+              className="bg-white dark:bg-table-container-bg p-6 rounded-lg shadow-lg max-w-fit w-full"
               onClick={(e) => e.stopPropagation()} // Prevent click event from closing the modal when clicking inside
             >
               <img
@@ -350,7 +367,7 @@ const renderOverview = () => {
               />
               <div className="flex justify-between mt-4">
                 <button
-                  className="opacity-30 hover:opacity-60 disabled:opacity-60 text-3xl"
+                  className="opacity-60 md:opacity-30 hover:opacity-60 disabled:md:opacity-60 disabled:opacity-30 text-3xl"
                   onClick={prevPhoto} // Go to the previous photo
                   disabled={
                     selectedPhotoIndex === 0
@@ -359,7 +376,7 @@ const renderOverview = () => {
                   <FontAwesomeIcon icon={faChevronCircleLeft}/>
                 </button>
                 <button
-                  className="opacity-30 hover:opacity-60 disabled:opacity-60 text-3xl"
+                  className="opacity-60 md:opacity-30 hover:opacity-60 disabled:md:opacity-60 disabled:opacity-30 text-3xl"
                   onClick={nextPhoto} // Go to the next photo
                   disabled={
                     selectedPhotoIndex && 
@@ -379,9 +396,9 @@ const renderOverview = () => {
 
   
   const renderAllRecords = () => {
-    const totalPages = Math.ceil(patientRecords.length / 5);
-    const indexOfLastRecord = currentPage * 5;
-    const indexOfFirstRecord = indexOfLastRecord - 5;
+    const totalPages = Math.ceil(patientRecords.length / 10);
+    const indexOfLastRecord = currentPage * 10;
+    const indexOfFirstRecord = indexOfLastRecord - 10;
     const currentRecords = patientRecords.slice(indexOfFirstRecord, indexOfLastRecord);
     return (
       <div>
@@ -389,7 +406,8 @@ const renderOverview = () => {
             <h1 className='font-semibold text-xl'>Patient Records</h1>
             <h2 className='text-sm opacity-70'>{`Total of ${patientRecords.length} records`}</h2>
         </div>
-        <table className="table-auto w-full">
+        <>
+        <table className="table-auto w-full hidden md:table">
           <thead>
             <tr className="font-medium h-14">
               <th className="text-sm pl-4">NO</th>
@@ -421,6 +439,25 @@ const renderOverview = () => {
             ))}
           </tbody>
         </table>
+        <div className='flex flex-col justify-between items-center md:hidden'>
+                {currentRecords.map((record, id) => (
+                    <div className={`${id % 2 ===0 ? 'bg-even-row-bg':''} flex justify-between items-center w-full px-3 py-2`} key={id}>
+                    <div className='flex justify-between items-center w-full'>
+                        <div >
+                        <p className='font-medium'>{record.doctorTreating}</p>
+                        <p className='text-sm font-light'>{formatDateTime(record.dueDate)}</p>
+                        </div>
+                        <button
+                          onClick={() => handleViewRecord(index)}
+                          className="px-4 py-2 bg-blue-400 bg-opacity-20 text-blue-400 hover:text-secondary-text hover:bg-opacity-100 duration-200 transition-all ease-in-out font-medium text-xs w-fit rounded-md"
+                        >
+                          view
+                        </button>
+                    </div>
+                    </div>
+                ))}
+            </div>
+        </>
         <div className="mt-4 flex justify-end">
             <Pagination
                 count={totalPages}
@@ -440,9 +477,9 @@ const renderOverview = () => {
   };
   
   return (
-    <div className=' mt-4'>
+    <div className={`mt-4`}>
       <div className='flex items-center justify-between'>
-        <div className='flex justify-center gap-5'>
+        <div className='flex justify-center md:gap-5 md:text-base gap-2 mt-2'>
             <div className='group'>
           <button
             onClick={() => setActiveTab('overview')}
@@ -452,7 +489,7 @@ const renderOverview = () => {
             Overview
           </button>
           <div
-                    className={`mt-2 ${
+                    className={`md:mt-2 ${
                         activeTab === 'overview' ? 'bg-blue-500 h-[2px] overflow-hidden transition-all duration-500 ease-in-out w-full' : 'bg-blue-500 h-[2px] w-0 group-hover:w-full transition-all duration-500 ease-in-out'
                       }`}
                   />
@@ -466,7 +503,7 @@ const renderOverview = () => {
             Records
           </button>
           <div
-                    className={`mt-2 ${
+                    className={`md:mt-2 ${
                         activeTab === 'records' ? 'bg-blue-500 h-[2px] overflow-hidden transition-all duration-500 ease-in-out w-full' : 'bg-blue-500 h-[2px] w-0 group-hover:w-full transition-all duration-500 ease-in-out'
                       }`}
                   />
@@ -480,7 +517,7 @@ const renderOverview = () => {
             Case Photos
           </button>
           <div
-                    className={`mt-2 ${
+                    className={`md:mt-2 ${
                       activeTab === 'case photos' ? 'bg-blue-500 h-[2px] overflow-hidden transition-all duration-500 ease-in-out w-full' : 'bg-blue-500 h-[2px] w-0 group-hover:w-full transition-all duration-500 ease-in-out'
                     }`}
                   />
@@ -488,11 +525,11 @@ const renderOverview = () => {
         </div>
         <button
           onClick={() => handleAddRecordClick()}
-          className='w-fit text-secondary-text rounded-md px-4 py-2 bg-primary-btn hover:bg-hover-btn transition-all duration-200 ease-in-out'>
+          className='w-fit text-secondary-text text-sm md:text-base rounded-md px-4 py-2 bg-primary-btn hover:bg-hover-btn transition-all duration-200 ease-in-out'>
           Add Record
         </button>
       </div>
-      <div className='bg-white py-8 px-9 mt-6 w-full rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.02)] border border-gray-200'>
+      <div className='bg-table-container-bg py-8 px-9 md:mt-6 mt-4 w-full rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.02)] border border-gray-200 dark:border-transparent'>
       {
         activeTab === 'overview' ? renderOverview() :
         activeTab === 'case photos' ? renderCasePhotos() :

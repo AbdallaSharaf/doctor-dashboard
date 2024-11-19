@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { capitalizeFirstLetter, convert24HourTo12Hour, convert12HourTo24Hour } from '../helpers/Helpers';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faChevronDown, faChevronUp, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronUp, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import AppointmentModal from '../components/modals/AppointmentModal';
 import CustomDropdown from '../components/CustomDropdown';
 import { useNavigate } from 'react-router-dom';
@@ -393,7 +393,6 @@ const handleBulkAction = async (action) => {
     }, [appointmentsPerPage]); // Dependency on editId
 
 //--------------------------------------end of effects--------------------------------------
-
 return (
     <div className="p-7 ">
             <div className='flex justify-between items-center mb-6 '>
@@ -407,8 +406,8 @@ return (
             </button>
 
                 <AppointmentModal
-                    addAppointmentModalOpen={addAppointmentModalOpen}
-                    setAddAppointmentModalOpen={setAddAppointmentModalOpen}
+                    isModalOpen={addAppointmentModalOpen}
+                    setIsModalOpen={setAddAppointmentModalOpen}
                     handleSubmit={handleAddAppointment}
                 />
 
@@ -448,25 +447,25 @@ return (
                     currentAppointments.length > 0 ? 
             (<> <table className="w-full table-auto md:table hidden">
                 <thead>
-                    <tr className='text-center border-b-[16px] border-transparent'>
+                    <tr className='text-center font-normal text-sm border-b-[16px] border-transparent'>
                         <th className="px-2">
                             <SelectAllCheckbox entries={filteredAppointments} selectedEntries={selectedAppointments} setSelectedEntries={setSelectedAppointments}/>
                         </th>
-                        <th className=" font-normal text-sm p-2">NO</th>
-                        <th className=" font-normal text-sm p-2 cursor-pointer" onClick={() => sortBy('name')}>
+                        <th className="p-2">NO</th>
+                        <th className="p-2 cursor-pointer" onClick={() => sortBy('name')}>
                             Patient Name {getArrow('name')}
                         </th>
-                        <th className=" font-normal text-sm p-2 cursor-pointer" onClick={() => sortBy('date')}>
+                        <th className="p-2 cursor-pointer" onClick={() => sortBy('date')}>
                             Date {getArrow('date')}
                         </th>
-                        <th className=" font-normal text-sm p-2 cursor-pointer" onClick={() => sortBy('time')}>
+                        <th className="p-2 cursor-pointer" onClick={() => sortBy('time')}>
                             Time {getArrow('time')}
                         </th>
-                        <th className=" font-normal text-sm p-2">Phone Number</th>
-                        <th className=" font-normal text-sm  cursor-pointer w-fit" onClick={() => sortBy('status')}>
+                        <th className="p-2">Phone Number</th>
+                        <th className=" cursor-pointer w-fit" onClick={() => sortBy('status')}>
                             Status {getArrow('status')}
                         </th>
-                        <th className=" font-normal text-sm p-2">Action</th>
+                        <th className="p-2">Action</th>
                     </tr>
                 </thead>
                 <tbody>

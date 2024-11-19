@@ -10,7 +10,11 @@ import CustomDropdown from '../components/CustomDropdown';
 import Spinner from '../components/Spinner'; // Import Spinner
 import {  markAsUnread, deleteMessage } from '../store/slices/messagesSlice'; // Import actions from your slice
 import { useDispatch, useSelector } from 'react-redux';
-
+import Lottie from 'lottie-react';
+import noDataAnimation from '../assets/Animation - 1730816811189.json'
+import SelectAllCheckbox from '../components/checkbox/SelectAllCheckbox';
+import IndividualCheckbox from '../components/checkbox/IndividualCheckbox';
+import { formatDateTime } from '../helpers/Helpers';
 
 const options = [
     { value: 'all', label: 'All Messages' },
@@ -25,7 +29,7 @@ const MessagesPage = () => {
     const loading = useSelector(state => state.messages.loading);
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredMessages, setFilteredMessages] = useState([]);
-    const [selectedIds, setSelectedIds] = useState(new Set());
+    const [selectedMessages, setSelectedMessages] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [messagesPerPage, setMessagesPerPage] = useState(5);
     const [selectedStatus, setSelectedStatus] = useState('all'); // Default to 'all'
@@ -38,7 +42,6 @@ const MessagesPage = () => {
     const currentMessages = filteredMessages.slice(indexOfFirstMessage, indexOfLastMessage);
     
     //---------- helper function ----------
-    console.log(loading)
     
     const formatTimestamp = (timestamp) => {
         const date = new Date(timestamp);
@@ -55,10 +58,16 @@ const MessagesPage = () => {
     
     //---------- handlers ----------
 
-    const handleToggleReadStatus = async (message, unread) => {
+    const handleToggleReadStatus = async (message) => {
         if (message) {
             const newUnreadStatus = !message.unread;
             await dispatch(markAsUnread({ id: message.id, unread: newUnreadStatus }));
+        }
+    };
+
+    const handleMarkAsRead = async (message) => {
+        if (message && message.unread) {
+            await dispatch(markAsUnread({ id: message.id, unread: false })); // Always mark as read
         }
     };
 
@@ -79,7 +88,7 @@ const MessagesPage = () => {
     
     
     const handleOpenMessage = (message) => {
-        handleToggleReadStatus(message.id, {unread: false})
+        handleMarkAsRead(message, {unread: false})
         navigate(`/messages/${message.id}`);
     };
     
@@ -91,35 +100,36 @@ const MessagesPage = () => {
         }
     };
     
-    const handleCheckboxChange = (id) => {
-        setSelectedIds(prevSelectedIds => {
-            const updatedSelectedIds = new Set(prevSelectedIds);
-            updatedSelectedIds.has(id) ? updatedSelectedIds.delete(id) : updatedSelectedIds.add(id);
-            return updatedSelectedIds;
+    const handleCheckboxChange = (message) => {
+        setSelectedMessages((prevSelectedMessages) => {
+            const exists = prevSelectedMessages.find((msg) => msg.id === message.id);
+            if (exists) {
+                // If the message is already selected, remove it
+                return prevSelectedMessages.filter((msg) => msg.id !== message.id);
+            } else {
+                // Otherwise, add the message to the selection
+                return [...prevSelectedMessages, message];
+            }
         });
     };
     
+    
     const handleBulkAction = async (action) => {
-        const promises = Array.from(selectedIds).map(id => action(id));
+        const promises = Array.from(selectedMessages).map(message => action(message));
         await Promise.all(promises);
     };
 
     const handleToggleSelectedReadStatus = async () => {
         // Check if any selected message is unread
-        const anyUnread = Array.from(selectedIds).some(id => {
-            const message = messages.find(msg => msg.id === id);
-            return message && message.unread;
-        });
+        const anyUnread = selectedMessages.some((message) => message.unread);
     
         // Set the new unread status based on the check
         const newUnreadStatus = !anyUnread;
     
-        await handleBulkAction(async (id) => {
-            console.log('clicked')
-            await dispatch(markAsUnread({ id: id, unread: newUnreadStatus }));
+        await handleBulkAction(async (message) => {
+            await dispatch(markAsUnread({ id: message.id, unread: newUnreadStatus }));
         });
     };
-    
     
     const handleDeleteSelected = async () => {
         const result = await Swal.fire({
@@ -129,13 +139,14 @@ const MessagesPage = () => {
             showCancelButton: true,
             confirmButtonText: 'Yes, delete them!',
         });
-        
+    
         if (result.isConfirmed) {
-            await handleBulkAction(async (id) => {
-                await dispatch(deleteMessage(id));
+            await handleBulkAction(async (message) => {
+                await dispatch(deleteMessage(message.id));
             });
         }
     };
+    
     
     
     //---------- end of handlers ----------
@@ -172,41 +183,36 @@ const MessagesPage = () => {
     
     
     return (
-        <div className="p-8 w-full">
-            <div className='flex justify-between'>
+        <div className="p-7 w-full">
             <h2 className="text-lg font-semibold mb-6">Messages</h2>
-            
-            </div>
-            <div className='p-7 rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.04) border border-gray-200]'>
-            <div className='flex justify-between items-center  mb-7'>
-            <div className='flex gap-4 w-full'>
-            <div className='w-44'>
+            <div className='bg-table-container-bg p-4 md:p-7 rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.04)] dark:border-transparent border border-gray-200]'>
+            <div className='flex justify-between items-center mb-6'>
+            <div className='flex md:gap-4 items-center'>
+            <div className='min-w-44'>
                 <CustomDropdown 
                     options={options} 
                     selectedStatus={{ value: selectedStatus, label: `${selectedStatus} Messages` }} 
                     setSelectedStatus={setSelectedStatus} 
                     />
             </div>
-            {selectedIds.size > 0 && 
-            <div className="flex">
-                <button onClick={handleToggleSelectedReadStatus} className="bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-2 text-sm">
+            <div className="hidden md:flex">
+                <button disabled={!selectedMessages.length>0} onClick={handleToggleSelectedReadStatus} className={`bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-2 text-sm ${!selectedMessages.length > 0 ? 'cursor-not-allowed opacity-50' : ''}`}>
                     Toggle Read
                 </button>
-                <button onClick={handleDeleteSelected} className="ml-4 p-2 text-sm hover:bg-gray-100 rounded text-primary-text">
+                <button disabled={!selectedMessages.length>0} onClick={handleDeleteSelected} className={`ml-4 p-2 text-sm rounded text-primary-text ${!selectedMessages.length > 0 ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-100'}`}>
                     Delete All
                 </button>
             </div>
-            }
             </div>
-            <div className="relative p-2 text-sm w-[250px]">
+            <div className="relative p-2 text-sm">
                 <FontAwesomeIcon 
                     icon={faMagnifyingGlass} 
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" 
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2" 
                 />
                 <input
                     type="text"
                     placeholder="Search Message"
-                    className="p-2 pl-8 bg-gray-100 rounded w-full"
+                    className="p-2 pl-8 bg-primary-bg rounded w-full"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -215,54 +221,41 @@ const MessagesPage = () => {
             {loading ? ( // Conditional rendering for loading spinner
                 <Spinner /> // Use Spinner component
                 ) : (
-            <table className="min-w-full ">
-                <thead className=''>
-                    <tr className="text-primary-text bg-gray-100 h-14">
-                        <th className="py-2 px-4 text-sm font-normal text-start">
-                            <input
-                                type="checkbox"
-                                onChange={() => {
-                                    const allSelected = currentMessages.length === selectedIds.size;
-                                    const newSelectedIds = allSelected ? new Set() : new Set(currentMessages.map(msg => msg.id));
-                                    setSelectedIds(newSelectedIds);
-                                }}
-                                checked={currentMessages.length > 0 && currentMessages.length === selectedIds.size}
-                            />
+                    messages.length > 0 ? 
+            (<> 
+            <table className="w-full table-auto md:table hidden">
+                <thead>
+                    <tr className="border-b-[16px] border-transparent font-normal text-sm ">
+                        <th className="px-2">
+                            <SelectAllCheckbox selectedEntries={selectedMessages} setSelectedEntries={setSelectedMessages} entries={messages}/>
                         </th>
-                        <th className="py-2 px-4 font-normal text-start text-sm">Sender</th>
-                        <th className="py-2 px-4 font-normal text-start text-sm">Subject</th>
-                        <th className="py-2 px-4 font-normal text-start text-sm">Status</th>
-                        <th className="py-2 px-4 font-normal text-start text-sm">Actions</th>
-                        <th className="py-2 px-4 font-normal text-start text-sm">Time</th>
+                        <th className="p-2 ">Sender</th>
+                        <th className="p-2 ">Subject</th>
+                        <th className="p-2 ">Status</th>
+                        <th className="p-2 ">Actions</th>
+                        <th className="p-2 ">Time</th>
                     </tr>
                 </thead>
                 <tbody>
                     {currentMessages.map((message, index) => (
                         <tr
                             key={message.id}
-                            className={` cursor-pointer ${message.unread ? 'font-bold' : ''}  h-14 ${index % 2 !== 0 ? 'bg-gray-100 hover:bg-gray-200' : 'bg-white hover:bg-gray-100'}`}
+                            className={` cursor-pointer ${message.unread ? 'font-bold' : ''}  h-14 text-sm ${index % 2 === 0 ? 'bg-even-row-bg' : ''} text-center`}
                             onClick={() => handleOpenMessage(message)}
                         >
-                            <td className="py-2 px-4 text-sm">
-                                <input
-                                    type="checkbox"
-                                    checked={selectedIds.has(message.id)}
-                                    onClick={(e) => {
-                                        e.stopPropagation(); // Prevent the event from bubbling up
-                                    }}
-                                    onChange={() => handleCheckboxChange(message.id)}
-                                />
+                            <td className="p-2" onClick={(e) => e.stopPropagation()}>
+                                <IndividualCheckbox entry={message} selectedEntries={selectedMessages} handleCheckboxChange={handleCheckboxChange} />
                             </td>
-                            <td className="py-2 px-4 text-sm">{message.name}</td>
-                            <td className="py-2 px-4 text-sm">{message.subject}</td>
-                            <td className="py-2 pl-8 text-sm">
+                            <td className="p-2">{message.name}</td>
+                            <td className="p-2">{message.subject}</td>
+                            <td className="py-2 text-sm">
                                 {message.unread ? (
                                     <FontAwesomeIcon onClick={async (e)=>{ e.stopPropagation(); await handleToggleReadStatus(message);}} icon={faEnvelope} className="text-red-500" />
                                 ) : (
                                     <FontAwesomeIcon onClick={async (e)=>{ e.stopPropagation(); await handleToggleReadStatus(message);}} icon={faEnvelopeOpen} className="text-green-500" />
                                 )}
                             </td>
-                            <td className="py-2 px-4 flex space-x-2 h-14 text-lg">
+                            <td className="grid grid-cols-3 gap-2 justify-center w-fit mx-auto text-xl">
                                 <button onClick={(e) => { 
                                     e.stopPropagation(); 
                                     handleReply('call', message.phone); 
@@ -284,15 +277,47 @@ const MessagesPage = () => {
                                     <FontAwesomeIcon icon={faTrash} />
                                 </button>
                             </td>
-                            <td className="py-2 px-4 text-sm">{formatTimestamp(message.timestamp)}</td>
+                            <td className="p-2">{formatTimestamp(message.timestamp)}</td>
                         </tr>
                     ))}
                 </tbody>
-            </table>)}
-            <div className="mt-10 flex justify-between">
-            <div className="mb-4 flex justify-between items-center">
+            </table> 
+            <div className='flex flex-col justify-between items-center md:hidden'>
+                {currentMessages.map((message, id) => (
+                    <div onClick={() => handleOpenMessage(message)} className={`${id % 2 ===0 ? 'bg-even-row-bg':''}  w-full px-3 py-2`} key={id}>
+                    <div className='flex justify-between items-center w-full mb-1' onClick={() => openMobileViewModal(message)}>
+                        <div className='flex gap-3 items-center'>
+                        <div className={`w-3 h-3 rounded-full ${message.unread ? 'bg-blue-500':'bg-transparent'}`}/>
+                        <div>
+                            <p className='font-medium leading-none text-lg'>{message.name}</p>
+                        </div>
+                        </div>
+                        <div onClick={(e) => e.stopPropagation()}>
+                        <p className={`text-sm leading-none font-medium pt-[4px]`}>{formatDateTime(message.timestamp)}</p>
+                        </div>
+                    </div>
+                    <div className='pl-6'>
+                    <p>{message.subject}</p>
+                    <p className='text-sm mt-1 font-thin'>{message.message}</p>
+                    </div>
+                    </div>
+                ))}
+            </div>
+            </>) : (
+         <div className="flex flex-col items-center justify-center h-64 space-y-4">
+         <Lottie 
+             animationData={noDataAnimation} 
+             loop={true} 
+             style={{ width: 150, height: 150 }} 
+             className="mb-4"
+         />
+         <p className="text-gray-500 text-lg">There are no messages to display.</p>
+     </div>
+        ))}
+            <div className="mt-4 flex justify-center md:justify-between text-secondary-text">
+            <div className="mb-4 justify-between items-center hidden md:flex">
                 <label htmlFor="messages-per-page" className="mr-4">Show:</label>
-                <div className='w-[160px]'>
+                <div className='w-[150px]'>
                 <CustomDropdown 
                     options={[5, 10, 20, 50, 100].map(option => ({ value: option, label: `${option} per page` }))} 
                     selectedStatus={{ value: messagesPerPage, label: `${messagesPerPage} per page` }} 
@@ -301,16 +326,21 @@ const MessagesPage = () => {
                 </div>
             </div>
             <Pagination
-                count={totalPages}
-                page={currentPage}
-                onChange={(event, value) => setCurrentPage(value)}
-                shape="rounded"
-                color="#1B84FF"
-                siblingCount={1} // Show one sibling on each side of the current page
-                boundaryCount={1} 
-                renderItem={(item) => (
-                    <PaginationItem {...item} />
-                )}
+            count={totalPages}
+            page={currentPage}
+            onChange={(event, value) => setCurrentPage(value)}
+            shape="rounded"
+            siblingCount={1}
+            boundaryCount={1}
+            renderItem={(item) => (
+                <PaginationItem
+                {...item}
+                classes={{
+                    root: "text-primary-text dark:text-primary-text", // Default text color
+                    selected: "bg-pagination-500-important dark: bg-pagination-500-dark-important", // Use the important class
+                }}
+                />
+            )}
             />
             </div>
             </div>

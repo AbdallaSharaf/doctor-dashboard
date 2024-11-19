@@ -38,7 +38,7 @@
   --sidebar-bg: #fff;
   --text-secondary: #fff;
   --text-link: #407fd5;
-  --bg--table-container: #fff;
+  --bg-table-container: #fff;
   --border-color: #e5e7eb;
 }
 
@@ -56,6 +56,7 @@
   --bg-table-container: #15171c;
   --text-link: #fff;
   --border-color: #e5e7eb2b;
+  border: transparent;
 }
 
 /* Hide scrollbar for Webkit-based browsers */

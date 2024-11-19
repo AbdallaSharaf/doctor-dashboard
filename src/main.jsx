@@ -5,7 +5,6 @@ import Layout from './helpers/Layout/Layout.jsx';
 import ScrollToTop from './helpers/ScrollToTop';
 import './index.css';
 import Schedule from './Pages/Schedule.jsx';
-import BookingDetails from './Pages/BookingDetails'; // Create this component
 import Appointments from './Pages/Appointments.jsx';
 import MessageDetailsPage from './Pages/MessageDetailsPage.jsx'
 import MessagesPage from './Pages/MessagesPage.jsx';
@@ -30,7 +29,6 @@ createRoot(document.getElementById('root')).render(
         <Route path='/' element={<Layout />}>
           <Route index element={<App />} />
           <Route path='/schedule' element={<Schedule />} />
-          <Route path="/booking/:id" element={<BookingDetails />} />
           <Route path="/appointments" element={<Appointments />} />
           <Route path="/patients/patient-details/:id" element={<PatientDetailsPage />} />
           <Route path="/messages" element={<MessagesPage />} />

@@ -26,14 +26,14 @@ export const saveVisibilityChange = createAsyncThunk(
           // Check if the team member exists before updating
           const url = `/teamMembers/${id}.json`;
           const exists = await axios.get(url);
-
           if (!exists.data) {
               console.warn(`Team member with ID ${id} not found.`);
               return rejectWithValue(`Team member not found`);
           }
 
           // Proceed with updating visibility if it exists
-          const response = await axios.patch(url, { isVisible });
+          const response = await axios.patch(url, { isVisible: !isVisible });
+          console.log(response.data.isVisible)
           return { id, isVisible: response.data.isVisible };
       } catch (error) {
           console.error('Error updating visibility status:', error);
@@ -102,8 +102,15 @@ const teamMembersSlice = createSlice({
                 state.loading = false;
                 state.error = action.error.message;
             })
+            .addCase(addTeamMember.pending, (state) => {
+                state.loading = true;
+            })
             .addCase(addTeamMember.fulfilled, (state, action) => {
                 state.members.push(action.payload);
+            })
+            .addCase(addTeamMember.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message;
             })
             .addCase(editTeamMember.fulfilled, (state, action) => {
                 const index = state.members.findIndex(member => member.id === action.payload.id);

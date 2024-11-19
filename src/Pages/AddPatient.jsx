@@ -186,52 +186,53 @@ const AddPatient = () => {
     
 
     return (
-        <div className="bg-white p-6 rounded-md shadow-md">
-            <h2 className="text-2xl font-semibold mb-4">Add Patient</h2>
-            <form onSubmit={formik.handleSubmit} className="space-y-4">
+        <div className="p-7 bg-table-container-bg -mb-7">
+            <h2 className="text-lg font-semibold mb-6">Add Patient</h2>
+            <form onSubmit={formik.handleSubmit} className="space-y-5 overflow-hidden">
             {/* Main Patient Data */}
-            <div>
+            <div className='flex flex-col md:flex-row gap-5 md:justify-between '>
+            <div className='md:w-1/3 '>
                 <label htmlFor="name" className="block font-medium">Name</label>
                 <input
                     type="text"
                     {...formik.getFieldProps('name')}
-                    className={`border p-2 rounded-md w-full ${formik.touched.name && formik.errors.name ? 'border-red-500' : ''}`}
+                    className={`border p-2 rounded-md w-full dark:border-transparent bg-primary-bg ${formik.touched.name && formik.errors.name ? 'border-red-500' : ''}`}
                 />
                 {formik.touched.name && formik.errors.name ? (
                     <p className='text-red-800'>{formik.errors.name}</p>
                 ) : null}
             </div>
 
-            <div>
+            <div className='md:w-1/3 '>
                 <label htmlFor="phone" className="block font-medium">Phone</label>
                 <input
                     type="tel"
                     {...formik.getFieldProps('phone')}
-                    className={`border p-2 rounded-md w-full ${formik.touched.phone && formik.errors.phone ? 'border-red-500' : ''}`}
+                    className={`border p-2 rounded-md w-full dark:border-transparent bg-primary-bg ${formik.touched.phone && formik.errors.phone ? 'border-red-500' : ''}`}
                 />
                 {formik.touched.phone && formik.errors.phone ? (
                     <p className='text-red-800'>{formik.errors.phone}</p>
                 ) : null}
             </div>
-
-            <div>
+            <div className='md:w-1/3 '>
                 <label htmlFor="age" className="block font-medium">Age</label>
                 <input
                     type="number"
                     {...formik.getFieldProps('age')}
-                    className={`border p-2 rounded-md w-full ${formik.touched.age && formik.errors.age ? 'border-red-500' : ''}`}
+                    className={`border p-2 rounded-md w-full dark:border-transparent bg-primary-bg ${formik.touched.age && formik.errors.age ? 'border-red-500' : ''}`}
                 />
                 {formik.touched.age && formik.errors.age ? (
                     <p className='text-red-800'>{formik.errors.age}</p>
                 ) : null}
             </div>
-
-            <div>
+            </div>
+            <div className='flex flex-col md:flex-row gap-5 md:justify-between '>
+            <div className='md:w-1/3 '>
                 <label htmlFor="gender" className="block font-medium">Gender</label>
                 <select
                     name="gender"
                     {...formik.getFieldProps('gender')}
-                    className={`border p-2 rounded-md w-full ${formik.touched.gender && formik.errors.gender ? 'border-red-500' : ''}`}
+                    className={`border p-2 rounded-md w-full dark:border-transparent bg-primary-bg ${formik.touched.gender && formik.errors.gender ? 'border-red-500' : ''}`}
                 >
                     <option value="">Select Gender</option>
                     <option value="male">Male</option>
@@ -243,23 +244,23 @@ const AddPatient = () => {
                 ) : null}
             </div>
 
-            <div>
+            <div className='md:w-1/3 '>
                 <label htmlFor="firstAppointmentDate" className="block font-medium">First Appointment Date & Time</label>
                 <input
                     type="date"
                     {...formik.getFieldProps('firstAppointmentDate')}
-                    className={`border p-2 rounded-md w-full ${formik.touched.firstAppointmentDate && formik.errors.firstAppointmentDate ? 'border-red-500' : ''}`}
+                    className={`border h-[38px] p-2 rounded-md w-full dark:border-transparent bg-primary-bg ${formik.touched.firstAppointmentDate && formik.errors.firstAppointmentDate ? 'border-red-500' : ''}`}
                 />
                 {formik.touched.firstAppointmentDate && formik.errors.firstAppointmentDate ? (
                     <p className='text-red-800'>{formik.errors.firstAppointmentDate}</p>
                 ) : null}
             </div>
 
-            <div>
+            <div className='md:w-1/3 '>
                 <label htmlFor="city" className="block font-medium">City</label>
                 <select
                     {...formik.getFieldProps('city')}
-                    className={`border p-2 rounded-md w-full ${formik.touched.city && formik.errors.city ? 'border-red-500' : ''}`}
+                    className={`border p-2 rounded-md w-full dark:border-transparent bg-primary-bg ${formik.touched.city && formik.errors.city ? 'border-red-500' : ''}`}
                 >
                     <option value="">Select a city</option>
                     {egyptianCities.map((city) => (
@@ -273,14 +274,15 @@ const AddPatient = () => {
                     <p className='text-red-800'>{formik.errors.city}</p>
                 ) : null}
             </div>
-
+            </div>
+            <div className='flex flex-col md:flex-row gap-5 md:justify-between '>
                     {/* Dropdown Fields */}
-                    <div>
+                    <div className='md:w-1/2 '>
                     <label htmlFor="doctorTreating" className="block font-medium">Doctor Treating</label>
                     <select
                         name="doctorTreating"
                         {...formik.getFieldProps('doctorTreating')}
-                        className="border p-2 rounded-md w-full"
+                        className="border p-2 rounded-md w-full bg-primary-bg"
                     >
                         <option value="">Select Doctor</option>
                         {doctors.map((doctor, index) => (
@@ -293,10 +295,21 @@ const AddPatient = () => {
                     <p className='text-red-800'>{formik.errors.doctorTreating}</p>
                 ) : null}
                 </div>
-
-               
+                <div className='md:w-1/2 '>
+                <label htmlFor="nextAppointmentDate" className="block font-medium">Next Appointment Date</label>
+                <input
+                    type="datetime-local"
+                    {...formik.getFieldProps('nextAppointmentDate')}
+                    className={`border p-2 h-[38px] rounded-md w-full dark:border-transparent bg-primary-bg ${formik.touched.nextAppointmentDate && formik.errors.nextAppointmentDate ? 'border-red-500' : ''}`}
+                />
+                {formik.touched.nextAppointmentDate && formik.errors.nextAppointmentDate ? (
+                    <p className='text-red-800'>{formik.errors.nextAppointmentDate}</p>
+                ) : null}
+            </div>
+            </div>
+            <div className='flex flex-col md:flex-row gap-5 md:justify-between '>
                 {/* Diagnosis Dropdown */}
-                <div>
+                <div className='md:w-1/3 '>
                     <label htmlFor="diagnosis" className="block font-medium">Select Diagnosis</label>
                    {/* Show custom input field if "Other" is selected */}
                    {otherOptionToggle==='diagnosis' ? (
@@ -307,7 +320,7 @@ const AddPatient = () => {
                             value={otherOption}
                             onChange={(e) => setOtherOption(e.target.value)}
                             onBlur={(e) => handleCustomSubmit('diagnosis', setSelectedDiagnoses, selectedDiagnoses)}
-                            className="border p-2 rounded-md w-full mt-2"
+                            className="border p-2 rounded-md w-full dark:border-transparent bg-primary-bg mt-2"
                         />
                         <button
                             type="button"
@@ -327,7 +340,7 @@ const AddPatient = () => {
                     ):<select
                     name="diagnosis"
                     onChange={(e) => handleAddSelectedItem(e.target.value,'diagnosis',setSelectedDiagnoses, selectedDiagnoses)}
-                    className="border p-2 rounded-md w-full"
+                    className="border p-2 rounded-md w-full bg-primary-bg"
                 >
                     <option value="">Select Diagnosis</option>
                     {diagnoses.map((diagnosis, index) => (
@@ -353,7 +366,7 @@ const AddPatient = () => {
                 </div>
 
                 {/* Medicine Dropdown */}
-                <div>
+                <div className='md:w-1/3 '>
                     <label htmlFor="jobDone" className="block font-medium">Select Job</label>
                    {/* Show custom input field if "Other" is selected */}
                    {otherOptionToggle==='jobDone' ? (
@@ -364,7 +377,7 @@ const AddPatient = () => {
                             value={otherOption}
                             onChange={(e) => setOtherOption(e.target.value)}
                             onBlur={(e) => handleCustomSubmit('jobDone', setSelectedJobs, selectedJobs)}
-                            className="border p-2 rounded-md w-full mt-2"
+                            className="border p-2 rounded-md w-full dark:border-transparent bg-primary-bg mt-2"
                         />
                         <button
                             type="button"
@@ -384,7 +397,7 @@ const AddPatient = () => {
                     ):<select
                     name="jobDone"
                     onChange={(e) => handleAddSelectedItem(e.target.value,'jobDone',setSelectedJobs, selectedJobs)}
-                    className="border p-2 rounded-md w-full"
+                    className="border p-2 dark:border-transparent rounded-md w-full bg-primary-bg"
                 >
                     <option value="">Select Job</option>
                     {jobs.map((job, index) => (
@@ -402,15 +415,15 @@ const AddPatient = () => {
                                 <FontAwesomeIcon
                                     icon={faXmark}
                                     className="h-4 w-4 ml-2 cursor-pointer text-red-500"
-                                    onClick={() => handleRemoveItem(setSelectedJobs, selectJobs, job)}
-                                />
+                                    onClick={() => handleRemoveItem(setSelectedJobs, selectedJobs, job)}
+                                    />
                             </span>
                         ))}
                     </div>
                 </div>
 
                 {/* Medicine Dropdown */}
-                <div>
+                <div className='md:w-1/3 '>
                     <label htmlFor="medicine" className="block font-medium">Select Medicine</label>
                    {/* Show custom input field if "Other" is selected */}
                    {otherOptionToggle==='medicine' ? (
@@ -421,7 +434,7 @@ const AddPatient = () => {
                             value={otherOption}
                             onChange={(e) => setOtherOption(e.target.value)}
                             onBlur={(e) => handleCustomSubmit('medicine', setSelectedMedicines, selectedMedicines)}
-                            className="border p-2 rounded-md w-full mt-2"
+                            className="border p-2 rounded-md w-full dark:border-transparent bg-primary-bg mt-2"
                         />
                         <button
                             type="button"
@@ -441,7 +454,7 @@ const AddPatient = () => {
                     ):<select
                     name="medicine"
                     onChange={(e) => handleAddSelectedItem(e.target.value,'medicine',setSelectedMedicines, selectedMedicines)}
-                    className="border p-2 rounded-md w-full"
+                    className="border p-2 rounded-md w-full bg-primary-bg"
                 >
                     <option value="">Select Medicine</option>
                     {medicines.map((medicine, index) => (
@@ -464,34 +477,22 @@ const AddPatient = () => {
                             </span>
                         ))}
                     </div>
+                    </div>
                 </div>
+                <div className='flex flex-col md:flex-row gap-5 md:justify-between '>
 
-
-            <div>
-                <label htmlFor="nextAppointmentDate" className="block font-medium">Next Appointment Date</label>
-                <input
-                    type="datetime-local"
-                    {...formik.getFieldProps('nextAppointmentDate')}
-                    className={`border p-2 rounded-md w-full ${formik.touched.nextAppointmentDate && formik.errors.nextAppointmentDate ? 'border-red-500' : ''}`}
-                />
-                {formik.touched.nextAppointmentDate && formik.errors.nextAppointmentDate ? (
-                    <p className='text-red-800'>{formik.errors.nextAppointmentDate}</p>
-                ) : null}
-            </div>
-
-            <div>
+            <div className='md:w-1/2 '>
                 <label htmlFor="additionalNotes" className="block font-medium">Additional Notes</label>
                 <textarea
                     name="additionalNotes"
                     {...formik.getFieldProps('additionalNotes')}
-                    className={`border p-2 rounded-md w-full ${formik.touched.additionalNotes && formik.errors.additionalNotes ? 'border-red-500' : ''}`}
+                    className={`border p-2 rounded-md w-full dark:border-transparent bg-primary-bg ${formik.touched.additionalNotes && formik.errors.additionalNotes ? 'border-red-500' : ''}`}
                 />
                 {formik.touched.additionalNotes && formik.errors.additionalNotes ? (
                     <p className='text-red-800'>{formik.errors.additionalNotes}</p>
                 ) : null}
             </div>
-
-            <div>
+            <div className='md:w-1/2 '>
             <label className="block mb-1">Case Photos (up to 10)</label>
                 <input
                     name=''
@@ -499,7 +500,7 @@ const AddPatient = () => {
                     multiple
                     accept="image/*"
                     onChange={handlePhotoChange}
-                    className="border p-2 rounded-md w-full"
+                    className="border p-2 rounded-md w-full bg-primary-bg"
                 />
                 <div className="mt-2 flex flex-wrap">
                     {casePhotos.map((photo, index) => (
@@ -518,10 +519,12 @@ const AddPatient = () => {
                     ))}
             </div>
             </div>
-
-            <button type="submit" className="bg-blue-500 text-white p-2 rounded-md">
+            </div>
+            <div className='w-full flex justify-center pt-5'>
+            <button type="submit" className="bg-blue-500 text-white p-2 rounded-md mx-auto w-80">
                 Add Patient
             </button>
+            </div>
         </form>
         </div>
     );

@@ -16,6 +16,7 @@ export const markAsUnread = createAsyncThunk(
     'messages/markAsUnread', 
     async ({ id, unread }) => {
         try {
+            console.log(id)
             const response = await axios.patch(`/messages/${id}.json`, { unread });
             return { id, unread: response.data.unread }; // Include id with the updated unread status
         } catch (error) {

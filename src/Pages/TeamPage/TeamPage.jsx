@@ -9,7 +9,9 @@ import { addTeamMember, editTeamMember, deleteTeamMember, reorderTeamMembers, sa
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import Spinner from '../../components/Spinner'; // Import Spinner
-
+import Lottie from 'lottie-react';
+import noDataAnimation from '../../assets/Animation - 1730816811189.json'
+import { TeamMobileViewModal } from '../../components/modals/TeamMobileViewModal';
 
 const TeamPage = () => {
   const [editMember, setEditMember] = useState(null);
@@ -17,8 +19,17 @@ const TeamPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
   const dispatch = useDispatch();
   const { members, loading } = useSelector((state) => state.team);
-  
-  
+  const [mobileViewMember, setMobileViewMember] = useState(null);
+  const [isMobileViewModalOpen, setIsMobileViewModalOpen] = useState(false); // State to manage modal visibility
+  const openMobileViewModal = (member) => {
+    setMobileViewMember(member)
+    setIsMobileViewModalOpen(true);
+};
+const closeMobileViewModal = () => {
+  setMobileViewMember(null)
+  setIsMobileViewModalOpen(false);
+};
+
   //--------------------------handlers-------------------------------
   
   // Handle input changes for the new member form
@@ -115,12 +126,13 @@ const TeamPage = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="w-full p-6">
-        <div className='flex justify-between mb-10'>
+      <div className="w-full p-7">
+        <div className='flex justify-between items-center mb-6'>
           <h2 className="text-lg font-semibold">Team Management</h2>
           <button 
             onClick={() => setIsModalOpen(true)} 
-            className="mb-2 py-2 px-4 bg-primary-btn hover:bg-hover-btn w-[170px] text-white rounded">
+            className="py-2 px-4 bg-primary-btn hover:bg-hover-btn text-white rounded flex items-center justify-center 
+                        w-[170px]">
               Add Member
           </button>
         </div>
@@ -132,24 +144,26 @@ const TeamPage = () => {
           handleAddMember={handleAddMember} 
         />
         
-        {loading ? ( // Conditional rendering for loading spinner
-          <Spinner /> // Use Spinner component
-        ) : (
-          <div className='p-8 rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.04)] border border-gray-200'>
+          <div className='bg-table-container-bg p-4 md:p-7 rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.04)] dark:border-transparent border border-gray-200]'>
             {/* Grid Header */}
-            <table className="w-full table-auto">
-              <thead className='border-b-[16px] border-white'>
-                <tr className="text-primary-text bg-gray-100 h-10">
-                  <th className="text-center font-semibold py-2">
+            {loading ? ( // Conditional rendering for loading spinner
+                <Spinner /> // Use Spinner component
+                ) : (
+                    members.length > 0 ? 
+            (<>
+            <table className="w-full table-auto md:table hidden">
+              <thead>
+                <tr className="text-center font-normal text-sm border-b-[16px] border-transparent">
+                  <th className="p-2">
                     <FontAwesomeIcon icon={faBars} className="mr-3 text-gray-400 hidden" />
                   </th>
-                  <th className="text-center font-semibold py-2 text-primary-text text-sm pr-6">NO</th>
-                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Image</th>
-                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Name</th>
-                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Job</th>
-                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Description</th>
-                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Show</th>
-                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Actions</th>
+                  <th className="text-left">NO</th>
+                  <th className="p-2">Image</th>
+                  <th className="p-2">Name</th>
+                  <th className="p-2">Job</th>
+                  <th className="p-2">Description</th>
+                  <th className="p-2">Show</th>
+                  <th className="p-2">Actions</th>
                 </tr>
               </thead>
 
@@ -169,8 +183,43 @@ const TeamPage = () => {
                 ))}
               </tbody>
             </table>
+            <div className=" md:hidden">
+            {members.map((member, index) => (
+              <div className='flex flex-col justify-between items-center' key={index}>
+              <TeamMember 
+              key={member.id} 
+              member={member} 
+              index={index} 
+              moveMember={handleMoveMember} 
+              setEditMember={setEditMember} 
+              handleDeleteMember={handleDeleteMember} 
+              editMember={editMember} 
+              openMobileViewModal={openMobileViewModal}
+              handleEditMember={handleEditMember}
+              handleInputChange={handleInputChange}
+            />
+            <TeamMobileViewModal
+              isOpen={isMobileViewModalOpen}
+              onClose={closeMobileViewModal}
+              member={mobileViewMember}
+              handleRejectDelete={handleDeleteMember}
+            />
+            </div>
+            ))}
           </div>
-        )}
+            </>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-64 space-y-4">
+          <Lottie 
+              animationData={noDataAnimation} 
+              loop={true} 
+              style={{ width: 150, height: 150 }} 
+              className="mb-4"
+          />
+          <p className="text-gray-500 text-lg">There are no members to display.</p>
+      </div>
+         ))}
+          </div>
       </div>
     </DndProvider>
   );

@@ -44,6 +44,7 @@ const AppointmentModal = ({ isModalOpen, setIsModalOpen, handleSubmit }) => {
         },
     });
 
+
     // Function to handle closing the modal and resetting the form
     const handleCloseModal = () => {
         formik.resetForm(); // Reset form when closing the modal
@@ -63,7 +64,7 @@ const AppointmentModal = ({ isModalOpen, setIsModalOpen, handleSubmit }) => {
                         exit={{ opacity: 0 }}         // Exit animation
                     >
                         <motion.div
-                            className="bg-white p-5 rounded shadow-md w-[90%] max-w-[400px] h-[90%] z-50 overflow-y-auto"
+                            className="bg-table-container-bg p-5 rounded shadow-md w-[90%] max-w-[400px] h-[90%] z-50 overflow-y-auto"
                             onClick={(e) => e.stopPropagation()} // Prevent click from bubbling up
                             initial={{ scale: 0.8, opacity: 0 }}  // Modal starts small and transparent
                             animate={{ scale: 1, opacity: 1 }}    // Animates to full size and opacity
@@ -80,7 +81,7 @@ const AppointmentModal = ({ isModalOpen, setIsModalOpen, handleSubmit }) => {
                                 value={formik.values.name}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                className="border border-gray-300 rounded p-2 w-full mb-4"
+                                className="border border-gray-300 dark:border-transparent bg-primary-bg rounded p-2 w-full mb-4"
                             />
                             {formik.touched.name && formik.errors.name ? (
                                 <div className="text-red-600 mb-2">{formik.errors.name}</div>
@@ -94,7 +95,7 @@ const AppointmentModal = ({ isModalOpen, setIsModalOpen, handleSubmit }) => {
                                 value={formik.values.phone}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                className="border border-gray-300 rounded p-2 w-full mb-4"
+                                className="border border-gray-300 dark:border-transparent bg-primary-bg rounded p-2 w-full mb-4"
                             />
                             {formik.touched.phone && formik.errors.phone ? (
                                 <div className="text-red-600 mb-2">{formik.errors.phone}</div>
@@ -108,7 +109,7 @@ const AppointmentModal = ({ isModalOpen, setIsModalOpen, handleSubmit }) => {
                                 value={formik.values.age}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                className="border border-gray-300 rounded  p-2 w-full mb-4"
+                                className="border border-gray-300 dark:border-transparent bg-primary-bg rounded  p-2 w-full mb-4"
                             />
                             {formik.touched.age && formik.errors.age ? (
                                 <div className="text-red-600 mb-2">{formik.errors.age}</div>
@@ -120,7 +121,7 @@ const AppointmentModal = ({ isModalOpen, setIsModalOpen, handleSubmit }) => {
                                 name="date"
                                 value={formik.values.date}
                                 onChange={formik.handleChange}
-                                className="border border-gray-300 rounded p-2 w-full mb-4"
+                                className="border border-gray-300 dark:border-transparent bg-primary-bg rounded p-2 w-full mb-4"
                             />
                             {formik.touched.date && formik.errors.date ? (
                                 <div className="text-red-600 mb-2">{formik.errors.date}</div>
@@ -132,7 +133,7 @@ const AppointmentModal = ({ isModalOpen, setIsModalOpen, handleSubmit }) => {
                                 name="time"
                                 value={formik.values.time}
                                 onChange={formik.handleChange}
-                                className="border border-gray-300 rounded p-2 w-full mb-4"
+                                className="border border-gray-300 dark:border-transparent bg-primary-bg rounded p-2 w-full mb-4"
                             />
                             {formik.touched.time && formik.errors.time ? (
                                 <div className="text-red-600 mb-2">{formik.errors.time}</div>
@@ -142,14 +143,14 @@ const AppointmentModal = ({ isModalOpen, setIsModalOpen, handleSubmit }) => {
                             <div className="flex space-x-4 mb-2">
                                 <button
                                     type="button"
-                                    className={`w-full px-2 py-3 rounded border transition-all duration-100 ease-in-out ${formik.values.gender === 'male' ? 'bg-primary-btn text-secondary-text' : 'bg-gray-200 text-primary-text'}`}
+                                    className={`w-full px-2 py-3 rounded border dark:border-transparent transition-all duration-100 ease-in-out ${formik.values.gender === 'male' ? 'bg-primary-btn text-secondary-text' : 'bg-gray-200 bg-opacity-20 text-primary-text'}`}
                                     onClick={() => formik.setFieldValue('gender', 'male')}
                                 >
                                     Male
                                 </button>
                                 <button
                                     type="button"
-                                    className={`w-full px-2 py-3 transition-all duration-100 ease-in-out rounded border ${formik.values.gender === 'female' ? 'bg-primary-btn text-secondary-text' : 'bg-gray-200 text-primary-text'}`}
+                                    className={`w-full px-2 py-3 transition-all duration-100 ease-in-out rounded border dark:border-transparent ${formik.values.gender === 'female' ? 'bg-primary-btn text-secondary-text' : 'bg-gray-200 bg-opacity-20 text-primary-text'}`}
                                     onClick={() => formik.setFieldValue('gender', 'female')}
                                 >
                                     Female
@@ -162,7 +163,7 @@ const AppointmentModal = ({ isModalOpen, setIsModalOpen, handleSubmit }) => {
                             {/* Problem Textarea */}
                             <textarea
                                 name="problem"
-                                className="border rounded mb-2 p-2 w-full size-32"
+                                className="border rounded mb-2 p-2 w-full size-32 bg-primary-bg dark:border-transparent"
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
                                 value={formik.values.problem}
@@ -172,7 +173,7 @@ const AppointmentModal = ({ isModalOpen, setIsModalOpen, handleSubmit }) => {
                                 <div className="text-red-600 mb-2">{formik.errors.problem}</div>
                             ) : null}
                             <div className='flex justify-center gap-5'>
-                            <button type='submit' onClick={handleCloseModal} className=" text-primary-text hover:bg-gray-100 rounded w-40 p-2">
+                            <button type='submit' onClick={handleCloseModal} className=" text-primary-text hover:bg-gray-100 dark:hover:bg-transparent rounded w-40 p-2">
                                 Cancel
                             </button>
                             <button onClick={formik.handleSubmit} className="bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-2 w-40 ">

@@ -1,5 +1,4 @@
 import { useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import Spinner from '../../components/Spinner';
 import MainDataCard from './MainDataCard';
@@ -30,11 +29,11 @@ const PatientDetailsPage = () => {
   
 
   return (
-    <div className="container mx-auto p-8 mt-4">
-      <h1 className="text-2xl font-bold">Patient History: {patientData.name}</h1>
-      <div className="grid grid-cols-3 gap-14 ">
+    <div className="container mx-auto p-7">
+      <h1 className="text-xl font-semibold mb-6">Patient History: {patientData.name}</h1>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-y-4 lg:gap-14 ">
         <MainDataCard patientData={patientData} />
-        <div className='col-span-2'>
+        <div className='md:col-span-2'>
           <RecordsSystem patientId={patientData.id} patientRecords={sortedRecords} />
         </div>
       </div>

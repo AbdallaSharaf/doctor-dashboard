@@ -71,7 +71,7 @@ const MainDataCard = ({patientData}) => {
 
 
   return (
-        <div className="bg-white py-8 px-9 h-fit mt-4 w-full rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.02)] border border-gray-200">
+        <div className="bg-table-container-bg py-8 px-9 h-fit mt-4 w-full rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.02)] border dark:border-transparent border-gray-200">
              <div className="relative w-24 h-24 mb-4 mx-auto overflow-hidden rounded-full bg-gray-200">
                 <img 
                     src={imagePreview || 'https://placehold.co/100'} 
@@ -93,7 +93,7 @@ const MainDataCard = ({patientData}) => {
                 type="text"
                 value={editedData.name}
                 onChange={(e) => handleFieldChange('name', e.target.value)}
-                className="border p-1 w-full text-center"
+                className="border p-1 w-full bg-primary-bg dark:border-transparent text-center"
             />
             ) : (
             <p className='p-[5px]'>{patientData.name}</p>
@@ -129,7 +129,7 @@ const MainDataCard = ({patientData}) => {
                 type="text"
                 value={editedData.phone}
                 onChange={(e) => handleFieldChange('phone', e.target.value)}
-                className="border p-1 w-full text-sm"
+                className="border p-1 w-full bg-primary-bg dark:border-transparent text-sm"
             />
             ) : (
             <p className='py-[5px] font-extralight'>{patientData.phone}</p>
@@ -142,7 +142,7 @@ const MainDataCard = ({patientData}) => {
                 type="text"
                 value={editedData.age}
                 onChange={(e) => handleFieldChange('age', e.target.value)}
-                className="border p-1 w-full text-sm"
+                className="border p-1 w-full bg-primary-bg dark:border-transparent text-sm"
             />
             ) : (
             <p className='py-[5px] font-extralight'>{patientData.age}</p>
@@ -155,14 +155,14 @@ const MainDataCard = ({patientData}) => {
             <button
                 type="button"
                 onClick={() => handleFieldChange('gender', 'male')}
-                className={`px-4 py-1 text-sm border rounded ${editedData.gender === 'male' ? 'bg-blue-500 text-white' : 'bg-gray-100'} w-20`}
+                className={`px-4 py-1 text-sm rounded ${editedData.gender === 'male' ? 'bg-blue-500 text-white' : 'bg-white bg-opacity-20'} w-20`}
             >
                 Male
             </button>
             <button
                 type="button"
                 onClick={() => handleFieldChange('gender', 'female')}
-                className={`px-4 text-sm py-1 border rounded ${editedData.gender === 'female' ? 'bg-blue-500 text-white' : 'bg-gray-100'} w-20`}
+                className={`px-4 text-sm py-1 rounded ${editedData.gender === 'female' ? 'bg-blue-500 text-white' : 'bg-white bg-opacity-20'} w-20`}
             >
                 Female
             </button>
@@ -177,7 +177,7 @@ const MainDataCard = ({patientData}) => {
                 <select
                     value={editedData.city}
                     onChange={(e) => handleFieldChange("city", e.target.value)}
-                    className="border p-1 w-full text-sm"
+                    className="border p-1 w-full bg-primary-bg dark:border-transparent text-sm"
                 >
                     <option value="">Select a city</option>
                     {egyptianCities.map((city) => (
@@ -198,7 +198,7 @@ const MainDataCard = ({patientData}) => {
                 type="date"
                 value={editedData.firstAppointmentDate}
                 onChange={(e) => handleFieldChange('firstAppointmentDate', e.target.value)}
-                className="border p-1 w-full"
+                className="border p-1 w-full bg-primary-bg dark:border-transparent"
             />
             ) : (
             <p className='py-[5px] font-extralight'>{formatDateTime(patientData.firstAppointmentDate)}</p>
@@ -211,7 +211,7 @@ const MainDataCard = ({patientData}) => {
                 type="date"
                 value={editedData.lastAppointmentDate}
                 onChange={(e) => handleFieldChange('lastAppointmentDate', e.target.value)}
-                className="border p-1 w-full"
+                className="border p-1 w-full bg-primary-bg dark:border-transparent"
             />
             ) : (
             <p className='py-[5px] font-extralight '>{formatDateTime(patientData.lastAppointmentDate)}</p>

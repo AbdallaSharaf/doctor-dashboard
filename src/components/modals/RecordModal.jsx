@@ -1,11 +1,12 @@
 // AddRecordModal.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import Swal from 'sweetalert2';
 import { useDispatch, useSelector } from 'react-redux';
 import { addPatientRecord, updateRecord } from '../../store/slices/patientsSlice'; // Adjust the import path
 import {selectDiagnoses, selectDoctorNames, selectJobs, selectMedicines} from '../../store/Selectors'
+import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; // Importing an icon for removing selected items
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { uploadPhoto } from '../../helpers/Helpers';
@@ -22,6 +23,7 @@ const AddRecordModal = ({ isOpen, onClose, patientId, record }) => {
   const [selectedJobs, setSelectedJobs] = useState([]);
   const [selectedMedicines, setSelectedMedicines] = useState([]);
   const [casePhotos, setCasePhotos] = useState([]);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (record) {
@@ -57,6 +59,7 @@ const AddRecordModal = ({ isOpen, onClose, patientId, record }) => {
       }),
       additionalNotes: Yup.string(),
     }),
+    validateOnBlur: false,  // Disable immediate validation on input change
     onSubmit: async (values, { resetForm }) => {
         const recordData = {
             doctorTreating: values.doctorTreating,
@@ -183,16 +186,17 @@ const AddRecordModal = ({ isOpen, onClose, patientId, record }) => {
 
 
 const handlePhotoChange = (event) => {
-    const files = Array.from(event.target.files);
-    if (files.length + casePhotos.length <= 10) {
-      setCasePhotos([...casePhotos, ...files]);
-    } else {
-      Swal.fire({
-        title: 'Limit Exceeded',
-        text: 'You can upload up to 10 photos only.',
-        icon: 'warning',
-      });
-    }
+  console.log('clicked')
+  const files = Array.from(event.target.files);
+  if (files.length + casePhotos.length <= 10) {
+    setCasePhotos([...casePhotos, ...files]);
+  } else {
+    Swal.fire({
+      title: 'Limit Exceeded',
+      text: 'You can upload up to 10 photos only.',
+      icon: 'warning',
+    });
+  }
   };
   
 // Handle removing an item from the array
@@ -204,18 +208,31 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="fixed inset-0 bg-black opacity-50" onClick={() => handleCloseModal(formik.resetForm)}></div>
-      <div className="bg-white rounded-lg p-6 shadow-md w-[80%] z-10">
+    <AnimatePresence>
+      <div className="fixed inset-0 flex items-center justify-center z-50">
+        <motion.div
+            onClick={() =>handleCloseModal(formik.resetForm)}
+            className="fixed inset-0 bg-black opacity-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            >
+              <motion.div
+                        className="bg-table-container-bg rounded-lg p-6 shadow-md w-[80%] z-10 max-h-[90vh] overflow-y-auto scrollbar-hide"
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
         <h2 className="text-xl font-bold mb-4">Add Patient Record</h2>
         <form onSubmit={formik.handleSubmit}>
-            <div className='grid grid-cols-2 gap-10 w-full'>
+            <div className='grid grid-cols-1 md:grid-cols-2 md:gap-10 w-full'>
             <div>
             <label className="block mb-1">Doctor Treating</label>
             <select
               name="doctorTreating"
               {...formik.getFieldProps('doctorTreating')}
-              className="border p-2 rounded-md w-full"
+              className="border dark:border-transparent p-2 rounded-md bg-primary-bg w-full"
             >
               <option value="">Select Doctor</option>
               {doctors.map((doctor, index) => (
@@ -233,7 +250,7 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
             <input
               type="date"
               {...formik.getFieldProps('dueDate')}
-              className="border p-2 w-full"
+              className="border dark:border-transparent p-2 w-full bg-primary-bg"
             />
             {formik.touched.dueDate && formik.errors.dueDate ? (
               <div className="text-red-600">{formik.errors.dueDate}</div>
@@ -244,7 +261,7 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
             <input
               type="date"
               {...formik.getFieldProps('nextAppointmentDate')}
-              className="border p-2 w-full"
+              className="border dark:border-transparent p-2 w-full bg-primary-bg"
             />
             {formik.touched.nextAppointmentDate && formik.errors.nextAppointmentDate ? (
               <div className="text-red-600">{formik.errors.nextAppointmentDate}</div>
@@ -252,21 +269,22 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
           </div>
           <div>
             <label className="block mb-1">Case Photos (up to 10)</label>
-            <input
-                name=''
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handlePhotoChange}
-                className="border p-2 rounded-md w-full"
-            />
             <div className="mt-2 flex flex-wrap">
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handlePhotoChange}
+              className="hidden"
+            />
+            
                 {casePhotos.map((photo, index) => (
                 <div key={index} className="relative mr-2 mb-2">
                     <img
                         src={photo instanceof File ? URL.createObjectURL(photo) : photo}
                         alt={`Preview ${index}`}
-                        className="h-20 w-20 object-cover rounded-md"
+                        className="h-[70px] w-[70px] object-cover rounded-md"
                     />
                     <FontAwesomeIcon
                     icon={faXmark}
@@ -275,6 +293,12 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
                     />
                 </div>
                 ))}
+            <div
+              className="w-10 h-10 flex justify-center items-center text-white rounded-full bg-primary-btn font-bold text-2xl"
+              onClick={() => fileInputRef.current.click()} // Trigger file input click
+            >
+              +
+            </div>
             </div>
             </div>
             <div>
@@ -286,7 +310,7 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
                   <input
                       type="number"
                       {...formik.getFieldProps('price.paid')}
-                      className="border p-2 w-full"
+                      className="border dark:border-transparent p-2 w-full bg-primary-bg"
                   />
                   {formik.touched.price?.paid && formik.errors.price?.paid ? (
                       <div className="text-red-600">{formik.errors.price.paid}</div>
@@ -299,7 +323,7 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
                   <input
                       type="number"
                       {...formik.getFieldProps('price.remaining')}
-                      className="border p-2 w-full"
+                      className="border dark:border-transparent p-2 w-full bg-primary-bg"
                   />
                   {formik.touched.price?.remaining && formik.errors.price?.remaining ? (
                       <div className="text-red-600">{formik.errors.price.remaining}</div>
@@ -322,7 +346,7 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
                             value={otherOption}
                             onChange={(e) => setOtherOption(e.target.value)}
                             onBlur={(e) => handleCustomSubmit('diagnosis', setSelectedDiagnoses, selectedDiagnoses)}
-                            className="border p-2 rounded-md w-full mt-2"
+                            className="border dark:border-transparent p-2 rounded-md bg-primary-bg w-full mt-2"
                         />
                         <button
                             type="button"
@@ -342,7 +366,7 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
                     ):<select
                     name="diagnosis"
                     onChange={(e) => handleAddSelectedItem(e.target.value,'diagnosis',setSelectedDiagnoses, selectedDiagnoses)}
-                    className="border p-2 rounded-md w-full"
+                    className="border dark:border-transparent p-2 rounded-md bg-primary-bg w-full"
                 >
                     <option value="">Select Diagnosis</option>
                     {diagnoses.map((diagnosis, index) => (
@@ -378,7 +402,7 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
                             value={otherOption}
                             onChange={(e) => setOtherOption(e.target.value)}
                             onBlur={() => handleCustomSubmit('medicine', setSelectedMedicines, selectedMedicines)}
-                            className="border p-2 rounded-md w-full mt-2"
+                            className="border dark:border-transparent p-2 rounded-md bg-primary-bg w-full mt-2"
                         />
                         <button
                             type="button"
@@ -398,7 +422,7 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
                     ):<select
                     name="medicine"
                     onChange={(e) => handleAddSelectedItem(e.target.value,'medicine',setSelectedMedicines, selectedMedicines)}
-                    className="border p-2 rounded-md w-full"
+                    className="border dark:border-transparent p-2 rounded-md bg-primary-bg w-full"
                 >
                     <option value="">Select Medicine</option>
                     {medicines.map((medicine, index) => (
@@ -433,7 +457,7 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
                             value={otherOption}
                             onChange={(e) => setOtherOption(e.target.value)}
                             onBlur={() => handleCustomSubmit('jobDone', setSelectedJobs, selectedJobs)}
-                            className="border p-2 rounded-md w-full mt-2"
+                            className="border dark:border-transparent p-2 rounded-md bg-primary-bg w-full mt-2"
                         />
                         <button
                             type="button"
@@ -453,7 +477,7 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
                     ):<select
                     name="jobDone"
                     onChange={(e) => handleAddSelectedItem(e.target.value,'jobDone',setSelectedJobs, selectedJobs)}
-                    className="border p-2 rounded-md w-full"
+                    className="border dark:border-transparent p-2 rounded-md bg-primary-bg w-full"
                 >
                     <option value="">Select Job</option>
                     {jobs.map((job, index) => (
@@ -480,18 +504,22 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
             <label className="block mb-1">Additional Notes</label>
             <textarea
               {...formik.getFieldProps('additionalNotes')}
-              className="border p-2 w-full h-32"
+              className="border dark:border-transparent p-2 w-full bg-primary-bg h-32"
             />
           </div>
             </div>
         </div>
           </div>
-          <button type="submit" className="mt-4 px-4 py-2 bg-blue-500 text-white rounded">
+          <div className='flex justify-center'>
+          <button type="submit" className="mt-4 px-4 py-2 bg-primary-btn text-white rounded">
             Submit
           </button>
+          </div>
         </form>
-      </div>
-    </div>
+        </motion.div>
+        </motion.div>
+        </div>
+        </AnimatePresence>
   );
 };
 

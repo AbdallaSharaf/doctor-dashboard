@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Pagination from '@mui/material/Pagination';
 import CustomDropdown from '../components/CustomDropdown';
 import Spinner from '../components/Spinner';
@@ -203,7 +203,7 @@ const handleBulkAction = async (action) => {
                     {/* Delete All Button */}
                     <button
                     onClick={() => handleBulkAction('delete')}
-                    className={`ml-4 p-2 text-sm hover:bg-gray-100 rounded text-primary-text ${!selectedPatients.length > 0 ? 'cursor-not-allowed opacity-50' : ''}`}
+                    className={`ml-4 p-2 text-sm rounded text-primary-text ${!selectedPatients.length > 0 ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-100 '}`}
                     disabled={!selectedPatients.length > 0} // Disable the button when isActive is false
                     >
                     Delete All
@@ -230,40 +230,40 @@ const handleBulkAction = async (action) => {
                     patients.length > 0 ? 
                     (<> <table className="w-full table-auto md:table hidden">
                         <thead>
-                            <tr className='text-center border-b-[16px] border-transparent'>
+                            <tr className='text-center border-b-[16px] border-transparent font-normal text-sm'>
                                 <th className="px-2 ">
                                     <SelectAllCheckbox selectedEntries={selectedPatients} setSelectedEntries={setSelectedPatients} entries={patients}/>
                                 </th>
-                                <th className="font-normal text-sm p-2">No</th>
-                                <th className="font-normal text-sm p-2">Name</th>
-                                <th className="font-normal text-sm p-2">First Appointment</th>
-                                <th className="font-normal text-sm p-2">Next Appointment</th>
-                                <th className="font-normal text-sm p-2">No. of Records</th>
-                                <th className="font-normal text-sm p-2"><h1>Total Payments</h1></th>
-                                <th className="font-normal text-sm p-2">Doctor Treating</th>
-                                <th className="font-normal text-sm p-2">Actions</th>
+                                <th className="p-2">No</th>
+                                <th className="p-2">Name</th>
+                                <th className="p-2">First Appointment</th>
+                                <th className="p-2">Next Appointment</th>
+                                <th className="p-2">No. of Records</th>
+                                <th className="p-2"><h1>Total Payments</h1></th>
+                                <th className="p-2">Doctor Treating</th>
+                                <th className="p-2">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {currentPatients.map((patient, index) => (
-                                <tr key={patient.id} className={`text-center ${index % 2 === 0 ? 'bg-even-row-bg' : ''} h-14`}>
+                                <tr key={patient.id} className={`text-center ${index % 2 === 0 ? 'bg-even-row-bg' : ''} h-14 text-sm`}>
                                     <td className="p-2">
                                         <IndividualCheckbox entry={patient} selectedEntries={selectedPatients} handleCheckboxChange={handleCheckboxChange} />
                                     </td>
-                                    <td className="text-sm p-2">{(currentPage - 1) * patientsPerPage + index + 1}</td>
-                                    <td className="font-bold text-sm p-2">
+                                    <td className="p-2">{(currentPage - 1) * patientsPerPage + index + 1}</td>
+                                    <td className="font-bold p-2">
                                         <Link to={`/patients/patient-details/${patient.id}`}>
                                             {patient.name}
                                         </Link>
                                     </td>
-                                    <td className="text-sm p-2">{formatDateTime(patient.firstAppointmentDate)}</td>
-                                    <td className="text-sm p-2">{getNextAppointmentDate(patient.records)}</td>
-                                    <td className="text-sm p-2">{patient.records.length}</td>
-                                    <td className="text-sm p-2 flex justify-center text-white gap-2">
+                                    <td className="p-2">{formatDateTime(patient.firstAppointmentDate)}</td>
+                                    <td className="p-2">{getNextAppointmentDate(patient.records)}</td>
+                                    <td className="p-2">{patient.records.length}</td>
+                                    <td className="p-2 flex justify-center text-white gap-2">
                                         <p className='px-2 py-1 bg-green-400 rounded-md'>{getTotalAmounts(patient.records).totalPaid}</p>
                                         <p className='px-2 py-1 bg-red-400 rounded-md'>{getTotalAmounts(patient.records).totalRemaining}</p>
                                     </td>
-                                    <td className="text-sm p-2">
+                                    <td className="p-2">
                                     <div className="relative flex justify-center group gap-2">
                                     {patient.records && (() => {
                                         const uniqueDoctors = Array.from(
