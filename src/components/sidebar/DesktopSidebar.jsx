@@ -16,7 +16,7 @@ const DesktopSidebar = () => {
     <div className={`${isCollapsed ? 'w-20 group-hover/width:w-64' : 'w-64 '} transition-all duration-300`}></div>
     <div
       className={`fixed min-h-screen sidebar group shadow-md transition-all duration-300
-                  ${isCollapsed ? 'w-20 group-hover/width:w-64' : 'w-64 '} z-30 border-r border-border-color`}
+                  ${isCollapsed ? 'w-20 group-hover/width:w-64' : 'w-64 '} z-10 border-r border-border-color`}
     >
       <div className="flex relative items-center justify-between px-4 pt-6 pb-2">
         <Link to="/" className="text-lg font-medium flex gap-3 items-center">

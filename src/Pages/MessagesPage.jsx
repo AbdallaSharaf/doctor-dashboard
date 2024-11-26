@@ -255,7 +255,7 @@ const MessagesPage = () => {
                                     <FontAwesomeIcon onClick={async (e)=>{ e.stopPropagation(); await handleToggleReadStatus(message);}} icon={faEnvelopeOpen} className="text-green-500" />
                                 )}
                             </td>
-                            <td className="grid grid-cols-3 gap-2 justify-center w-fit mx-auto text-xl">
+                            <td className="grid grid-cols-3 gap-2 items-center h-14 justify-center w-fit mx-auto text-xl">
                                 <button onClick={(e) => { 
                                     e.stopPropagation(); 
                                     handleReply('call', message.phone); 
@@ -316,7 +316,7 @@ const MessagesPage = () => {
         ))}
             <div className="mt-4 flex justify-center md:justify-between text-secondary-text">
             <div className="mb-4 justify-between items-center hidden md:flex">
-                <label htmlFor="messages-per-page" className="mr-4">Show:</label>
+                <label htmlFor="messages-per-page" className="mr-4 text-primary-text">Show:</label>
                 <div className='w-[150px]'>
                 <CustomDropdown 
                     options={[5, 10, 20, 50, 100].map(option => ({ value: option, label: `${option} per page` }))} 

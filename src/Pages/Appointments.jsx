@@ -25,6 +25,7 @@ import Spinner from '../components/Spinner';
 import { MobileViewModal } from '../components/modals/MobileViewModal';
 import SelectAllCheckbox from '../components/checkbox/SelectAllCheckbox';
 import IndividualCheckbox from '../components/checkbox/IndividualCheckbox';
+import AddPatient from './AddPatient';
 
 
 const getStatusClass = (status) => {
@@ -77,8 +78,9 @@ const Appointments = () => {
     const [appointmentsPerPage, setAppointmentsPerPage] = useState(10);
     const [phoneHovered, setPhoneHovered] = useState(false);
     const [isMobileViewModalOpen, setIsMobileViewModalOpen] = useState(false);
+    const [isAddPatientModalOpen, setIsAddPatientModalOpen] = useState(false);
+    const [addPatientModalAppointment, setAddPatientModalAppointment] = useState(false);
     const [mobileViewAppointment, setMobileViewAppointment] = useState(null);
-
     const patients = useSelector(state => state.patients.list)
     const navigate = useNavigate()
     const rowRef = useRef(); // Ref for the editable row
@@ -341,7 +343,8 @@ const handleBulkAction = async (action) => {
             });
         } else {
             // If no matching patient, navigate to add-patient form with pre-filled data
-            navigate('/add-patient', { state: { patientData } });
+            setIsAddPatientModalOpen(true)
+            setAddPatientModalAppointment(appointment)
         }
     };
     
@@ -552,7 +555,7 @@ return (
                                             Discard
                                         </button>
                                     </div>
-                                ) : (
+                                ) : (<>
                                     <ActionsDropdown
                                         appointment={appointment}
                                         handleChangeStatus={handleChangeStatus}
@@ -561,6 +564,8 @@ return (
                                         handleReply={handleReply}
                                         handleAddPatient={handleAddPatient}
                                     />
+                                    <AddPatient patientData={addPatientModalAppointment} isModalOpen={isAddPatientModalOpen} onClose={setIsAddPatientModalOpen} />
+                                    </>
                                 )}
                             </td>
                         </tr>
@@ -585,6 +590,7 @@ return (
                             handleReply={handleReply}
                             handleAddPatient={handleAddPatient}
                         />
+                        <AddPatient patientData={addPatientModalAppointment} isModalOpen={isAddPatientModalOpen} onClose={setIsAddPatientModalOpen} />
                         </div>
                     </div>
                     <MobileViewModal 
@@ -614,7 +620,7 @@ return (
         ))}
             <div className="mt-4 flex justify-center md:justify-between text-secondary-text">
             <div className="mb-4 justify-between items-center hidden md:flex">
-                <label htmlFor="appointments-per-page" className="mr-4">Show:</label>
+                <label htmlFor="appointments-per-page" className="text-primary-text mr-4">Show:</label>
                 <div className='w-[150px]'>
                 <CustomDropdown 
                     options={[5, 10, 20, 50, 100].map(option => ({ value: option, label: `${option} per page` }))} 

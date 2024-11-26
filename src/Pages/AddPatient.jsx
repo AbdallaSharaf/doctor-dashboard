@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from '../helpers/Axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; // Importing an icon for removing selected items
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
@@ -8,6 +8,8 @@ import * as Yup from 'yup';
 import { useDispatch, useSelector } from 'react-redux';
 import {addPatient} from '../store/slices/patientsSlice'
 import {selectDiagnoses, selectDoctorNames, selectJobs, selectMedicines} from '../store/Selectors'
+import { motion, AnimatePresence } from 'framer-motion';
+
 
 import Swal from 'sweetalert2';
 
@@ -16,9 +18,7 @@ const egyptianCities = [
     "Cairo", "Alexandria", 'Tanta'
 ];
 
-const AddPatient = () => {
-    const location = useLocation();
-    const { patientData } = location.state || {};
+const AddPatient = ({isModalOpen, onClose, patientData = {}}) => {
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const doctors = useSelector(selectDoctorNames);
@@ -33,6 +33,7 @@ const AddPatient = () => {
     const [selectedJobs, setSelectedJobs] = useState([]);
     const [selectedMedicines, setSelectedMedicines] = useState([]);
     const [casePhotos, setCasePhotos] = useState([]);
+    const fileInputRef = useRef(null);
 
     const validationSchema = Yup.object().shape({
         name: Yup.string().required('Name is required'),
@@ -183,15 +184,29 @@ const AddPatient = () => {
     const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
         setter(selectedItems.filter((item) => item !== itemToRemove));
     };
-    
 
     return (
-        <div className="p-7 bg-table-container-bg -mb-7">
+    <AnimatePresence>
+            {isModalOpen && (
+                <motion.div
+                    onClick={() => onClose(false)}
+                    className="fixed bg-black z-40 bg-opacity-15 inset-0 flex w-screen h-screen items-center justify-center"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                >
+                    <motion.div
+                        className="bg-table-container-bg p-5 rounded shadow-md w-[90%] max-w-[400px] h-[90%] z-50 overflow-y-auto relative"
+                        onClick={(e) => e.stopPropagation()}
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
             <h2 className="text-lg font-semibold mb-6">Add Patient</h2>
             <form onSubmit={formik.handleSubmit} className="space-y-5 overflow-hidden">
             {/* Main Patient Data */}
-            <div className='flex flex-col md:flex-row gap-5 md:justify-between '>
-            <div className='md:w-1/3 '>
+            <div className=''>
                 <label htmlFor="name" className="block font-medium">Name</label>
                 <input
                     type="text"
@@ -203,7 +218,7 @@ const AddPatient = () => {
                 ) : null}
             </div>
 
-            <div className='md:w-1/3 '>
+            <div className=''>
                 <label htmlFor="phone" className="block font-medium">Phone</label>
                 <input
                     type="tel"
@@ -214,7 +229,7 @@ const AddPatient = () => {
                     <p className='text-red-800'>{formik.errors.phone}</p>
                 ) : null}
             </div>
-            <div className='md:w-1/3 '>
+            <div className=''>
                 <label htmlFor="age" className="block font-medium">Age</label>
                 <input
                     type="number"
@@ -225,9 +240,7 @@ const AddPatient = () => {
                     <p className='text-red-800'>{formik.errors.age}</p>
                 ) : null}
             </div>
-            </div>
-            <div className='flex flex-col md:flex-row gap-5 md:justify-between '>
-            <div className='md:w-1/3 '>
+            <div className=''>
                 <label htmlFor="gender" className="block font-medium">Gender</label>
                 <select
                     name="gender"
@@ -244,7 +257,7 @@ const AddPatient = () => {
                 ) : null}
             </div>
 
-            <div className='md:w-1/3 '>
+            <div className=''>
                 <label htmlFor="firstAppointmentDate" className="block font-medium">First Appointment Date & Time</label>
                 <input
                     type="date"
@@ -256,7 +269,7 @@ const AddPatient = () => {
                 ) : null}
             </div>
 
-            <div className='md:w-1/3 '>
+            <div className=''>
                 <label htmlFor="city" className="block font-medium">City</label>
                 <select
                     {...formik.getFieldProps('city')}
@@ -274,15 +287,13 @@ const AddPatient = () => {
                     <p className='text-red-800'>{formik.errors.city}</p>
                 ) : null}
             </div>
-            </div>
-            <div className='flex flex-col md:flex-row gap-5 md:justify-between '>
                     {/* Dropdown Fields */}
-                    <div className='md:w-1/2 '>
+                    <div className=''>
                     <label htmlFor="doctorTreating" className="block font-medium">Doctor Treating</label>
                     <select
                         name="doctorTreating"
                         {...formik.getFieldProps('doctorTreating')}
-                        className="border p-2 rounded-md w-full bg-primary-bg"
+                        className="border p-2 dark:border-transparent rounded-md w-full bg-primary-bg"
                     >
                         <option value="">Select Doctor</option>
                         {doctors.map((doctor, index) => (
@@ -295,7 +306,7 @@ const AddPatient = () => {
                     <p className='text-red-800'>{formik.errors.doctorTreating}</p>
                 ) : null}
                 </div>
-                <div className='md:w-1/2 '>
+                <div className=''>
                 <label htmlFor="nextAppointmentDate" className="block font-medium">Next Appointment Date</label>
                 <input
                     type="datetime-local"
@@ -306,10 +317,8 @@ const AddPatient = () => {
                     <p className='text-red-800'>{formik.errors.nextAppointmentDate}</p>
                 ) : null}
             </div>
-            </div>
-            <div className='flex flex-col md:flex-row gap-5 md:justify-between '>
                 {/* Diagnosis Dropdown */}
-                <div className='md:w-1/3 '>
+                <div className=''>
                     <label htmlFor="diagnosis" className="block font-medium">Select Diagnosis</label>
                    {/* Show custom input field if "Other" is selected */}
                    {otherOptionToggle==='diagnosis' ? (
@@ -340,7 +349,7 @@ const AddPatient = () => {
                     ):<select
                     name="diagnosis"
                     onChange={(e) => handleAddSelectedItem(e.target.value,'diagnosis',setSelectedDiagnoses, selectedDiagnoses)}
-                    className="border p-2 rounded-md w-full bg-primary-bg"
+                    className="border p-2 dark:border-transparent rounded-md w-full bg-primary-bg"
                 >
                     <option value="">Select Diagnosis</option>
                     {diagnoses.map((diagnosis, index) => (
@@ -366,7 +375,7 @@ const AddPatient = () => {
                 </div>
 
                 {/* Medicine Dropdown */}
-                <div className='md:w-1/3 '>
+                <div className=''>
                     <label htmlFor="jobDone" className="block font-medium">Select Job</label>
                    {/* Show custom input field if "Other" is selected */}
                    {otherOptionToggle==='jobDone' ? (
@@ -423,7 +432,7 @@ const AddPatient = () => {
                 </div>
 
                 {/* Medicine Dropdown */}
-                <div className='md:w-1/3 '>
+                <div className=''>
                     <label htmlFor="medicine" className="block font-medium">Select Medicine</label>
                    {/* Show custom input field if "Other" is selected */}
                    {otherOptionToggle==='medicine' ? (
@@ -454,7 +463,7 @@ const AddPatient = () => {
                     ):<select
                     name="medicine"
                     onChange={(e) => handleAddSelectedItem(e.target.value,'medicine',setSelectedMedicines, selectedMedicines)}
-                    className="border p-2 rounded-md w-full bg-primary-bg"
+                    className="border p-2 rounded-md w-full bg-primary-bg dark:border-transparent"
                 >
                     <option value="">Select Medicine</option>
                     {medicines.map((medicine, index) => (
@@ -478,10 +487,8 @@ const AddPatient = () => {
                         ))}
                     </div>
                     </div>
-                </div>
-                <div className='flex flex-col md:flex-row gap-5 md:justify-between '>
 
-            <div className='md:w-1/2 '>
+            <div className=''>
                 <label htmlFor="additionalNotes" className="block font-medium">Additional Notes</label>
                 <textarea
                     name="additionalNotes"
@@ -492,17 +499,20 @@ const AddPatient = () => {
                     <p className='text-red-800'>{formik.errors.additionalNotes}</p>
                 ) : null}
             </div>
-            <div className='md:w-1/2 '>
-            <label className="block mb-1">Case Photos (up to 10)</label>
-                <input
-                    name=''
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                    className="border p-2 rounded-md w-full bg-primary-bg"
-                />
+            <div className=''>
+            <label className="flex items-center gap-3 mb-1">
+                Case Photos (up to 10)
+                <div className="font-bold text-2xl hover:opacity-60" onClick={() => fileInputRef.current.click()}>+</div>
+            </label>
                 <div className="mt-2 flex flex-wrap">
+                <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handlePhotoChange}
+                className="hidden"
+                />
                     {casePhotos.map((photo, index) => (
                     <div key={index} className="relative mr-2 mb-2">
                         <img
@@ -517,7 +527,7 @@ const AddPatient = () => {
                         />
                     </div>
                     ))}
-            </div>
+                    
             </div>
             </div>
             <div className='w-full flex justify-center pt-5'>
@@ -526,8 +536,11 @@ const AddPatient = () => {
             </button>
             </div>
         </form>
-        </div>
-    );
+        </motion.div>
+        </motion.div>
+    )}
+    </AnimatePresence>
+    )
 };
 
 export default AddPatient;

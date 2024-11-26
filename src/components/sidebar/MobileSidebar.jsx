@@ -7,10 +7,14 @@ const MobileSidebar = ({ isSidebarOpen, toggleSidebar, isDarkMode, toggleDarkMod
   return (
     <>
       {/* Overlay and Sidebar */}
-      <div className={`fixed inset-0 z-40 bg-black transition-opacity duration-300 ${isSidebarOpen ? 'opacity-50' : 'opacity-0 pointer-events-none'}`} onClick={toggleSidebar}></div>
+      <div className={`fixed inset-0 z-10 bg-black transition-opacity duration-300 ${isSidebarOpen ? 'opacity-50' : 'opacity-0 pointer-events-none'}`} onClick={toggleSidebar}></div>
       
       <div 
-        className={`sidebar fixed top-0 left-0 h-full w-1/2 border-r dark:border-opacity-25 dark:border-gray-300 z-50 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 lg:hidden`}
+        className={`sidebar fixed bottom-0 left-0 w-full md:w-1/2 h-full z-50 transform ${
+          isSidebarOpen
+            ? 'translate-y-0 md:translate-x-0 opacity-100'
+            : 'translate-y-full md:-translate-x-full md:translate-y-0 opacity-0'
+        } transition-all duration-500 lg:hidden`}
       >
         <div className="flex items-center justify-between px-4 py-4 border-b border-gray-300 dark:border-transparent">
           <h1 className="font-medium flex gap-3 items-center">
@@ -20,8 +24,8 @@ const MobileSidebar = ({ isSidebarOpen, toggleSidebar, isDarkMode, toggleDarkMod
         </div>
 
         {/* Navigation Links */}
-        <nav className="mt-6 flex flex-col space-y-2 px-4">
-          {[
+        <nav className="mt-3 flex flex-col space-y-2 px-4 max-h-[75%] md:max-h-full overflow-y-auto text-lg scrollbar-hide ">
+          {[ 
             { path: "/", label: "Overview" },
             { path: "/appointments", label: "Appointments" },
             { path: "/patients", label: "Patients" },
@@ -34,22 +38,22 @@ const MobileSidebar = ({ isSidebarOpen, toggleSidebar, isDarkMode, toggleDarkMod
             <Link 
               to={path} 
               key={label} 
-              onClick={toggleSidebar} 
-              className="p-3 flex items-center text-sm rounded"
+              onClick={() => toggleSidebar(false)} 
+              className="p-3 flex items-center justify-center md:justify-start"
             >
-              <FontAwesomeIcon icon={faBook} className="mr-3 text-[#99A1B7]" />
+              <FontAwesomeIcon icon={faBook} className="mr-3 md:block hidden text-[#99A1B7]" />
               <span>{label}</span>
             </Link>
           ))}
-        </nav>
-
         {/* Dark Mode Toggle */}
-        <div className="absolute bottom-0 w-full px-7 pb-6">
-          <button onClick={toggleDarkMode} className="flex items-center text-sm">
-            <FontAwesomeIcon icon={!isDarkMode ? faMoon : faSun} className="mr-3 text-[#99A1B7]" />
+        <div className="md w-full p-3 px-3 flex items-center justify-center md:justify-start ">
+          <button onClick={toggleDarkMode} className="flex items-center">
+            <FontAwesomeIcon icon={!isDarkMode ? faMoon : faSun} className="mr-3 md:block hidden text-[#99A1B7]" />
             <span>{!isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
           </button>
         </div>
+        </nav>
+
       </div>
     </>
   );

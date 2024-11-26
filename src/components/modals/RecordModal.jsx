@@ -186,7 +186,6 @@ const AddRecordModal = ({ isOpen, onClose, patientId, record }) => {
 
 
 const handlePhotoChange = (event) => {
-  console.log('clicked')
   const files = Array.from(event.target.files);
   if (files.length + casePhotos.length <= 10) {
     setCasePhotos([...casePhotos, ...files]);
@@ -209,10 +208,9 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 flex items-center justify-center z-50">
         <motion.div
             onClick={() =>handleCloseModal(formik.resetForm)}
-            className="fixed inset-0 bg-black opacity-50"
+            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -518,7 +516,6 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
         </form>
         </motion.div>
         </motion.div>
-        </div>
         </AnimatePresence>
   );
 };

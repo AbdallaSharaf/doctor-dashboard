@@ -6,8 +6,14 @@ import Navbar from "../../components/navbar/Navbar";
 const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
+  const toggleSidebar = (value) => {
+    if (typeof value === "boolean") {
+      setIsSidebarOpen(value);
+    } else {
+      setIsSidebarOpen((prev) => !prev);
+    }
+  };
+  
   return (
     <>
     <div className="grid grid-cols-[auto_1fr]">
@@ -20,7 +26,7 @@ const Layout = () => {
 
       {/* Main Content */}
       <div className="w-full">
-        <Navbar toggleSidebar={toggleSidebar}/>
+        <Navbar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen}/>
         <Outlet />
       </div>
     </div>

@@ -8,13 +8,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import PatientActionsDropdown from '../components/actions/PatientActionsDropdown';
 import { useDispatch, useSelector } from 'react-redux';
-import { formatDateTime } from '../helpers/Helpers';
 import { archivePatient } from '../store/slices/patientsSlice'; // Import Redux actions
 import Swal from 'sweetalert2';
 import Lottie from 'lottie-react';
 import noDataAnimation from '../assets/Animation - 1730816811189.json'
 import SelectAllCheckbox from '../components/checkbox/SelectAllCheckbox';
 import IndividualCheckbox from '../components/checkbox/IndividualCheckbox';
+import AddPatient from './AddPatient';
 
 
 const Patients = () => {
@@ -26,6 +26,8 @@ const Patients = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [patientsPerPage, setPatientsPerPage] = useState(10);
     const [selectedStatus, setSelectedStatus] = useState('All');
+    const [isAddPatientModalOpen, setIsAddPatientModalOpen] = useState(false);
+
     const dispatch = useDispatch()
     const handleCheckboxChange = (id) => {
         setSelectedPatients((prevSelected) =>
@@ -175,10 +177,10 @@ const handleBulkAction = async (action) => {
         <div className="p-7 w-full">
             <div className='flex justify-between items-center mb-6'>
                 <h2 className="text-lg font-semibold">Patients</h2>
-                <Link to="/add-patient" className="py-2 px-4 bg-primary-btn hover:bg-hover-btn text-white rounded flex items-center justify-center 
+                <div onClick={()=>setIsAddPatientModalOpen(true)} className="py-2 px-4 bg-primary-btn hover:bg-hover-btn text-white rounded flex items-center justify-center 
                             w-[170px]">
                     Add Patient
-                </Link>
+                </div>
             </div>
             <div className='bg-table-container-bg p-4 md:p-7 rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.04)] dark:border-transparent border border-gray-200]'>
                 <div className='flex justify-between items-center  mb-6'>
@@ -236,7 +238,6 @@ const handleBulkAction = async (action) => {
                                 </th>
                                 <th className="p-2">No</th>
                                 <th className="p-2">Name</th>
-                                <th className="p-2">First Appointment</th>
                                 <th className="p-2">Next Appointment</th>
                                 <th className="p-2">No. of Records</th>
                                 <th className="p-2"><h1>Total Payments</h1></th>
@@ -256,7 +257,6 @@ const handleBulkAction = async (action) => {
                                             {patient.name}
                                         </Link>
                                     </td>
-                                    <td className="p-2">{formatDateTime(patient.firstAppointmentDate)}</td>
                                     <td className="p-2">{getNextAppointmentDate(patient.records)}</td>
                                     <td className="p-2">{patient.records.length}</td>
                                     <td className="p-2 flex justify-center text-white gap-2">
@@ -334,6 +334,7 @@ const handleBulkAction = async (action) => {
                     </Link>
                 ))}
             </div>
+            <AddPatient isModalOpen={isAddPatientModalOpen} onClose={setIsAddPatientModalOpen} />
                 </>) : (
          <div className="flex flex-col items-center justify-center h-64 space-y-4">
          <Lottie 
@@ -347,7 +348,7 @@ const handleBulkAction = async (action) => {
         ))}
                 <div className="mt-4 flex justify-center md:justify-between text-secondary-text">
             <div className="mb-4 justify-between items-center hidden md:flex">
-                <label htmlFor="patients-per-page" className="mr-4">Show:</label>
+                <label htmlFor="patients-per-page" className="mr-4 text-primary-text">Show:</label>
                 <div className='w-[150px]'>
                 <CustomDropdown 
                     options={[5, 10, 20, 50, 100].map(option => ({ value: option, label: `${option} per page` }))} 
