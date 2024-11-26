@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { capitalizeFirstLetter, convert24HourTo12Hour, convert12HourTo24Hour } from '../helpers/Helpers';
+import { capitalizeFirstLetter, convert24HourTo12Hour, convert12HourTo24Hour, getStatusClass } from '../helpers/Helpers';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import AppointmentModal from '../components/modals/AppointmentModal';
@@ -15,7 +15,6 @@ import Lottie from 'lottie-react';
 import noDataAnimation from '../assets/Animation - 1730816811189.json'
 import PhoneWithActions from '../components/actions/PhoneWithActions';
 
-
 import {
     addAppointment,
     updateAppointment,
@@ -26,24 +25,6 @@ import { MobileViewModal } from '../components/modals/MobileViewModal';
 import SelectAllCheckbox from '../components/checkbox/SelectAllCheckbox';
 import IndividualCheckbox from '../components/checkbox/IndividualCheckbox';
 import AddPatient from './AddPatient';
-
-
-const getStatusClass = (status) => {
-    switch (status.toLowerCase()) {
-        case 'completed':
-            return 'text-blue-600 bg-blue-600';
-        case 'approved':
-            return 'text-green-600 bg-green-600';
-        case 'ongoing':
-            return 'text-red-600 bg-red-600';
-        case 'pending':
-            return 'text-yellow-600 bg-yellow-600';
-        case 'cancelled':
-            return 'text-gray-600 bg-gray-600'; // Color for "Cancelled"
-        default:
-            return 'text-gray-600';
-    }
-};
 
 
 const statusOptions = [

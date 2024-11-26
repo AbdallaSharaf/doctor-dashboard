@@ -18,6 +18,24 @@ export const uploadPhoto = async (file) => {
 
 
 
+export const getStatusClass = (status) => {
+    switch (status.toLowerCase()) {
+        case 'completed':
+            return 'text-blue-600 bg-blue-600';
+        case 'approved':
+            return 'text-green-600 bg-green-600';
+        case 'ongoing':
+            return 'text-red-600 bg-red-600';
+        case 'pending':
+            return 'text-yellow-600 bg-yellow-600';
+        case 'cancelled':
+            return 'text-gray-600 bg-gray-600'; // Color for "Cancelled"
+        default:
+            return 'text-gray-600';
+    }
+};
+
+
 export const clearPastDatesFromFirebase = async () => {
     try {
         const today = new Date(); // Get today's date as a Date object

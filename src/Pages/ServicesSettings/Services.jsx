@@ -27,29 +27,6 @@ const ServicesPage = () => {
     serviceSetter(prev => ({ ...prev, [name]: value }));
   };
   
-
-  
-  
-  // Delete a services service
-  const handleDeleteService = async (id) => {
-    const serviceToDelete = services.find(service => service.id === id);
-    const result = await Swal.fire({
-        title: `Are you sure you want to delete ${serviceToDelete.name}?`,
-        text: "This action cannot be undone!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel',
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-      });
-  
-    if (result.isConfirmed) {
-      await dispatch(deleteService({id}));
-      Swal.fire('Deleted!', `${serviceToDelete.name} has been deleted.`, 'success');
-    }
-  };
-  
   
   // Move service in the list (reordering)
   const handleMoveService = useCallback(async (dragIndex, hoverIndex) => {

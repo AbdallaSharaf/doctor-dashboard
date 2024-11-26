@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { addOption } from '../../store/slices/clinicSettingsSlice';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd } from '@fortawesome/free-solid-svg-icons';
+
 
 const AddOptionForm = ({ endpoint, type }) => {
     const [newOption, setNewOption] = useState('');
