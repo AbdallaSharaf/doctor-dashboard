@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { capitalizeFirstLetter, convert24HourTo12Hour, convert12HourTo24Hour, getStatusClass } from '../helpers/Helpers';
+import { capitalizeFirstLetter, convert24HourTo12Hour, convert12HourTo24Hour, getStatusClass, statusOptions } from '../helpers/Helpers';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import AppointmentModal from '../components/modals/AppointmentModal';
@@ -26,16 +26,6 @@ import SelectAllCheckbox from '../components/checkbox/SelectAllCheckbox';
 import IndividualCheckbox from '../components/checkbox/IndividualCheckbox';
 import AddPatient from './AddPatient';
 
-
-const statusOptions = [
-    { value: 'All', label: 'All' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'ongoing', label: 'Ongoing' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'cancelled', label: 'Cancelled' },
-    { value: 'approved', label: 'Approved' },
-];
-
 const editableStatusOptions = [
     { label: 'Pending', value: 'pending' },
     { label: 'Approved', value: 'approved' },
@@ -58,9 +48,9 @@ const Appointments = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [appointmentsPerPage, setAppointmentsPerPage] = useState(10);
     const [phoneHovered, setPhoneHovered] = useState(false);
-    const [isMobileViewModalOpen, setIsMobileViewModalOpen] = useState(false);
     const [isAddPatientModalOpen, setIsAddPatientModalOpen] = useState(false);
     const [addPatientModalAppointment, setAddPatientModalAppointment] = useState(false);
+    const [isMobileViewModalOpen, setIsMobileViewModalOpen] = useState(false);
     const [mobileViewAppointment, setMobileViewAppointment] = useState(null);
     const patients = useSelector(state => state.patients.list)
     const navigate = useNavigate()

@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { HashRouter, Route, Routes } from 'react-router-dom';
-import App from './Pages/App.jsx';
+import App from './Pages/Homepage/App.jsx';
 import Layout from './helpers/Layout/Layout.jsx';
 import ScrollToTop from './helpers/ScrollToTop';
 import './index.css';
@@ -54,9 +54,7 @@ createRoot(document.getElementById('root')).render(
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/doctor-dashboard/service-worker.js')
     .then(registration => {
-      console.log('Service Worker registered:', registration);
     })
     .catch(error => {
-      console.log('Service Worker registration failed:', error);
     });
 }

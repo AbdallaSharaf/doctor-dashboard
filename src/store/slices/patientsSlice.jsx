@@ -167,6 +167,9 @@ export const addFieldsToAllRecords = createAsyncThunk(
     async (_, { getState, rejectWithValue }) => {
         try {
             const patients = getState().patients.list;
+            console.log('clicked')
+            // Define the list of random services
+            const services = ['تسوس', 'تجميل', 'تقويم', 'ضرس العقل', 'حشو'];
 
             // Collect all patch requests
             const updatePromises = patients.map(async (patient) => {
@@ -174,26 +177,21 @@ export const addFieldsToAllRecords = createAsyncThunk(
                     const updatedRecords = Object.keys(patient.records).reduce((acc, recordId) => {
                         const record = patient.records[recordId];
 
-                        // If `price` is missing, set a random price value
-                        let price = record.price ?? Math.floor(Math.random() * 1000) + 100;
+                        // Add a random service to the record
+                        const randomService = services[Math.floor(Math.random() * services.length)];
 
-                        // Split `price` into `paid` and `remaining` parts
-                        const paid = Math.floor(Math.random() * price); // Random paid amount
-                        const remaining = price - paid;
-
-                        // Set `price` to an object with `paid` and `remaining` fields
                         acc[recordId] = {
                             ...record,
-                            price: { paid, remaining },
+                            service: randomService, // Add the `service` field
                         };
                         return acc;
                     }, {});
 
                     try {
                         await axios.patch(`/patients/${patient.id}.json`, { records: updatedRecords });
-                        console.log('success');
+                        console.log(`Patient ${patient.id} records updated successfully`);
                     } catch (error) {
-                        console.log(error);
+                        console.error(`Error updating patient ${patient.id}:`, error);
                     }
                 }
             });
@@ -201,12 +199,13 @@ export const addFieldsToAllRecords = createAsyncThunk(
             // Await all patches
             await Promise.all(updatePromises);
 
-            return 'All records updated successfully with updated price field';
+            return 'All records updated successfully with random service field';
         } catch (error) {
             return rejectWithValue(error.message);
         }
     }
 );
+
 
 // Patients Slice
 const patientsSlice = createSlice({

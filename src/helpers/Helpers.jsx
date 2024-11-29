@@ -16,6 +16,18 @@ export const uploadPhoto = async (file) => {
     }
 };
 
+export const getRandomColor = () => {
+    return `#${Math.floor(Math.random() * 16777215).toString(16)}`; // Random hex color
+  };
+
+export const statusOptions = [
+    { value: 'All', label: 'All' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'ongoing', label: 'Ongoing' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'cancelled', label: 'Cancelled' },
+    { value: 'approved', label: 'Approved' },
+];
 
 
 export const getStatusClass = (status) => {

@@ -47,7 +47,7 @@ const CustomDropdown = ({ options, selectedStatus, setSelectedStatus }) => {
                             key={option.value}
                             className={`${
                                 selectedStatus.value === option.value ? 'text-gray-900 dark:text-gray-500' : ''
-                              } group flex rounded-md items-center w-full px-2 py-2 text-sm cursor-pointer`}
+                              } group flex rounded-md items-center w-full px-2 py-2 text-sm cursor-pointer hover:opacity-80`}
                             onClick={() => handleSelect(option)}
                         >
                             {option.label}

@@ -5,3 +5,206 @@ inline edit on click outside appointments
 navigating from addPatient Page
 cities handling 
 messages
+
+
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import CustomDropdown from '../../../components/CustomDropdown';
+import { capitalizeFirstLetter } from '../../../helpers/Helpers';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+
+// Helper function to prepare revenue data (Month-Year, Quarter-Year)
+const prepareRevenueData = (patients, selectedTimePeriod) => {
+    const revenueByService = {};
+    patients.forEach((patient) => {
+        Object.values(patient.records).forEach((record) => {
+            const { dueDate, service, price } = record;
+            if (!dueDate || !service || !price) return;
+
+            const recordDate = new Date(dueDate);
+            const year = recordDate.getFullYear();
+            const month = recordDate.getMonth(); // 0-11
+            const monthName = recordDate.toLocaleString('default', { month: 'long' });
+            const quarter = Math.floor(month / 3) + 1;
+            const revenue = price.paid + price.remaining;
+
+            let periodKey;
+            if (selectedTimePeriod === 'month') {
+                periodKey = `${monthName} ${year}`; // e.g., "October 2024"
+            } else if (selectedTimePeriod === 'quarter') {
+                periodKey = `Q${quarter} ${year}`; // e.g., "Q1 2024"
+            } else if (selectedTimePeriod === 'year') {
+                periodKey = `${year}`; // e.g., "2024"
+            }
+
+            // Now we group by service, and within each service, by time period.
+            if (!revenueByService[service]) {
+                revenueByService[service] = {};
+            }
+            if (!revenueByService[service][periodKey]) {
+                revenueByService[service][periodKey] = 0;
+            }
+            revenueByService[service][periodKey] += revenue;
+        });
+    });
+
+    return revenueByService;
+};
+
+
+// Main RevenueGraph Component
+const RevenueGraph = ({ patients }) => {
+    const [selectedService, setSelectedService] = useState(null);
+    const [selectedTimePeriod, setSelectedTimePeriod] = useState('month'); // Default to 'month'
+    const [selectedPeriod, setSelectedPeriod] = useState(() => {
+        const now = new Date();
+        const monthName = now.toLocaleString('default', { month: 'long' });
+        return `${monthName} ${now.getFullYear()}`; // e.g., "November 2024"
+    });
+    const services = useSelector((state => state.services.list.map(service => service.name)));
+
+    const getColorForService = (service) => {
+        const colorPalette = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#8dd1e1'];
+        const serviceColorIndex = services.indexOf(service);
+        return colorPalette[serviceColorIndex % colorPalette.length];
+    };
+
+    // Prepare the revenue data based on the selected time period
+    const revenueData = prepareRevenueData(patients, selectedTimePeriod);
+
+    // Transform revenue data into chart-compatible format where the x-axis shows services
+    const chartData = Object.keys(revenueData).map((service) => {
+        const periods = revenueData[service];
+        return { service, ...periods };
+    });
+
+    // Filter chart data based on the selected service (if any)
+    const filteredChartData = selectedService
+        ? chartData.filter((data) => data.service === selectedService)
+        : chartData;
+
+    const totalRevenue = filteredChartData.reduce((total, item) => {
+        Object.keys(item).forEach((key) => {
+            if (key !== 'service') {
+                total += item[key];
+            }
+        });
+        return total;
+    }, 0);
+
+       const handleTimePeriodChange = (event) => {
+        const newTimePeriod = event;
+    
+        // Determine the default selected period based on the new time period
+        const date = new Date(); // Reference the currentDate
+    
+        let defaultSelectedPeriod = null;
+    
+        if (newTimePeriod === 'month') {
+            const monthName = date.toLocaleString('default', { month: 'long' });
+            defaultSelectedPeriod = `${monthName} ${date.getFullYear()}`; // e.g., "November 2024"
+        } else if (newTimePeriod === 'quarter') {
+            const currentMonth = date.getMonth(); // 0-based index (0=Jan, 1=Feb, ...)
+            const quarter = Math.floor(currentMonth / 3) + 1; // Calculate the quarter
+            defaultSelectedPeriod = `Q${quarter} ${date.getFullYear()}`; // e.g., "Q4 2024"
+        } else if (newTimePeriod === 'year') {
+            defaultSelectedPeriod = `${date.getFullYear()}`; // e.g., "2024"
+        }
+    
+        setSelectedTimePeriod(newTimePeriod);
+        setSelectedPeriod(defaultSelectedPeriod); // Set the default period
+    };
+
+    const shiftDate = (direction) => {
+        let newDate = new Date(); // Start from the current date
+        if (selectedPeriod) {
+            if (selectedTimePeriod === 'month') {
+                const [month, year] = selectedPeriod.split(' ');
+                newDate = new Date(`${month} 1, ${year}`); // Parse selectedPeriod for month
+            } else if (selectedTimePeriod === 'quarter') {
+                const [, year] = selectedPeriod.split(' ');
+                newDate = new Date(`January 1, ${year}`); // Start from the year for quarters
+            } else if (selectedTimePeriod === 'year') {
+                newDate = new Date(`January 1, ${selectedPeriod}`); // Parse selectedPeriod for year
+            }
+        }
+    
+        let newSelectedPeriod = null;
+    
+        if (selectedTimePeriod === 'month') {
+            newDate.setMonth(newDate.getMonth() + direction); // Shift by one month
+            const monthName = newDate.toLocaleString('default', { month: 'long' });
+            newSelectedPeriod = `${monthName} ${newDate.getFullYear()}`; // Update to new month and year
+        } else if (selectedTimePeriod === 'quarter') {
+            newDate.setMonth(newDate.getMonth() + 3 * direction); // Shift by one quarter
+            const currentMonth = newDate.getMonth();
+            const quarter = Math.floor(currentMonth / 3) + 1; // Calculate new quarter
+            newSelectedPeriod = `Q${quarter} ${newDate.getFullYear()}`; // Update to new quarter and year
+        } else if (selectedTimePeriod === 'year') {
+            newDate.setFullYear(newDate.getFullYear() + direction); // Shift by one year
+            newSelectedPeriod = `${newDate.getFullYear()}`; // Update to new year
+        }
+    
+        setSelectedPeriod(newSelectedPeriod); // Update the selected period state
+    };
+    
+
+    return (
+        <section className="bg-table-container-bg shadow-md col-span-3 rounded-md p-7">
+            <div className='flex justify-between items-center'>
+                <h2 className="text-xl font-semibold mb-4">Revenue by Service</h2>
+                <div className="mb-4 flex gap-4">
+                    <div className='w-[150px]'>
+                        <CustomDropdown
+                            options={[{ value: 'all', label: 'All Services' }, ...services.map((option) => ({ value: option, label: option }))]}
+                            selectedStatus={{ value: selectedService || 'all', label: selectedService || 'All Services' }}
+                            setSelectedStatus={(selected) => setSelectedService(selected === 'all' ? null : selected)} 
+                        />
+                    </div>
+                    <div className='w-[120px]'>
+                        <CustomDropdown
+                            options={['month', 'quarter', 'year'].map(option => ({ value: option, label: `${capitalizeFirstLetter(option)}ly` }))} 
+                            selectedStatus={{ value: selectedTimePeriod, label: `${capitalizeFirstLetter(selectedTimePeriod)}ly` }} 
+                            setSelectedStatus={(selected) => handleTimePeriodChange(selected)} 
+                        />
+                    </div>
+                </div>
+            </div>
+            <div className="mx-4 mb-6 w-full justify-between flex gap-4 items-center">
+                <button onClick={() => shiftDate(-1)} className="h-8 w-8 rounded-md bg-primary-bg">
+                    <FontAwesomeIcon icon={faChevronLeft}/>
+                </button>
+                <div className='leading-none text-lg pt-2'>
+                    {selectedPeriod}
+                </div>
+                <button onClick={() => shiftDate(1)} className="h-8 w-8 rounded-md bg-primary-bg">
+                    <FontAwesomeIcon icon={faChevronRight}/>
+                </button>
+            </div>
+
+            <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={filteredChartData} animationDuration={800}>
+                    <XAxis dataKey="service" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />a
+                    {Object.keys(filteredChartData[0] || {}).map(
+                        (key) =>
+                            key !== 'service' &&
+                            (selectedTimePeriod ? key === selectedPeriod : true) && (
+                                <Bar key={key} dataKey={key} fill={getColorForService(key)} />
+                            )
+                    )}
+                </BarChart>
+            </ResponsiveContainer>
+
+            <div className="mt-4 text-lg font-semibold">
+                Total Revenue: {totalRevenue.toLocaleString()} EGP
+            </div>
+        </section>
+    );
+};
+
+export default RevenueGraph;
