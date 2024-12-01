@@ -11,16 +11,15 @@ const App = () => {
   const currentTime = new Date();
   const appointments = useSelector((state) => state.appointments.list);
   const patients = useSelector((state) => state.patients.list);
-
   return (
     <div className="p-4 bg-primary-bg">
       {/* Header Section */}
       <header className="mb-6">
         <div>
-          <h1 className="text-2xl font-bold sidebar">
+          <h1 className="text-2xl font-bold">
             Welcome, Dr. Smith!
           </h1>
-          <p className="text-lg font-medium sidebar opacity-60">
+          <p className="text-lg font-medium opacity-60">
             {formatDateTime(currentTime)}
           </p>
         </div>

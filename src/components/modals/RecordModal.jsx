@@ -15,6 +15,7 @@ const AddRecordModal = ({ isOpen, onClose, patientId, record }) => {
   const dispatch = useDispatch();
   const doctors = useSelector(selectDoctorNames);
   const diagnoses = useSelector(selectDiagnoses);
+  const services = useSelector((state) => state.services.list.map((service) => service.name));
   const jobs = useSelector(selectJobs);
   const medicines = useSelector(selectMedicines);
   const [otherOptionToggle, setOtherOptionToggle] = useState('');
@@ -31,7 +32,8 @@ const AddRecordModal = ({ isOpen, onClose, patientId, record }) => {
         doctorTreating: record.doctorTreating || '',
         dueDate: record.dueDate || '',
         nextAppointmentDate: record.nextAppointmentDate || '',
-        price: record.price.paid + record.price.remaining || 0,
+        service: record.service || '',
+        price: record.price || 0,
         additionalNotes: record.additionalNotes || '',
         });
       setSelectedDiagnoses(record.diagnoses || []);
@@ -46,11 +48,13 @@ const AddRecordModal = ({ isOpen, onClose, patientId, record }) => {
         doctorTreating: '',
         dueDate: '',
         nextAppointmentDate: '',
+        service: '',
         price: {paid: 0, remaining: 0},
         additionalNotes: '',
       },
     validationSchema: Yup.object({
       doctorTreating: Yup.string().required('Required'),
+      service: Yup.string().required('Required'),
       nextAppointmentDate: Yup.date().required('Required'),
       dueDate: Yup.date().required('Required'),
       price: Yup.object({
@@ -65,6 +69,7 @@ const AddRecordModal = ({ isOpen, onClose, patientId, record }) => {
             doctorTreating: values.doctorTreating,
             diagnoses: selectedDiagnoses,
             jobs: selectedJobs,
+            service: values.service,
             medicines: selectedMedicines,
             casePhotos: casePhotos, // Initialize as an empty array
             dueDate: values.dueDate,
@@ -79,9 +84,7 @@ const AddRecordModal = ({ isOpen, onClose, patientId, record }) => {
         // Initialize the existing URLs
     const existingUrls = (Array.isArray(recordData.casePhotos) ? recordData.casePhotos : []).filter(url => typeof url === 'string')
     // Filter the casePhotos to get only the file objects
-    const newPhotos = casePhotos.filter(photo => photo instanceof File); // Keep only File objects
-        console.log(newPhotos)
-    
+    const newPhotos = casePhotos.filter(photo => photo instanceof File); // Keep only File objects    
         // If there are new photos to upload
         if (newPhotos.length > 0) {
           const uploadPromises = await newPhotos.map(photo => uploadPhoto(photo)); // Upload new photos only
@@ -104,8 +107,7 @@ const AddRecordModal = ({ isOpen, onClose, patientId, record }) => {
       }
     }
         try {
-            const recordId = record.id
-            console.log(recordId)
+            const recordId = record?.id
             const actionResult = record ? await dispatch(updateRecord({patientId, recordId, updatedRecordData: recordData})): await dispatch(addPatientRecord({ patientId, recordData }));
             if (record){
                 if (updateRecord.fulfilled.match(actionResult)) {
@@ -221,6 +223,7 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.8, opacity: 0 }}
                         transition={{ duration: 0.3 }}
+                        onClick={e=>e.stopPropagation()}
                     >
         <h2 className="text-xl font-bold mb-4">Add Patient Record</h2>
         <form onSubmit={formik.handleSubmit}>
@@ -265,40 +268,36 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
               <div className="text-red-600">{formik.errors.nextAppointmentDate}</div>
             ) : null}
           </div>
-          <div>
-            <label className="block mb-1">Case Photos (up to 10)</label>
-            <div className="mt-2 flex flex-wrap">
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handlePhotoChange}
-              className="hidden"
-            />
-            
-                {casePhotos.map((photo, index) => (
-                <div key={index} className="relative mr-2 mb-2">
+          <div className=''>
+                <label className="flex items-center gap-3 mb-1">
+                    Case Photos (up to 10)
+                    <div className="font-bold text-2xl hover:opacity-60" onClick={() => fileInputRef.current.click()}>+</div>
+                </label>
+                <div className="mt-2 flex flex-wrap">
+                <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handlePhotoChange}
+                className="hidden"
+                />
+                {casePhotos?.map((photo, index) => (
+                  <div key={index} className="relative mr-2 mb-2">
                     <img
-                        src={photo instanceof File ? URL.createObjectURL(photo) : photo}
-                        alt={`Preview ${index}`}
-                        className="h-[70px] w-[70px] object-cover rounded-md"
+                      src={typeof photo === 'string' ? photo : URL.createObjectURL(photo)}
+                      alt={`Preview ${index}`}
+                      className="h-20 w-20 object-cover rounded-md"
                     />
                     <FontAwesomeIcon
-                    icon={faXmark}
-                    className="absolute top-0 right-0 h-4 w-4 cursor-pointer text-red-500"
-                    onClick={() => handleRemoveItem(setCasePhotos, casePhotos, photo)}
+                      icon={faXmark}
+                      className="absolute top-0 right-0 h-4 w-4 cursor-pointer text-red-500"
+                      onClick={() => handleRemoveItem(setCasePhotos, casePhotos, photo)}
                     />
-                </div>
-                ))}
-            <div
-              className="w-10 h-10 flex justify-center items-center text-white rounded-full bg-primary-btn font-bold text-2xl"
-              onClick={() => fileInputRef.current.click()} // Trigger file input click
-            >
-              +
+                  </div>
+                ))}   
             </div>
-            </div>
-            </div>
+            </div>  
             <div>
               <label className="block mb-1">Price</label>
               <div  className='flex gap-4 justify-between'>
@@ -332,7 +331,24 @@ const handleRemoveItem = (setter, selectedItems, itemToRemove) => {
             </div>
 
             <div>
-
+            <div className='w-full"'>
+                    <label htmlFor="service" className="block font-medium">Service</label>
+                    <select
+                        name="service"
+                        {...formik.getFieldProps('service')}
+                        className="border p-2 dark:border-transparent rounded-md w-full bg-primary-bg mb-1"
+                    >
+                        <option value="">Select Service</option>
+                        {services.map((service, index) => (
+                            <option key={index} value={service}>
+                                {service}
+                            </option>
+                        ))}
+                    </select>
+                        {formik.touched.service && formik.errors.service ? (
+                    <p className='text-red-800'>{formik.errors.service}</p>
+                ) : null}
+                </div>
                 <div>
                     <label htmlFor="diagnosis" className="block font-medium">Select Diagnosis</label>
                    {/* Show custom input field if "Other" is selected */}

@@ -220,7 +220,7 @@ const handleBulkAction = async (action) => {
                         <input
                             type="text"
                             placeholder="Search Patients"
-                            className="p-2 pl-8 sidebar border border-transparent rounded w-full"
+                            className="p-2 pl-8 bg-primary-bg border border-transparent rounded w-full"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />

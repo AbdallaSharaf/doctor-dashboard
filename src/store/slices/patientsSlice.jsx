@@ -1,6 +1,8 @@
 // patientsSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from '../../helpers/Axios';
+import { useSelector } from 'react-redux';
+import { selectDoctorNames } from '../Selectors';
 
 // Async Thunks for CRUD Operations
 
@@ -167,9 +169,16 @@ export const addFieldsToAllRecords = createAsyncThunk(
     async (_, { getState, rejectWithValue }) => {
         try {
             const patients = getState().patients.list;
-            console.log('clicked')
-            // Define the list of random services
-            const services = ['تسوس', 'تجميل', 'تقويم', 'ضرس العقل', 'حشو'];
+            // Define the current date and the two-year ago date
+            const currentDate = new Date();
+            const twoYearsAgo = new Date();
+            twoYearsAgo.setFullYear(currentDate.getFullYear() - 2);
+
+            // Function to generate a random date within the last 2 years
+            const getRandomDate = () => {
+                const randomTimestamp = twoYearsAgo.getTime() + Math.random() * (currentDate.getTime() - twoYearsAgo.getTime());
+                return new Date(randomTimestamp).toISOString();
+            };
 
             // Collect all patch requests
             const updatePromises = patients.map(async (patient) => {
@@ -177,12 +186,12 @@ export const addFieldsToAllRecords = createAsyncThunk(
                     const updatedRecords = Object.keys(patient.records).reduce((acc, recordId) => {
                         const record = patient.records[recordId];
 
-                        // Add a random service to the record
-                        const randomService = services[Math.floor(Math.random() * services.length)];
+                        // Add a random dueDate within the last 2 years
+                        const randomDueDate = getRandomDate();
 
                         acc[recordId] = {
                             ...record,
-                            service: randomService, // Add the `service` field
+                            dueDate: randomDueDate, // Add the random `dueDate`
                         };
                         return acc;
                     }, {});
@@ -199,12 +208,13 @@ export const addFieldsToAllRecords = createAsyncThunk(
             // Await all patches
             await Promise.all(updatePromises);
 
-            return 'All records updated successfully with random service field';
+            return 'All records updated successfully with random dueDate';
         } catch (error) {
             return rejectWithValue(error.message);
         }
     }
 );
+
 
 
 // Patients Slice

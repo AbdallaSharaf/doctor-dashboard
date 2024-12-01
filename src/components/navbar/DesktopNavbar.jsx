@@ -13,7 +13,7 @@ const DesktopNavbar = ({toggleSidebar, image}) => {
     const messages = useSelector(state => state.messages.data);
 
   return (
-        <div className='hidden md:flex sidebar items-center justify-between px-4 lg:px-7 h-[60px] border-gray-300 border-opacity-10 shadow-md  border-b'>
+        <div className='hidden md:flex bg-primary-bg items-center justify-between px-4 lg:px-7 h-[60px] border-gray-300 border-opacity-10 shadow-md  border-b'>
           {/* Sidebar toggle button for mobile view */}
           <button 
           onClick={toggleSidebar} 
@@ -39,7 +39,7 @@ const DesktopNavbar = ({toggleSidebar, image}) => {
             
             {showNotifications && (
               <div 
-                className="absolute sidebar right-2 top-7 py-3 w-80 shadow-lg border border-gray-300 border-opacity-30 rounded-lg z-50"
+                className="absolute bg-primary-bg right-2 top-7 py-3 w-80 shadow-lg border border-gray-300 border-opacity-30 rounded-lg z-50"
               >
                 <h3 className="font-semibold mb-3 pb-3 px-4 border-b border-gray-300 border-opacity-30">Recent Notifications</h3>
                 <ul className="space-y-3 px-4 max-h-52 overflow-y-auto">
@@ -70,7 +70,7 @@ const DesktopNavbar = ({toggleSidebar, image}) => {
             
             {showMessages && (
               <div 
-                className="absolute right-2 top-7 sidebar w-80 shadow-lg border border-gray-300 border-opacity-30 rounded-lg z-50"
+                className="absolute right-2 top-7 bg-primary-bg w-80 shadow-lg border border-gray-300 border-opacity-30 rounded-lg z-50"
               >
                 <h3 className="font-semibold mb-3 py-3 px-4 border-b border-gray-300 border-opacity-30 ">Recent Messages</h3>
                 <ul className="space-y-3 px-4 max-h-52 overflow-y-auto">
@@ -117,7 +117,7 @@ const DesktopNavbar = ({toggleSidebar, image}) => {
             
             {showUserMenu && (
               <div 
-                className="absolute right-0 top-11 w-40 shadow-lg border sidebar border-gray-300 border-opacity-30 rounded-lg z-50"
+                className="absolute right-0 top-11 w-40 shadow-lg border bg-primary-bg border-gray-300 border-opacity-30 rounded-lg z-50"
               >
                 <ul className="space-y-3 py-3 px-4">
                   <li>

@@ -11,7 +11,7 @@ const RecordsSystem = ({ patientId, patientRecords }) => {
     const location = useLocation();
     const [isModalOpen, setIsModalOpen] = useState(location.state?.openAddRecordModal || false);
     const [activeTab, setActiveTab] = useState('overview'); // 'overview' or 'case photos'
-    const [selectedRecordIndex, setSelectedRecordIndex] = useState(patientRecords.length - 1); // Track the selected record index
+    const [selectedRecord, setSelectedRecord] = useState(patientRecords[patientRecords.length - 1]);
     const [currentPage, setCurrentPage] = useState(1);
     const [isEditing, setIsEditing] = useState(false)
     const overviewRef = useRef(null); // Create a ref for the overview section
@@ -30,8 +30,8 @@ const RecordsSystem = ({ patientId, patientRecords }) => {
     setIsModalOpen(false);
   };
 
-  const handleViewRecord = (index) => {
-    setSelectedRecordIndex(index); // Set the selected record index
+  const handleViewRecord = (rec) => {
+    setSelectedRecord(rec); // Set the selected record index
     setActiveTab('overview'); // Switch to the overview tab
     if (overviewRef.current) {
         overviewRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -215,20 +215,11 @@ const RecordsSystem = ({ patientId, patientRecords }) => {
 // The renderOverview function with clickable records
 const renderOverview = () => {  
     // Get the selected record, or default to the most recent record
-    const record = selectedRecordIndex !== null 
-      ? patientRecords[selectedRecordIndex] 
-      : patientRecords[patientRecords.length - 1];
+    const record = selectedRecord
   
-      const sortedRecords = [...patientRecords];
+      const sortedRecords = patientRecords.filter((rec) => rec !== selectedRecord);
+      sortedRecords.unshift(selectedRecord);
 
-    if (selectedRecordIndex !== null) {
-    const selectedRecord = patientRecords[selectedRecordIndex];
-    sortedRecords.sort((a, b) => {
-        if (a === selectedRecord) return -1; // Move selected record to the top
-        if (b === selectedRecord) return 1;
-        return 0;
-    });
-    }
 
     const handlePhotoClick = (photo, photoIndex) => {
         setSelectedPhoto(photo); // Set the clicked photo in state
@@ -260,7 +251,6 @@ const renderOverview = () => {
       };
     
     if (!record) return <p>No records available</p>;
-      console.log(selectedPhotoIndex)
     return (
       <div ref={overviewRef} id="overview" className='scroll-mt-12'>
         <div className='flex items-center justify-between mb-4'>
@@ -277,7 +267,7 @@ const renderOverview = () => {
           {sortedRecords.map((rec, index) => (
             <button 
               key={index} 
-              onClick={() => setSelectedRecordIndex(index)}
+              onClick={() => {setSelectedRecord(rec);}}
               className={`px-5 py-4 text-sm rounded-full hover:bg-blue-500 hover:text-white duration-200 transition-all ease-in-out ${record === rec ? 'bg-blue-500 text-white' : 'text-blue-500'}`}
             >
                 {new Date(rec.dueDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
@@ -537,7 +527,7 @@ const renderOverview = () => {
         null
       }
       </div>
-      <AddRecordModal isOpen={isModalOpen} onClose={handleCloseModal} patientId={patientId} record={isEditing ? patientRecords[selectedRecordIndex] : null}/>
+      <AddRecordModal isOpen={isModalOpen} onClose={handleCloseModal} patientId={patientId} record={isEditing ? selectedRecord : null}/>
     </div>
   );
 };

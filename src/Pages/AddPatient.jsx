@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 
 import Swal from 'sweetalert2';
+import CustomDropdown from '../components/CustomDropdown';
 
 // List of Egyptian cities
 const egyptianCities = [
@@ -26,12 +27,14 @@ const AddPatient = ({isModalOpen, onClose, patientData = {}}) => {
     const jobs = useSelector(selectJobs);
     const medicines = useSelector(selectMedicines);
     const patients = useSelector((state) => state.patients.list);
+    const services = useSelector((state) => state.services.list.map((service) => service.name));
     const [otherOptionToggle, setOtherOptionToggle] = useState('')
     const [otherOption, setOtherOption] = useState('');
     
     const [selectedDiagnoses, setSelectedDiagnoses] = useState([]);
     const [selectedJobs, setSelectedJobs] = useState([]);
     const [selectedMedicines, setSelectedMedicines] = useState([]);
+    const [selectedService, setSelectedService] = useState();
     const [casePhotos, setCasePhotos] = useState([]);
     const fileInputRef = useRef(null);
 
@@ -52,6 +55,7 @@ const AddPatient = ({isModalOpen, onClose, patientData = {}}) => {
             phone: patientData?.phone || '',
             age: patientData?.age || '',
             gender: patientData?.gender || '',
+            service: patientData?.service || '',
             firstAppointmentDate: '',
             lastAppointmentDate: '',
             city: '',
@@ -99,6 +103,7 @@ const AddPatient = ({isModalOpen, onClose, patientData = {}}) => {
                             doctorTreating: values.doctorTreating,
                             diagnosis: selectedDiagnoses,
                             jobDone: selectedJobs,
+                            service: selectedService,
                             medicine: selectedMedicines,
                             casePhoto: casePhotoUrl,
                             nextAppointmentDate: values.nextAppointmentDate,
@@ -121,6 +126,7 @@ const AddPatient = ({isModalOpen, onClose, patientData = {}}) => {
                     setSelectedJobs([]);
                     setCasePhotos([]); // Clear photos after submission
                     setSelectedMedicines([]);
+                    setSelectedService();
                     navigate(`/patients/patient-details/${newPatientId}`);
                     console.log('Patient and record added successfully');
                 } else {
@@ -204,7 +210,7 @@ const AddPatient = ({isModalOpen, onClose, patientData = {}}) => {
                         transition={{ duration: 0.3 }}
                     >
             <h2 className="text-lg font-semibold mb-6">Add Patient</h2>
-            <form onSubmit={formik.handleSubmit} className="space-y-5 overflow-hidden">
+            <form onSubmit={formik.handleSubmit} className="space-y-5 overflow-hidden text-start">
             {/* Main Patient Data */}
             <div className=''>
                 <label htmlFor="name" className="block font-medium">Name</label>
@@ -304,6 +310,24 @@ const AddPatient = ({isModalOpen, onClose, patientData = {}}) => {
                     </select>
                         {formik.touched.doctorTreating && formik.errors.doctorTreating ? (
                     <p className='text-red-800'>{formik.errors.doctorTreating}</p>
+                ) : null}
+                </div>
+                <div className='w-full"'>
+                    <label htmlFor="service" className="block font-medium">Service</label>
+                    <select
+                        name="service"
+                        {...formik.getFieldProps('service')}
+                        className="border p-2 dark:border-transparent rounded-md w-full bg-primary-bg"
+                    >
+                        <option value="">Select Service</option>
+                        {services.map((service, index) => (
+                            <option key={index} value={service}>
+                                {service}
+                            </option>
+                        ))}
+                    </select>
+                        {formik.touched.service && formik.errors.service ? (
+                    <p className='text-red-800'>{formik.errors.service}</p>
                 ) : null}
                 </div>
                 <div className=''>

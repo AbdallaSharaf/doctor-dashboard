@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { motion, AnimatePresence } from 'framer-motion'; // Import Framer Motion components
+import { useSelector } from 'react-redux';
+import CustomDropdown from '../CustomDropdown';
 
 const formikInitialValues = {
     name: '',
     phone: '',
     age: '',
     gender: '',
+    service: '',
     problem: '',
     date: '',
     time: '',
@@ -34,16 +37,19 @@ const formikValidationSchema = {
 }
 
 const AppointmentModal = ({ isModalOpen, setIsModalOpen, handleSubmit }) => {
+    const services = useSelector((state) => state.services.list.map((service) => service.name));
     const formik = useFormik({
         initialValues: formikInitialValues,
         validationSchema: Yup.object(formikValidationSchema),
         onSubmit: (values) => {
             handleSubmit(values);
             formik.resetForm();
+            setSelectedService()
             setIsModalOpen(false);
         },
     });
 
+    const [selectedService, setSelectedService] = useState(null)
 
     // Function to handle closing the modal and resetting the form
     const handleCloseModal = () => {
@@ -159,7 +165,14 @@ const AppointmentModal = ({ isModalOpen, setIsModalOpen, handleSubmit }) => {
                             {formik.touched.gender && formik.errors.gender ? (
                                 <div className="text-red-600 mb-2">{formik.errors.gender}</div>
                             ) : null}
-
+                            
+                            {/* Service Selectbox */}
+                            <div className='pt-2 pb-4 w-full"'>
+                            <CustomDropdown 
+                                options={[...services.map((option) => ({ value: option, label: option }))]}
+                                selectedStatus={{ value: selectedService || "", label: selectedService || "select a Service" }}
+                                setSelectedStatus={(selected) => setSelectedService(selected)}/>
+                            </div>
                             {/* Problem Textarea */}
                             <textarea
                                 name="problem"

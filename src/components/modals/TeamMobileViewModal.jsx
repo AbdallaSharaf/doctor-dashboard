@@ -15,7 +15,7 @@ export const TeamMobileViewModal = ({ isOpen, onClose, member, handleRejectDelet
                         animate={{ x: "0%", opacity: 1 }}
                         exit={{ x: "100%", opacity: 0 }}
                         transition={{ duration: 0.3, ease: "easeInOut" }}
-                        className="sidebar p-6 rounded-lg shadow-lg w-2/3 bg-white"
+                        className="bg-primary-bg p-6 rounded-lg shadow-lg w-2/3 bg-white"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Modal content */}

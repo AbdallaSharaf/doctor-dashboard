@@ -1,10 +1,16 @@
 import React from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import { Pie } from "react-chartjs-2";
 import dayjs from "dayjs";
-import CountUp from "react-countup"; // Import react-countup
+import CountUp from "react-countup";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip as ChartTooltip,
+  Legend as ChartLegend,
+} from "chart.js";
 
-// Customize the color palette for the pie chart
-const colors = ["#FF7F7F", "#FFB74D", "#4CAF50", "#2196F3"];
+// Register Chart.js modules
+ChartJS.register(ArcElement, ChartTooltip, ChartLegend);
 
 const PatientsStatistics = ({ patients }) => {
   const currentMonth = dayjs().month();
@@ -38,10 +44,56 @@ const PatientsStatistics = ({ patients }) => {
   });
 
   // Prepare data for the pie chart
-  const chartData = Object.entries(ageGroups).map(([group, count]) => ({
-    name: group,
-    value: count,
-  }));
+  const chartData = {
+    labels: Object.keys(ageGroups),
+    datasets: [
+      {
+        data: Object.values(ageGroups),
+        backgroundColor: ["#FF7F7F", "#FFB74D", "#4CAF50", "#2196F3"],
+        hoverBackgroundColor: ["#E57373", "#FFA726", "#388E3C", "#1976D2"],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    plugins: {
+      legend: {
+        position: "bottom", // Move legend below the chart
+        labels: {
+          font: {
+            size: 15, // Customize font size
+          },
+          boxWidth: 18,
+        },
+      },
+      tooltip: {
+        callbacks: {
+          title: (tooltipItems) => {
+            // Custom title
+            return `Age Group: ${tooltipItems[0].label}`;
+          },
+          label: (tooltipItem) => {
+            // Custom label content
+            const value = tooltipItem.raw; // Get the raw value
+            return `Total Patients: ${value}`;
+          },
+        },
+        backgroundColor: "rgba(0, 0, 0, 0.8)", // Optional: Change background color
+        titleFont: {
+          size: 16, // Title font size
+        },
+        bodyFont: {
+          size: 14, // Body font size
+        },
+        padding: 10, // Padding inside the tooltip
+        displayColors: true, // Hide color boxes in the tooltip
+      },
+    },
+    maintainAspectRatio: true, // Allow resizing
+  };
+  
+  
 
   // Total number of patients
   const totalPatients = patients.length;
@@ -50,10 +102,10 @@ const PatientsStatistics = ({ patients }) => {
     <section className="bg-table-container-bg shadow-md rounded-md p-7 h-auto">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-      <h2 className="text-xl font-semibold">Patients Statistics</h2>
-      <h2 className="">
-        {dayjs().format("MMMM")}, {dayjs().year()}
-      </h2>
+        <h2 className="text-xl font-semibold">Patients Statistics</h2>
+        <h2>
+          {dayjs().format("MMMM")}, {dayjs().year()}
+        </h2>
       </div>
       <div className="grid md:grid-cols-4 grid-cols-1 items-center justify-between gap-6">
         {/* Total Patients */}
@@ -72,30 +124,14 @@ const PatientsStatistics = ({ patients }) => {
           </p>
         </div>
 
-      {/* Patients by Age Group */}
-      <div className="mt-6 col-span-2">
-        <h3 className="text-lg font-medium text-center">Patients by Age Group</h3>
-        <ResponsiveContainer width="100%" height={200}>
-          <PieChart>
-            <Pie
-              data={chartData}
-              dataKey="value"
-              nameKey="name"
-              outerRadius={80}
-              fill="#8884d8"
-              label
-            >
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
+        {/* Patients by Age Group */}
+        <div className="mt-6 col-span-2">
+          <h3 className="text-lg font-medium text-center">Patients by Age Group</h3>
+          <div className="w-full h-[300px]">
+            <Pie data={chartData} options={chartOptions} />
+          </div>
+        </div>
       </div>
-      </div>
-
     </section>
   );
 };

@@ -10,11 +10,21 @@ import Swal from 'sweetalert2';
 import { Pagination, PaginationItem } from '@mui/material';
 import CustomDropdown from '../../components/CustomDropdown';
 import ActionsDropdown from '../../components/actions/AppointmentsActionsDropdown';
-import {deleteAppointment} from '../../store/slices/appointmentsSlice';
+import {deleteAppointment, updateAppointment} from '../../store/slices/appointmentsSlice';
 import { MobileViewModal } from '../../components/modals/MobileViewModal';
 import AddPatient from '../AddPatient';
 import Spinner from '../../components/Spinner';
 
+const colors = [
+    'bg-red-500',
+    'bg-green-500',
+    'bg-blue-500',
+    'bg-yellow-500',
+    'bg-purple-500',
+    'bg-orange-500',
+    'bg-pink-500',
+    'bg-teal-500',
+  ];
 
 const WeekAppointments = ({appointments}) => {
     const dispatch = useDispatch()
@@ -113,6 +123,10 @@ const WeekAppointments = ({appointments}) => {
             window.open(`https://wa.me/${phoneNumber}`);
         }
     };
+    const handleChangeStatus = async (id, newStatus) => {
+        console.log('clicked')
+        await dispatch(updateAppointment({ id: id, updatedData: { status: newStatus } }));
+    };
     
     const handleCopyPhone = (phone) => {
         navigator.clipboard.writeText(phone)
@@ -180,7 +194,7 @@ const WeekAppointments = ({appointments}) => {
                 <input
                     type="text"
                     placeholder="Search Appointment"
-                    className="p-2 pl-8 sidebar border border-transparent rounded w-full"
+                    className="p-2 pl-8 bg-primary-bg border border-transparent rounded w-full"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -189,11 +203,12 @@ const WeekAppointments = ({appointments}) => {
             {loading ? ( // Conditional rendering for loading spinner
                 <Spinner /> // Use Spinner component
                 ) : (
-            <> 
-            <table className="w-full table-auto md:table hidden">
+            <>
+            <div className='min-h-[500px]'>
+            <table className="w-full table-auto md:table hidden ">
                 <thead>
                     <tr className='text-center font-normal text-sm border-b-[16px] border-transparent'>
-                        <th className="p-2">NO</th>
+                        <th className=""></th>
                         <th className="p-2">
                             Patient Name
                         </th>
@@ -210,10 +225,16 @@ const WeekAppointments = ({appointments}) => {
                         <th className="p-2">Action</th>
                     </tr>
                 </thead>
-                <tbody className='max-h-[500px] overflow-y-auto scrollbar-hide'>
+                <tbody className=''>
                     {currentAppointments.map((appointment, index) => (
-                        <tr key={appointment.id} className={`h-14 text-center ${index % 2 ===0 ? 'bg-even-row-bg':''}`}>
-                            <td className="text-sm p-2">{index + 1}</td>
+                        <tr key={appointment.id} className={`max-h-14 text-center ${index % 2 ===0 ? 'bg-even-row-bg':''}`}>
+                            <td className="py-2">
+                                <div
+                                    className={`w-10 h-10 flex items-center justify-center ${colors[index % colors.length]} text-white font-semibold rounded-full shadow-xl`}
+                                >
+                                    {appointment.name?.charAt(0).toUpperCase()}
+                                </div>
+                            </td>                            
                             <td className="font-bold text-sm p-2">{appointment.name}</td>
                             <td className=" text-sm p-2">{appointment.date}</td>
                             <td className=" text-sm p-2">{appointment.time}</td>
@@ -230,7 +251,7 @@ const WeekAppointments = ({appointments}) => {
                                     <ActionsDropdown
                                         appointment={appointment}
                                         handleRejectDelete={handleDeleteAppointment}
-                                        handleReply={handleReply}
+                                        handleChangeStatus={handleChangeStatus}
                                         handleAddPatient={handleAddPatient}
                                     />
                                     <AddPatient patientData={addPatientModalAppointment} isModalOpen={isAddPatientModalOpen} onClose={setIsAddPatientModalOpen} />
@@ -240,6 +261,7 @@ const WeekAppointments = ({appointments}) => {
                     ))}
                 </tbody>
             </table>
+            
             <div className='flex flex-col justify-between items-center md:hidden'>
                 {currentAppointments.map((appointment, id) => (
                     <div className={`${id % 2 ===0 ? 'bg-even-row-bg':''} flex justify-between items-center w-full px-3 py-2`} key={id}>
@@ -253,9 +275,9 @@ const WeekAppointments = ({appointments}) => {
                         <ActionsDropdown
                             appointment={appointment}
                             handleRejectDelete={handleDeleteAppointment}
-                            handleReply={handleReply}
                             handleAddPatient={handleAddPatient}
-                        />
+                            handleChangeStatus={handleChangeStatus}
+                            />
                         <AddPatient patientData={addPatientModalAppointment} isModalOpen={isAddPatientModalOpen} onClose={setIsAddPatientModalOpen} />
                         </div>
                     </div>
@@ -270,6 +292,7 @@ const WeekAppointments = ({appointments}) => {
                     />
                     </div>
                 ))}
+            </div>
             </div>
             </>
             )}
