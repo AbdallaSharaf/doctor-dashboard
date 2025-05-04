@@ -29,6 +29,9 @@ const PerformanceAnalysis = ({ patients, appointments }) => {
   const doctors = useSelector((state) => state.team.members);
   const currentMonth = dayjs().subtract(1, 'month').month();  // Get the previous month
   const currentYear = dayjs().year();
+  // const fixedDate = dayjs('2024-11-01');
+  // const currentMonth = fixedDate.month(); // Note: 0-indexed (0 = January, ..., 7 = August)
+  // const currentYear = fixedDate.year();
 
   // 1. Most Popular Service (Radar Chart Data)
   const getMostPopularService = () => {

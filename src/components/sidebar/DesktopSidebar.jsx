@@ -18,10 +18,9 @@ const DesktopSidebar = () => {
       className={`fixed min-h-screen sidebar group shadow-md transition-all duration-300
                   ${isCollapsed ? 'w-20 group-hover/width:w-64' : 'w-64 '} z-10 border-r border-border-color`}
     >
-      <div className="flex relative items-center justify-between px-4 pt-6 pb-2">
+      <div className="flex relative items-center justify-between pt-6 pb-2">
         <Link to="/" className="text-lg font-medium flex gap-3 items-center">
-          <FontAwesomeIcon icon={faDragon} className={`${isCollapsed ? 'text-2xl group-hover:text-4xl' : 'text-4xl'} text-red-500`} />
-          <h1 className={`${isCollapsed ? 'hidden group-hover:block' : 'block'}`}>Dashboard</h1>
+          <img src="./logo.png" alt="Logo" className="w-full h-24" />
         </Link>
         <button
           onClick={toggleSidebar}
@@ -32,7 +31,7 @@ const DesktopSidebar = () => {
           <FontAwesomeIcon icon={faArrowRight} />
         </button>
       </div>
-      <div className={`${isCollapsed ? 'overflow-hidden' : ''} mt-6 flex flex-col space-y-2`}>
+      <div className={`${isCollapsed ? 'overflow-hidden' : ''} flex flex-col space-y-2`}>
       <nav>
         {[
           { path: "/", label: "Overview" },

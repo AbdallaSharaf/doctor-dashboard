@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../helpers/Axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; // Importing an icon for removing selected items
@@ -12,13 +12,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 
 import Swal from 'sweetalert2';
-import CustomDropdown from '../components/CustomDropdown';
 
 // List of Egyptian cities
 const egyptianCities = [
     "Cairo", "Alexandria", 'Tanta'
 ];
 
+// eslint-disable-next-line react/prop-types
 const AddPatient = ({isModalOpen, onClose, patientData = {}}) => {
     const navigate = useNavigate()
     const dispatch = useDispatch()
@@ -352,7 +352,7 @@ const AddPatient = ({isModalOpen, onClose, patientData = {}}) => {
                             placeholder="Enter custom diagnosis"
                             value={otherOption}
                             onChange={(e) => setOtherOption(e.target.value)}
-                            onBlur={(e) => handleCustomSubmit('diagnosis', setSelectedDiagnoses, selectedDiagnoses)}
+                            onBlur={() => handleCustomSubmit('diagnosis', setSelectedDiagnoses, selectedDiagnoses)}
                             className="border p-2 rounded-md w-full dark:border-transparent bg-primary-bg mt-2"
                         />
                         <button
@@ -409,7 +409,7 @@ const AddPatient = ({isModalOpen, onClose, patientData = {}}) => {
                             placeholder="Enter custom job"
                             value={otherOption}
                             onChange={(e) => setOtherOption(e.target.value)}
-                            onBlur={(e) => handleCustomSubmit('jobDone', setSelectedJobs, selectedJobs)}
+                            onBlur={() => handleCustomSubmit('jobDone', setSelectedJobs, selectedJobs)}
                             className="border p-2 rounded-md w-full dark:border-transparent bg-primary-bg mt-2"
                         />
                         <button
@@ -466,7 +466,7 @@ const AddPatient = ({isModalOpen, onClose, patientData = {}}) => {
                             placeholder="Enter custom medicine"
                             value={otherOption}
                             onChange={(e) => setOtherOption(e.target.value)}
-                            onBlur={(e) => handleCustomSubmit('medicine', setSelectedMedicines, selectedMedicines)}
+                            onBlur={() => handleCustomSubmit('medicine', setSelectedMedicines, selectedMedicines)}
                             className="border p-2 rounded-md w-full dark:border-transparent bg-primary-bg mt-2"
                         />
                         <button
