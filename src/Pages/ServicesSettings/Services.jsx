@@ -14,6 +14,7 @@ import Spinner from '../../components/Spinner'; // Import Spinner
 const ServicesPage = () => {
   const [timeoutId, setTimeoutId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
+  const [selectedService, setSelectedService] = useState(); // State to manage modal visibility
   const dispatch = useDispatch();
   const services = useSelector((state) => state.services.list);
   const loading  = useSelector((state) => state.services.loading);
@@ -27,6 +28,15 @@ const ServicesPage = () => {
     serviceSetter(prev => ({ ...prev, [name]: value }));
   };
   
+  const handleOpenModal = (service = null) => {
+    setSelectedService(service);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedService();
+    setIsModalOpen(false);
+  };
   
   // Move service in the list (reordering)
   const handleMoveService = useCallback(async (dragIndex, hoverIndex) => {
@@ -70,7 +80,7 @@ const ServicesPage = () => {
         <div className='flex justify-between mb-10'>
           <h2 className="text-lg font-semibold">Services Management</h2>
           <button 
-            onClick={() => setIsModalOpen(true)} 
+            onClick={() => handleOpenModal()} 
             className="mb-2 py-2 px-4 bg-primary-btn hover:bg-hover-btn w-[170px] text-white rounded">
               Add Service
           </button>
@@ -79,27 +89,28 @@ const ServicesPage = () => {
         {/* Modal for adding new services service */}
         <ServicesModal 
           isModalOpen={isModalOpen} 
-          setIsModalOpen={setIsModalOpen} 
+          selectedService={selectedService}
+          setIsModalOpen={handleCloseModal} 
         />
         
         {loading ? ( // Conditional rendering for loading spinner
           <Spinner /> // Use Spinner component
         ) : (
-          <div className='p-8 rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.04)] border border-gray-200'>
+          <div className='bg-table-container-bg p-4 md:p-7 rounded-md shadow-[10px_10px_10px_10px_rgba(0,0,0,0.04)] dark:border-transparent border border-gray-200]'>
             {/* Grid Header */}
             <table className="w-full table-auto">
-              <thead className='border-b-[16px] border-white'>
-                <tr className="text-primary-text bg-gray-100 h-10">
+              <thead className='border-b-[16px] border-white dark:border-transparent'>
+                <tr className=" h-10">
                   <th className="text-center font-semibold py-2">
-                    <FontAwesomeIcon icon={faBars} className="mr-3 text-gray-400 hidden" />
+                    <FontAwesomeIcon icon={faBars} className="mr-3 hidden" />
                   </th>
-                  <th className="text-center font-semibold py-2 text-primary-text text-sm pr-6">NO</th>
-                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Icon</th>
-                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Name</th>
-                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Short Description</th>
-                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Long Description</th>
-                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Show</th>
-                  <th className="text-center font-semibold py-2 text-primary-text text-sm">Actions</th>
+                  <th className="py-2 pr-6">NO</th>
+                  <th className="py-2">Icon</th>
+                  <th className="py-2">Name</th>
+                  <th className="py-2">Short Description</th>
+                  <th className="py-2">Long Description</th>
+                  <th className="py-2">Show</th>
+                  <th className="py-2">Actions</th>
                 </tr>
               </thead>
 
@@ -112,7 +123,7 @@ const ServicesPage = () => {
                     moveService={handleMoveService} 
                     handleInputChange={handleInputChange}
                     isModalOpen={isModalOpen} 
-                    setIsModalOpen={setIsModalOpen} 
+                    setIsModalOpen={() => handleOpenModal(service)} 
                   />
                 ))}
               </tbody>

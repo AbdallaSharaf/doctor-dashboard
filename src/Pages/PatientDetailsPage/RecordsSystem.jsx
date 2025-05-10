@@ -6,6 +6,7 @@ import PaginationItem from '@mui/material/PaginationItem'; // Import PaginationI
 import { useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronCircleLeft, faChevronCircleRight } from '@fortawesome/free-solid-svg-icons';
+import { Tooltip } from '@mui/material';
 
 const RecordsSystem = ({ patientId, patientRecords }) => {
     const location = useLocation();
@@ -414,8 +415,12 @@ const renderOverview = () => {
                 <td className="py-3 text-sm text-center pl-4">{formatDateTime(record.dueDate)}</td>
                 <td className="py-3 text-sm text-center">{record.doctorTreating}</td>
                 <td className="text-sm text-center p-2 flex justify-center text-white gap-2">
+                  <Tooltip title="Amount Paid" arrow>
                     <p className='px-2 py-1 bg-green-400 rounded-md'>{Math.floor(record.price.paid)}</p>
+                  </Tooltip>
+                  <Tooltip title="Amount Remaining" arrow>
                     <p className='px-2 py-1 bg-red-400 rounded-md'>{Math.floor(record.price.remaining)}</p>
+                  </Tooltip>
                 </td>
                 <td className="py-3 text-sm text-center">
                   <button

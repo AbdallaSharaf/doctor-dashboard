@@ -5,8 +5,7 @@ import React, {useRef, useState, useEffect} from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { useDispatch } from 'react-redux';
 import { saveVisibilityChange, deleteService } from '../../store/slices/servicesSlice'; // Import the action
-import ServicesModal from '../../components/modals/ServicesModal';
-import Swal from 'sweetalert2';
+ import Swal from 'sweetalert2';
 
 const ItemType = 'SERVICE';
 
@@ -14,7 +13,6 @@ const Service = ({
   service,
   index,
   moveService,
-  isModalOpen,
   setIsModalOpen,
 }) => {
   const ref = useRef();
@@ -122,34 +120,29 @@ const Service = ({
     <tr
       ref={ref}
       data-handler-id={handlerId}
-      onDoubleClick={() => setEditedService(service)}
-      className={`h-16 ${isDragging ? 'opacity-0' : 'opacity-100'} ${editedService ? 'bg-black' : 'cursor-grab'} ${index % 2 !== 0 ? 'bg-gray-100' : 'bg-white'}`}
+      onDoubleClick={setIsModalOpen}
+      className={`h-14 text-sm text-center ${isDragging ? 'opacity-0' : 'opacity-100'} ${editedService ? 'bg-black' : 'cursor-grab'} ${index % 2 !== 0 ? 'bg-even-row-bg' : ''}`}
     >
-          <td className="text-sm text-center w-12"><FontAwesomeIcon icon={faBars} className="mr-3 text-gray-400" /></td>
-          <td className="text-sm text-center pr-6 w-10">{index + 1}</td>
+          <td className="text-center w-12"><FontAwesomeIcon icon={faBars} className="mr-3 text-gray-400" /></td>
+          <td className="text-center pr-6 w-10">{index + 1}</td>
           <td className="flex justify-center relative max-w-24"><img src={service.icon} className="w-12 h-12 rounded-full absolute -top-7" /></td>
-          <td className="font-bold text-sm text-center w-32 truncate">{service.name}</td>
-          <td className="text-sm text-center text-gray-500 max-w-20 truncate">{service.shortDescription}</td>
-          <td className="text-sm text-center text-gray-500 max-w-20 truncate">{service.longDescription}</td>
+          <td className="font-bold text-center w-32 truncate">{service.name}</td>
+          <td className="text-center text-gray-500 max-w-20 truncate">{service.shortDescription}</td>
+          <td className="text-center text-gray-500 max-w-20 truncate">{service.longDescription}</td>
           <td className="text-center w-16">
             <Switch
               checked={isVisible}
               onChange={handleToggleVisibility}
-              className="group inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition data-[checked]:bg-blue-600"
+              className="group inline-flex h-6 w-11 items-center rounded-full bg-gray-200 dark:bg-gray-500 transition data-[checked]:bg-primary-btn dark:data-[checked]:bg-primary-btn"
             >
               <span className="size-4 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6" />
             </Switch>
           </td>
           <td className="space-x-2 flex items-center justify-center h-16">
-            <button onClick={() => setIsModalOpen(true)} className="bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-1 transition duration-150 w-20">
+            <button onClick={setIsModalOpen} className="bg-primary-btn hover:bg-hover-btn text-secondary-text rounded p-1 transition duration-150 w-20">
               Edit
             </button>
-            <ServicesModal 
-                isModalOpen={isModalOpen} 
-                setIsModalOpen={setIsModalOpen}
-                existingService={service}
-                />
-            <button onClick={() => handleDeleteService(service.id, service.name)} className="bg-white hover:bg-gray-100 text-primary-text rounded p-1 transition duration-150 w-20">
+            <button onClick={() => handleDeleteService(service.id, service.name)} className=" hover:bg-gray-100 text-primary-text rounded p-1 transition duration-150 w-20">
               Delete
             </button>
           </td>
