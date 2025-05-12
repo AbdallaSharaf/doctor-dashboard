@@ -35,7 +35,7 @@ const ServiceModal = ({ isModalOpen, setIsModalOpen, selectedService }) => {
     });
   };
 
-  const handleEditService = async (serviceData, mainServiceId = null) => {
+  const handleEditService = async (serviceData) => {
     await dispatch(editService({ 
       id: serviceData.id, 
       updatedData: serviceData, 
@@ -76,7 +76,7 @@ const ServiceModal = ({ isModalOpen, setIsModalOpen, selectedService }) => {
           ...(values.parentServiceId && { parentServiceId: values.parentServiceId })
         };
         selectedService 
-          ? handleEditService(newService, values.parentServiceId) 
+          ? handleEditService(newService) 
           : handleAddService(newService, values.parentServiceId);
         handleCloseModal();
       } catch (error) {

@@ -94,7 +94,7 @@ const CardOptions = ({choice}) => {
                     <input
                         type="text"
                         placeholder={`Search ${choice}`}
-                        className="p-2 pl-8 sidebar w-44 border border-transparent rounded"
+                        className="bg-primary-bg p-2 pl-8 w-44 border border-transparent rounded"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />

@@ -30,6 +30,7 @@ const ServicesPage = () => {
   
   const handleOpenModal = (service = null) => {
     setSelectedService(service);
+    console.log(service)
     setIsModalOpen(true);
   };
 
@@ -123,7 +124,7 @@ const ServicesPage = () => {
                     moveService={handleMoveService} 
                     handleInputChange={handleInputChange}
                     isModalOpen={isModalOpen} 
-                    setIsModalOpen={() => handleOpenModal(service)} 
+                    setIsModalOpen={handleOpenModal} 
                   />
                 ))}
               </tbody>
